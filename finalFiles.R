@@ -15,10 +15,10 @@ fileList = list.files ( dirRW , full.names = T ) %>% as.data.frame() %>% rename(
 mainFilesL = fileList %>% filter ( grepl ( "\\.rds" , fName ) )
 fullPrunedList = NULL
 
-for ( rdsFile in mainFilesL ){
-
-	fullPrunedList = c ( fullPrunedList , unlist ( rdsFile ) )
-
+for ( rdsFile in mainFilesL$fName ){
+  
+  fullPrunedList = c ( fullPrunedList , unlist ( readRDS ( rdsFile ) ) )
+  
 }
 
 # save R object containing all snps of interest
