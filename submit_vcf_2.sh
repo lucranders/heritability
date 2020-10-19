@@ -13,4 +13,4 @@ output=/scratch/genevol/users/lucas/allChr.vcf.gz
 
 bcftools concat -o $output $input
 
-Rscript /raid/genevol/users/lucas/heritability/finalFiles.r
+Rscript /raid/genevol/users/lucas/heritability/finalFiles.R
