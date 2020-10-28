@@ -23,7 +23,7 @@ saveDir = "/raid/genevol/users/lucas/heritability/plots/"
 
 ## Step 1
 
-After the removal of monomorphisms, filtration of the desired samples and after obtaining the list of non-correlated genes per chromosome (considering correlation value of $\sqrt{0.1}$), it is now desired to calculate the GRM matrix.
+After the removal of monomorphisms, filtration of the desired samples and after obtaining the list of non-correlated snp's per chromosome (considering correlation value of $\sqrt{0.1}$), it is now desired to calculate the GRM matrix.
 ```{r}
 # Read file with all chromosomes
 # allChrFile = SeqArray::seqOpen ( paste0 ( tempDir , "allChr.gds" ) )
