@@ -28,7 +28,7 @@ After the removal of monomorphisms, filtration of the desired samples and after 
 # Read file with all chromosomes
 # allChrFile = SeqArray::seqOpen ( paste0 ( tempDir , "allChr.gds" ) )
 # List of all genes of interest (after pruning)
-listGenes = readRDS ( paste0 ( tempDir , "fullPrunedList.rds" ) )
+listSnps = readRDS ( paste0 ( tempDir , "fullPrunedList.rds" ) )
 
 # GRM - calculated as defined in CGTA
 # grm_obj = SNPRelate::snpgdsGRM( allChrFile , snp.id = listGenes , method = "GCTA")
@@ -45,26 +45,26 @@ grm_matrix = gaston::as.matrix ( altReadSnps )
 
 # manual_GRM = ( 1 / nrow ( grm_scaled ) ) * grm_scaled %*% t ( grm_scaled )
 # GRM matrix calculation (GCTA)
-grm_alt_p = gaston::GRM ( altReadSnps , which.snps = listGenes )
+grm_alt_p = gaston::GRM ( altReadSnps , which.snps = listSnps )
 
 
 # transform matrix into dataframe (3 columns - col1 = samples each row, col2 = samples each column ,  col3 = values for each pair)
 dfGrm = reshape2::melt(grm_alt_p)
 
 # indexing with numeric values each sample (columns and rows)
-dfGrm$sampLines = rep ( seq ( 1 , nrow ( grm_alt_p ) ) , nrow ( grm_alt_p ) ) 
-dfGrm$sampCols = sort ( rep ( seq ( 1 , nrow ( grm_alt_p ) ) , nrow ( grm_alt_p ) ) )
+# dfGrm$sampLines = rep ( seq ( 1 , nrow ( grm_alt_p ) ) , nrow ( grm_alt_p ) ) 
+# dfGrm$sampCols = sort ( rep ( seq ( 1 , nrow ( grm_alt_p ) ) , nrow ( grm_alt_p ) ) )
 
 
 # To calculate the correlation between individuals, the calculation A_ij/sqrt(A_ii)sqrt(A_jj) will be done
 # dataframe with only diag. values
-dfGrmDiag = dfGrm[dfGrm$sampLines==dfGrm$sampCols,]
+dfGrmDiag = dfGrm[ dfGrm$Var1 == dfGrm$Var2,]
 # sqrt of those values
 dfGrmDiag = dfGrmDiag %>% mutate ( sqrtVal = sqrt ( value ) , sqrtVal2 = sqrt ( value ) )
 
 # merging each A_ii for each row and col
-dfGrmM = merge ( dfGrm , dfGrmDiag[ ,c ( "sqrtVal" , "sampLines" ) ] , on = c ( "sampLines" ) )
-dfGrmM2 = merge ( dfGrmM , dfGrmDiag[ ,c ( "sqrtVal2" , "sampCols" ) ] , on = c ( "sampCols" ) )
+dfGrmM = merge ( dfGrm , dfGrmDiag[ ,c ( "sqrtVal" , "Var1" ) ] , on = c ( "Var1" ) )
+dfGrmM2 = merge ( dfGrmM , dfGrmDiag[ ,c ( "sqrtVal2" , "Var2" ) ] , on = c ( "Var2" ) )
 
 # Calculating A_ij/(sqrt(A_ii)sqrt(A_jj))
 dfGrmFinal = dfGrmM2 %>% mutate ( corrIndividuals = value / ( sqrtVal * sqrtVal2 ) ) %>% arrange ( Var1 , Var2 )
