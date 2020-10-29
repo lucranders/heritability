@@ -5,6 +5,10 @@ date: "21/10/2020"
 output:
   html_document:
     df_print: paged
+  pdf_document:
+    df_print: paged
+  github_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -13,6 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, message=FALSE}
 library ( dplyr )
+library ( plyr )
 library ( ggplot2 )
 
 tempDir = "/scratch/genevol/users/lucas/"
@@ -110,13 +115,19 @@ tableComparisons = table ( checkFin$ancestries ) %>% as.data.frame() %>% mutate 
 
 knitr::kable ( tableComparisons )
 
-checkFin %>% ggplot ( aes ( x = corrIndividuals , fill =  ancestries ) ) +
-geom_histogram ( aes(y=..density..) , bins = 10 ) +
-geom_density ( ) +
-facet_wrap ( ~ancestries ) +
-theme(panel.spacing = unit (2, "lines") ) +
-labs ( x = "Correlation between individuals" , y = "Density" , title = "Histogram of correlation between distinct individuals" )
+numComparisons = ddply(.data=checkFin, 
+                 .(ancestries), 
+                 summarize, 
+                 n=paste("n =", length(corrIndividuals)))
 
+checkFin %>% ggplot ( aes ( x = corrIndividuals , fill =  ancestries ) ) +
+    geom_density ( ) +
+    facet_grid ( ancestries~. ) +
+    theme(panel.spacing = unit (2, "lines") ) +
+    labs ( x = "Correlation between individuals" , y = "Density" , title = "Histogram of correlation between distinct individuals" ) +
+  geom_text(data=numComparisons, aes(x=0, y=190, label=n), 
+                    colour="black", inherit.aes=FALSE, parse=FALSE) +
+  scale_x_continuous ( breaks = seq ( from = -0.05 , to = 0.1 , by = 0.01 ) , limits = c( -0.05 , 0.1 ) )
 
 
 # display individuals with correlation greater than 10% in the sample
@@ -126,15 +137,19 @@ listGreatCorr
 ```
 
 ```{r}
-grm = grm_alt_p
+# grm = grm_alt_p
 # rownames ( grm ) = altReadSnps
 # colnames ( grm ) = altReadSnps$sample.id
 
-eigenValuesGrm = eigen ( grm )
+correlationMatrix = reshape2::dcast(dfGrmFinal, Var1~Var2 , value.var = "corrIndividuals")
+rownames ( correlationMatrix ) = correlationMatrix$Var1
+correlationMatrix$Var1 = NULL
+
+eigenValuesGrm = eigen ( correlationMatrix )
 dfEigen = eigenValuesGrm$values %>% 
 as.data.frame ( ) %>% 
-mutate ( order = 1:n() ) %>%  
-rename ( "Value" = '.' ) %>%  
+mutate ( order = 1:445 ) %>%  
+dplyr::rename ( "Value" = '.' ) %>%
 mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
 
 
@@ -142,40 +157,40 @@ dfEigen %>% ggplot ( aes ( x = order , y = Value , colour = neg )  ) +
 geom_point ( ) +
 labs ( x = "Order" , y = "Eigen Value" , title = "Eigen values plot" , colour = "Sign" )
 
-matrixCorrection = eigenValuesGrm$vectors %*% diag( eigenValuesGrm$values + abs ( min ( eigenValuesGrm$values ) ) ) %*% t ( eigenValuesGrm$vectors )
+# matrixCorrection = eigenValuesGrm$vectors %*% diag( eigenValuesGrm$values + abs ( min ( eigenValuesGrm$values ) ) ) %*% t ( eigenValuesGrm$vectors )
 # rownames ( matrixCorrection ) = grm_obj$sample.id
 # colnames ( matrixCorrection ) = grm_obj$sample.id
 
-rownames ( matrixCorrection ) = rownames ( grm )
-colnames ( matrixCorrection ) = colnames ( grm )
+# rownames ( matrixCorrection ) = rownames ( grm )
+# colnames ( matrixCorrection ) = colnames ( grm )
 
 
-eigenCorr = eigen ( matrixCorrection )
+# eigenCorr = eigen ( matrixCorrection )
 
-dfEigenCorr = eigenCorr$values %>% 
-  as.data.frame ( ) %>% 
-  mutate ( order = 1:n() ) %>%  
-  rename ( "Value" = '.' ) %>%  
-  mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
+# dfEigenCorr = eigenCorr$values %>% 
+  # as.data.frame ( ) %>% 
+  # mutate ( order = 1:n() ) %>%  
+  # rename ( "Value" = '.' ) %>%  
+  # mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
+  
 
-
-dfEigenCorr %>% ggplot ( aes ( x = order , y = Value , colour = neg )  ) + 
-  geom_point ( ) +
-  labs ( x = "Order" , y = "Eigen Value" , title = "Eigen values plot" , colour = "Sign" )
+# dfEigenCorr %>% ggplot ( aes ( x = order , y = Value , colour = neg )  ) + 
+#   geom_point ( ) +
+#   labs ( x = "Order" , y = "Eigen Value" , title = "Eigen values plot" , colour = "Sign" )
 
 ```
 
 ```{r}
-expressionInterest = hlaExp %>% filter ( subject_id %in% colnames ( grm ) )
+expressionInterest = hlaExp %>% filter ( subject_id %in% colnames ( correlationMatrix ) )
 
 mainInfo = expressionInterest %>% distinct( subject_id , continental_pop ,population )
 numEigen = 2
-print ( paste0 ( "Total variation explained by the first ", numEigen , " eigen values: " , 100*round ( sum ( eigenCorr$values[1:numEigen] )/ sum ( eigenCorr$values ) , 4 ) , "%" ) )
-vectors_ = eigenCorr$vectors[,1:numEigen]
-calcScores = matrixCorrection %*% vectors_ %>% 
+print ( paste0 ( "Total variation explained by the first ", numEigen , " eigen values: " , 100*round ( sum ( eigenValuesGrm$values[1:numEigen] )/ sum ( eigenValuesGrm$values ) , 4 ) , "%" ) )
+vectors_ = eigenValuesGrm$vectors[,1:numEigen]
+calcScores = as.matrix ( correlationMatrix , ncol = 445 )  %*% vectors_ %>% 
   as.data.frame() %>% 
-  rename ( "PC1" = "V1" , "PC2" = "V2" ) %>% 
-  mutate ( subject_id = rownames ( matrixCorrection ) )
+  dplyr::rename ( "PC1" = "V1" , "PC2" = "V2" ) %>% 
+  mutate ( subject_id = rownames ( correlationMatrix ) )
 pcaPlot = merge ( mainInfo , calcScores )
 
 pcaPlot %>% ggplot ( aes ( x = PC1 , y = PC2  , colour = continental_pop ) ) +
@@ -195,7 +210,7 @@ simpleModels = function ( exp_ , df ){
   sum0 = summary ( fixed0 )
   fixedEffectSigma = sum0$sigma^2
 
-  mixedModel = coxme::lmekin( dfFilter$TPM ~ 1 + (1|dfFilter$subject_id) , data=dfFilter, varlist=list(matrixCorrection), vinit=2)
+  mixedModel = coxme::lmekin( dfFilter$TPM ~ 1 + (1|dfFilter$subject_id) , data=dfFilter, varlist=list(as.matrix ( correlationMatrix , ncol = 445 ) ), vinit=2)
   
   mixedEffectSigma = mixedModel$sigma^2
   sigmaA = as.numeric(mixedModel$vcoef)
@@ -205,7 +220,7 @@ simpleModels = function ( exp_ , df ){
   # h = sigmaA / ( sigmaA + mixedEffectSigma)
   
   
-  modelExpanded = coxme::lmekin( dfFilter$TPM ~ 1 + dfFilter$PC1 + dfFilter$PC2 + (1|dfFilter$subject_id), data=dfFilter, varlist=list(matrixCorrection), vinit=2)
+  modelExpanded = coxme::lmekin( dfFilter$TPM ~ 1 + dfFilter$PC1 + dfFilter$PC2 + (1|dfFilter$subject_id), data=dfFilter, varlist=list(as.matrix ( correlationMatrix , ncol = 445 ) ), vinit=2)
 
   mixedEffectSigmaExp <- modelExpanded$sigma^2
   # comparisonExp = modelExpanded/fixedEffectSigma
@@ -221,13 +236,13 @@ listNames = unique ( expressionInterest$gene_name )
 modelDf = merge ( expressionInterest , calcScores )
 
 requiredInfo = NULL
-for ( name_ in listNames ){
+for ( name_ in listNames[1] ){
   
   requiredInfo = rbind ( requiredInfo , simpleModels ( exp_ = name_ ,df = modelDf ) )
   
 }
 
-finalDf = requiredInfo %>% as.data.frame ( ) %>% rename ("Gene" = "V1" , 
+finalDf = requiredInfo %>% as.data.frame ( ) %>% dplyr::rename ("Gene" = "V1" , 
                                                           "fixedSigma" = "V2" ,
                                                           "residualMixedSigma" = "V3" , 
                                                           "randomEffectSigma" = "V4",
