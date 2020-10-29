@@ -5,6 +5,7 @@ Lucas Ramalho Anderson
 
 ``` r
 library ( dplyr )
+# library ( plyr )
 library ( ggplot2 )
 
 tempDir = "/scratch/genevol/users/lucas/"
@@ -155,13 +156,22 @@ knitr::kable ( tableComparisons )
 | EUR      |           63903|  0.6468570|
 
 ``` r
+numComparisons = plyr::ddply(.data=checkFin, 
+                 "ancestries", 
+                 summarize, 
+                 n=paste("n =", length(corrIndividuals)))
+
 checkFin %>% ggplot ( aes ( x = corrIndividuals , fill =  ancestries ) ) +
-geom_histogram ( aes(y=..density..) , bins = 10 ) +
-geom_density ( ) +
-facet_wrap ( ~ancestries ) +
-theme(panel.spacing = unit (2, "lines") ) +
-labs ( x = "Correlation between individuals" , y = "Density" , title = "Histogram of correlation between distinct individuals" )
+    geom_density ( ) +
+    facet_grid ( ancestries~. ) +
+    theme(panel.spacing = unit (2, "lines") ) +
+    labs ( x = "Correlation between individuals" , y = "Density" , title = "Histogram of correlation between distinct individuals" ) +
+  geom_text(data=numComparisons, aes(x=0, y=190, label=n), 
+                    colour="black", inherit.aes=FALSE, parse=FALSE) +
+  scale_x_continuous ( breaks = seq ( from = -0.05 , to = 0.1 , by = 0.01 ) , limits = c( -0.05 , 0.1 ) )
 ```
+
+    ## Warning: Removed 2 rows containing non-finite values (stat_density).
 
 ![](FirstResults_files/figure-markdown_github/unnamed-chunk-2-3.png)
 
@@ -172,23 +182,24 @@ listGreatCorr = checkFin[ ( checkFin$corrIndividuals > .1 ) & ( checkFin$corrInd
 listGreatCorr
 ```
 
-    ##      Var2    Var1      value   sqrtVal  sqrtVal2 corrIndividuals
-    ## 1 HG00120 HG00116 0.09008931 0.7819242 0.7784499       0.1480055
-    ## 2 HG00240 HG00238 0.07855307 0.7790604 0.7979312       0.1263649
-    ##   continental_pop.x continental_pop.y ancestries
-    ## 1               EUR               EUR        EUR
-    ## 2               EUR               EUR        EUR
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["Var2"],"name":[1],"type":["fctr"],"align":["left"]},{"label":["Var1"],"name":[2],"type":["fctr"],"align":["left"]},{"label":["value"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["sqrtVal"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sqrtVal2"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["corrIndividuals"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["continental_pop.x"],"name":[7],"type":["chr"],"align":["left"]},{"label":["continental_pop.y"],"name":[8],"type":["chr"],"align":["left"]},{"label":["ancestries"],"name":[9],"type":["chr"],"align":["left"]}],"data":[{"1":"HG00120","2":"HG00116","3":"0.09008908","4":"0.7819052","5":"0.7784340","6":"0.1480118","7":"EUR","8":"EUR","9":"EUR"},{"1":"HG00240","2":"HG00238","3":"0.07855233","4":"0.7790443","5":"0.7979105","6":"0.1263696","7":"EUR","8":"EUR","9":"EUR"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
 
 ``` r
-grm = grm_alt_p
+# grm = grm_alt_p
 # rownames ( grm ) = altReadSnps
 # colnames ( grm ) = altReadSnps$sample.id
 
-eigenValuesGrm = eigen ( grm )
+correlationMatrix = reshape2::dcast(dfGrmFinal, Var1~Var2 , value.var = "corrIndividuals")
+rownames ( correlationMatrix ) = correlationMatrix$Var1
+correlationMatrix$Var1 = NULL
+
+eigenValuesGrm = eigen ( correlationMatrix )
 dfEigen = eigenValuesGrm$values %>% 
 as.data.frame ( ) %>% 
-mutate ( order = 1:n() ) %>%  
-rename ( "Value" = '.' ) %>%  
+mutate ( order = 1:445 ) %>%  
+rename ( "Value" = '.' ) %>%
 mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
 
 
@@ -200,46 +211,44 @@ labs ( x = "Order" , y = "Eigen Value" , title = "Eigen values plot" , colour = 
 ![](FirstResults_files/figure-markdown_github/unnamed-chunk-3-1.png)
 
 ``` r
-matrixCorrection = eigenValuesGrm$vectors %*% diag( eigenValuesGrm$values + abs ( min ( eigenValuesGrm$values ) ) ) %*% t ( eigenValuesGrm$vectors )
+# matrixCorrection = eigenValuesGrm$vectors %*% diag( eigenValuesGrm$values + abs ( min ( eigenValuesGrm$values ) ) ) %*% t ( eigenValuesGrm$vectors )
 # rownames ( matrixCorrection ) = grm_obj$sample.id
 # colnames ( matrixCorrection ) = grm_obj$sample.id
 
-rownames ( matrixCorrection ) = rownames ( grm )
-colnames ( matrixCorrection ) = colnames ( grm )
+# rownames ( matrixCorrection ) = rownames ( grm )
+# colnames ( matrixCorrection ) = colnames ( grm )
 
 
-eigenCorr = eigen ( matrixCorrection )
+# eigenCorr = eigen ( matrixCorrection )
 
-dfEigenCorr = eigenCorr$values %>% 
-  as.data.frame ( ) %>% 
-  mutate ( order = 1:n() ) %>%  
-  rename ( "Value" = '.' ) %>%  
-  mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
+# dfEigenCorr = eigenCorr$values %>% 
+  # as.data.frame ( ) %>% 
+  # mutate ( order = 1:n() ) %>%  
+  # rename ( "Value" = '.' ) %>%  
+  # mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
+  
 
-
-dfEigenCorr %>% ggplot ( aes ( x = order , y = Value , colour = neg )  ) + 
-  geom_point ( ) +
-  labs ( x = "Order" , y = "Eigen Value" , title = "Eigen values plot" , colour = "Sign" )
+# dfEigenCorr %>% ggplot ( aes ( x = order , y = Value , colour = neg )  ) + 
+#   geom_point ( ) +
+#   labs ( x = "Order" , y = "Eigen Value" , title = "Eigen values plot" , colour = "Sign" )
 ```
 
-![](FirstResults_files/figure-markdown_github/unnamed-chunk-3-2.png)
-
 ``` r
-expressionInterest = hlaExp %>% filter ( subject_id %in% colnames ( grm ) )
+expressionInterest = hlaExp %>% filter ( subject_id %in% colnames ( correlationMatrix ) )
 
 mainInfo = expressionInterest %>% distinct( subject_id , continental_pop ,population )
 numEigen = 2
-print ( paste0 ( "Total variation explained by the first ", numEigen , " eigen values: " , 100*round ( sum ( eigenCorr$values[1:numEigen] )/ sum ( eigenCorr$values ) , 4 ) , "%" ) )
+print ( paste0 ( "Total variation explained by the first ", numEigen , " eigen values: " , 100*round ( sum ( eigenValuesGrm$values[1:numEigen] )/ sum ( eigenValuesGrm$values ) , 4 ) , "%" ) )
 ```
 
-    ## [1] "Total variation explained by the first 2 eigen values: 5.61%"
+    ## [1] "Total variation explained by the first 2 eigen values: 3.75%"
 
 ``` r
-vectors_ = eigenCorr$vectors[,1:numEigen]
-calcScores = matrixCorrection %*% vectors_ %>% 
+vectors_ = eigenValuesGrm$vectors[,1:numEigen]
+calcScores = as.matrix ( correlationMatrix , ncol = 445 )  %*% vectors_ %>% 
   as.data.frame() %>% 
   rename ( "PC1" = "V1" , "PC2" = "V2" ) %>% 
-  mutate ( subject_id = rownames ( matrixCorrection ) )
+  mutate ( subject_id = rownames ( correlationMatrix ) )
 pcaPlot = merge ( mainInfo , calcScores )
 
 pcaPlot %>% ggplot ( aes ( x = PC1 , y = PC2  , colour = continental_pop ) ) +
@@ -262,7 +271,7 @@ simpleModels = function ( exp_ , df ){
   sum0 = summary ( fixed0 )
   fixedEffectSigma = sum0$sigma^2
 
-  mixedModel = coxme::lmekin( dfFilter$TPM ~ 1 + (1|dfFilter$subject_id) , data=dfFilter, varlist=list(matrixCorrection), vinit=2)
+  mixedModel = coxme::lmekin( dfFilter$TPM ~ 1 + (1|dfFilter$subject_id) , data=dfFilter, varlist=list(as.matrix ( correlationMatrix , ncol = 445 ) ), vinit=2)
   
   mixedEffectSigma = mixedModel$sigma^2
   sigmaA = as.numeric(mixedModel$vcoef)
@@ -272,7 +281,7 @@ simpleModels = function ( exp_ , df ){
   # h = sigmaA / ( sigmaA + mixedEffectSigma)
   
   
-  modelExpanded = coxme::lmekin( dfFilter$TPM ~ 1 + dfFilter$PC1 + dfFilter$PC2 + (1|dfFilter$subject_id), data=dfFilter, varlist=list(matrixCorrection), vinit=2)
+  modelExpanded = coxme::lmekin( dfFilter$TPM ~ 1 + dfFilter$PC1 + dfFilter$PC2 + (1|dfFilter$subject_id), data=dfFilter, varlist=list(as.matrix ( correlationMatrix , ncol = 445 ) ), vinit=2)
 
   mixedEffectSigmaExp <- modelExpanded$sigma^2
   # comparisonExp = modelExpanded/fixedEffectSigma
@@ -345,110 +354,110 @@ finalDf %>% knitr::kable()
 <tr class="odd">
 <td align="left">HLA-A</td>
 <td align="right">180900.15</td>
-<td align="right">126067.66</td>
-<td align="right">51701.260</td>
-<td align="right">132658.36</td>
-<td align="right">43406.933974</td>
-<td align="right">0.6968908</td>
-<td align="right">0.7333237</td>
-<td align="right">0.2908341</td>
-<td align="right">0.2465388</td>
+<td align="right">0.0000000</td>
+<td align="right">Inf</td>
+<td align="right">0.000000e+00</td>
+<td align="right">1.100328e+56</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.0000000</td>
+<td align="right">NaN</td>
+<td align="right">1.0000000</td>
 </tr>
 <tr class="even">
 <td align="left">HLA-B</td>
 <td align="right">526383.05</td>
-<td align="right">471645.07</td>
-<td align="right">48733.998</td>
-<td align="right">511004.80</td>
-<td align="right">362.711598</td>
-<td align="right">0.8960111</td>
-<td align="right">0.9707850</td>
-<td align="right">0.0936510</td>
-<td align="right">0.0007093</td>
+<td align="right">0.0000000</td>
+<td align="right">Inf</td>
+<td align="right">0.000000e+00</td>
+<td align="right">1.005852e+13</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.0000000</td>
+<td align="right">NaN</td>
+<td align="right">1.0000000</td>
 </tr>
 <tr class="odd">
 <td align="left">HLA-C</td>
 <td align="right">127438.40</td>
-<td align="right">85467.99</td>
-<td align="right">40356.415</td>
-<td align="right">88511.16</td>
-<td align="right">36480.976408</td>
-<td align="right">0.6706612</td>
-<td align="right">0.6945408</td>
-<td align="right">0.3207360</td>
-<td align="right">0.2918662</td>
+<td align="right">0.0000000</td>
+<td align="right">128722.67</td>
+<td align="right">1.240047e+05</td>
+<td align="right">1.001000e-04</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.9730559</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0000000</td>
 </tr>
 <tr class="even">
 <td align="left">HLA-DPA1</td>
 <td align="right">31587.29</td>
-<td align="right">29133.91</td>
-<td align="right">2064.005</td>
-<td align="right">30542.58</td>
-<td align="right">5.088393</td>
-<td align="right">0.9223301</td>
-<td align="right">0.9669265</td>
-<td align="right">0.0661584</td>
-<td align="right">0.0001666</td>
+<td align="right">0.2816560</td>
+<td align="right">31313.48</td>
+<td align="right">0.000000e+00</td>
+<td align="right">3.346782e+04</td>
+<td align="right">8.90e-06</td>
+<td align="right">0.0000000</td>
+<td align="right">0.9999910</td>
+<td align="right">1.0000000</td>
 </tr>
 <tr class="odd">
 <td align="left">HLA-DPB1</td>
 <td align="right">37625.10</td>
-<td align="right">25389.65</td>
-<td align="right">9592.266</td>
-<td align="right">33403.72</td>
-<td align="right">9.749311</td>
-<td align="right">0.6748061</td>
-<td align="right">0.8878041</td>
-<td align="right">0.2742065</td>
-<td align="right">0.0002918</td>
+<td align="right">0.3677982</td>
+<td align="right">33857.19</td>
+<td align="right">3.122143e-01</td>
+<td align="right">3.329876e+04</td>
+<td align="right">9.80e-06</td>
+<td align="right">0.0000083</td>
+<td align="right">0.9999891</td>
+<td align="right">0.9999906</td>
 </tr>
 <tr class="even">
 <td align="left">HLA-DQA1</td>
 <td align="right">51654.46</td>
-<td align="right">41390.59</td>
-<td align="right">8644.455</td>
-<td align="right">48501.41</td>
-<td align="right">28.894018</td>
-<td align="right">0.8012975</td>
-<td align="right">0.9389589</td>
-<td align="right">0.1727680</td>
-<td align="right">0.0005954</td>
+<td align="right">0.3729824</td>
+<td align="right">50052.43</td>
+<td align="right">0.000000e+00</td>
+<td align="right">1.256190e+08</td>
+<td align="right">7.20e-06</td>
+<td align="right">0.0000000</td>
+<td align="right">0.9999925</td>
+<td align="right">1.0000000</td>
 </tr>
 <tr class="odd">
 <td align="left">HLA-DQB1</td>
 <td align="right">38524.93</td>
-<td align="right">36032.89</td>
-<td align="right">2319.584</td>
-<td align="right">38005.48</td>
-<td align="right">27.989865</td>
-<td align="right">0.9353135</td>
-<td align="right">0.9865164</td>
-<td align="right">0.0604807</td>
-<td align="right">0.0007359</td>
+<td align="right">0.4305301</td>
+<td align="right">38836.22</td>
+<td align="right">3.042733e-01</td>
+<td align="right">3.880878e+04</td>
+<td align="right">1.12e-05</td>
+<td align="right">0.0000079</td>
+<td align="right">0.9999889</td>
+<td align="right">0.9999922</td>
 </tr>
 <tr class="even">
 <td align="left">HLA-DRA</td>
 <td align="right">390199.52</td>
-<td align="right">371872.42</td>
-<td align="right">15914.581</td>
-<td align="right">381119.41</td>
-<td align="right">32.216643</td>
-<td align="right">0.9530315</td>
-<td align="right">0.9767296</td>
-<td align="right">0.0410395</td>
-<td align="right">0.0000845</td>
+<td align="right">4.3764783</td>
+<td align="right">382198.84</td>
+<td align="right">3.346605e+00</td>
+<td align="right">3.799972e+05</td>
+<td align="right">1.12e-05</td>
+<td align="right">0.0000086</td>
+<td align="right">0.9999885</td>
+<td align="right">0.9999912</td>
 </tr>
 <tr class="odd">
 <td align="left">HLA-DRB1</td>
 <td align="right">148507.21</td>
-<td align="right">65927.22</td>
-<td align="right">69784.460</td>
-<td align="right">83398.53</td>
-<td align="right">46952.682502</td>
-<td align="right">0.4439328</td>
-<td align="right">0.5615790</td>
-<td align="right">0.5142112</td>
-<td align="right">0.3602014</td>
+<td align="right">1.3197049</td>
+<td align="right">130126.27</td>
+<td align="right">1.855803e+00</td>
+<td align="right">1.275805e+05</td>
+<td align="right">8.90e-06</td>
+<td align="right">0.0000125</td>
+<td align="right">0.9999899</td>
+<td align="right">0.9999855</td>
 </tr>
 </tbody>
 </table>

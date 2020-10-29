@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, message=FALSE}
 library ( dplyr )
-library ( plyr )
+# library ( plyr )
 library ( ggplot2 )
 
 tempDir = "/scratch/genevol/users/lucas/"
@@ -115,8 +115,8 @@ tableComparisons = table ( checkFin$ancestries ) %>% as.data.frame() %>% mutate 
 
 knitr::kable ( tableComparisons )
 
-numComparisons = ddply(.data=checkFin, 
-                 .(ancestries), 
+numComparisons = plyr::ddply(.data=checkFin, 
+                 "ancestries", 
                  summarize, 
                  n=paste("n =", length(corrIndividuals)))
 
@@ -149,7 +149,7 @@ eigenValuesGrm = eigen ( correlationMatrix )
 dfEigen = eigenValuesGrm$values %>% 
 as.data.frame ( ) %>% 
 mutate ( order = 1:445 ) %>%  
-dplyr::rename ( "Value" = '.' ) %>%
+rename ( "Value" = '.' ) %>%
 mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
 
 
@@ -189,7 +189,7 @@ print ( paste0 ( "Total variation explained by the first ", numEigen , " eigen v
 vectors_ = eigenValuesGrm$vectors[,1:numEigen]
 calcScores = as.matrix ( correlationMatrix , ncol = 445 )  %*% vectors_ %>% 
   as.data.frame() %>% 
-  dplyr::rename ( "PC1" = "V1" , "PC2" = "V2" ) %>% 
+  rename ( "PC1" = "V1" , "PC2" = "V2" ) %>% 
   mutate ( subject_id = rownames ( correlationMatrix ) )
 pcaPlot = merge ( mainInfo , calcScores )
 
@@ -236,13 +236,13 @@ listNames = unique ( expressionInterest$gene_name )
 modelDf = merge ( expressionInterest , calcScores )
 
 requiredInfo = NULL
-for ( name_ in listNames[1] ){
+for ( name_ in listNames ){
   
   requiredInfo = rbind ( requiredInfo , simpleModels ( exp_ = name_ ,df = modelDf ) )
   
 }
 
-finalDf = requiredInfo %>% as.data.frame ( ) %>% dplyr::rename ("Gene" = "V1" , 
+finalDf = requiredInfo %>% as.data.frame ( ) %>% rename ("Gene" = "V1" , 
                                                           "fixedSigma" = "V2" ,
                                                           "residualMixedSigma" = "V3" , 
                                                           "randomEffectSigma" = "V4",
