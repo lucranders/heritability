@@ -137,13 +137,10 @@ listGreatCorr
 ```
 
 ```{r}
-# grm = grm_alt_p
-# rownames ( grm ) = altReadSnps
-# colnames ( grm ) = altReadSnps$sample.id
-
 correlationMatrix = reshape2::dcast(dfGrmFinal, Var1~Var2 , value.var = "corrIndividuals")
 rownames ( correlationMatrix ) = correlationMatrix$Var1
 correlationMatrix$Var1 = NULL
+
 
 eigenValuesGrm = eigen ( correlationMatrix )
 dfEigen = eigenValuesGrm$values %>% 
@@ -156,28 +153,6 @@ mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
 dfEigen %>% ggplot ( aes ( x = order , y = Value , colour = neg )  ) + 
 geom_point ( ) +
 labs ( x = "Order" , y = "Eigen Value" , title = "Eigen values plot" , colour = "Sign" )
-
-# matrixCorrection = eigenValuesGrm$vectors %*% diag( eigenValuesGrm$values + abs ( min ( eigenValuesGrm$values ) ) ) %*% t ( eigenValuesGrm$vectors )
-# rownames ( matrixCorrection ) = grm_obj$sample.id
-# colnames ( matrixCorrection ) = grm_obj$sample.id
-
-# rownames ( matrixCorrection ) = rownames ( grm )
-# colnames ( matrixCorrection ) = colnames ( grm )
-
-
-# eigenCorr = eigen ( matrixCorrection )
-
-# dfEigenCorr = eigenCorr$values %>% 
-  # as.data.frame ( ) %>% 
-  # mutate ( order = 1:n() ) %>%  
-  # rename ( "Value" = '.' ) %>%  
-  # mutate ( neg = ifelse ( Value < 0 , "Negative" , "Positive" ) )
-  
-
-# dfEigenCorr %>% ggplot ( aes ( x = order , y = Value , colour = neg )  ) + 
-#   geom_point ( ) +
-#   labs ( x = "Order" , y = "Eigen Value" , title = "Eigen values plot" , colour = "Sign" )
-
 ```
 
 ```{r}
@@ -196,12 +171,15 @@ pcaPlot = merge ( mainInfo , calcScores )
 pcaPlot %>% ggplot ( aes ( x = PC1 , y = PC2  , colour = continental_pop ) ) +
   geom_point ( ) +
   labs ( title = "PCA plot (first 2 dimensions)" , colour = "Origin" )
-  # geom_text ( )
 
 ```
 
 
 ```{r}
+matrixModelReference = eigenValuesGrm$vectors %*% t ( eigenValuesGrm$vectors )
+rownames ( matrixModelReference ) = rownames ( correlationMatrix )
+colnames ( matrixModelReference ) = colnames ( correlationMatrix )
+
 simpleModels = function ( exp_ , df ){
   
   dfFilter = df  %>% filter ( gene_name == exp_ )
@@ -210,23 +188,15 @@ simpleModels = function ( exp_ , df ){
   sum0 = summary ( fixed0 )
   fixedEffectSigma = sum0$sigma^2
 
-  mixedModel = coxme::lmekin( dfFilter$TPM ~ 1 + (1|dfFilter$subject_id) , data=dfFilter, varlist=list(as.matrix ( correlationMatrix , ncol = 445 ) ), vinit=2)
+  mixedModel = coxme::lmekin( dfFilter$TPM ~ 1 + (1|dfFilter$subject_id) , data=dfFilter, varlist=list( matrixModelReference ), vinit=2)
   
   mixedEffectSigma = mixedModel$sigma^2
   sigmaA = as.numeric(mixedModel$vcoef)
   
-  # comparison = mixedEffectSigma/fixedEffectSigma
-  
-  # h = sigmaA / ( sigmaA + mixedEffectSigma)
-  
-  
-  modelExpanded = coxme::lmekin( dfFilter$TPM ~ 1 + dfFilter$PC1 + dfFilter$PC2 + (1|dfFilter$subject_id), data=dfFilter, varlist=list(as.matrix ( correlationMatrix , ncol = 445 ) ), vinit=2)
+  modelExpanded = coxme::lmekin( dfFilter$TPM ~ 1 + dfFilter$PC1 + dfFilter$PC2 + (1|dfFilter$subject_id), data=dfFilter, varlist=list( matrixModelReference ), vinit=2)
 
   mixedEffectSigmaExp <- modelExpanded$sigma^2
-  # comparisonExp = modelExpanded/fixedEffectSigma
   sigmaAExp = as.numeric(modelExpanded$vcoef)
-  
-  # hExp = sigmaAExp / (sigmaAExp + mixedEffectSigmaExp )
   
   return ( c ( exp_ , fixedEffectSigma , mixedEffectSigma , sigmaA , mixedEffectSigmaExp , sigmaAExp ) )
   
