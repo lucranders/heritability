@@ -179,12 +179,59 @@ checkFin %>% ggplot ( aes ( x = corrIndividuals , fill =  ancestries ) ) +
 # display individuals with correlation greater than 10% in the sample
 listGreatCorr = checkFin[ ( checkFin$corrIndividuals > .1 ) & ( checkFin$corrIndividuals < .999 ) , ] %>% distinct( corrIndividuals , .keep_all = TRUE)
 
-listGreatCorr
+knitr::kable(listGreatCorr)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Var2"],"name":[1],"type":["fctr"],"align":["left"]},{"label":["Var1"],"name":[2],"type":["fctr"],"align":["left"]},{"label":["value"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["sqrtVal"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sqrtVal2"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["corrIndividuals"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["continental_pop.x"],"name":[7],"type":["chr"],"align":["left"]},{"label":["continental_pop.y"],"name":[8],"type":["chr"],"align":["left"]},{"label":["ancestries"],"name":[9],"type":["chr"],"align":["left"]}],"data":[{"1":"HG00120","2":"HG00116","3":"0.09009294","4":"0.7819189","5":"0.7784457","6":"0.1480133","7":"EUR","8":"EUR","9":"EUR"},{"1":"HG00240","2":"HG00238","3":"0.07855365","4":"0.7790536","5":"0.7979256","6":"0.1263679","7":"EUR","8":"EUR","9":"EUR"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+<table>
+<colgroup>
+<col width="7%" />
+<col width="7%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="14%" />
+<col width="16%" />
+<col width="16%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Var2</th>
+<th align="left">Var1</th>
+<th align="right">value</th>
+<th align="right">sqrtVal</th>
+<th align="right">sqrtVal2</th>
+<th align="right">corrIndividuals</th>
+<th align="left">continental_pop.x</th>
+<th align="left">continental_pop.y</th>
+<th align="left">ancestries</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">HG00120</td>
+<td align="left">HG00116</td>
+<td align="right">0.0900909</td>
+<td align="right">0.7819164</td>
+<td align="right">0.7784429</td>
+<td align="right">0.1480109</td>
+<td align="left">EUR</td>
+<td align="left">EUR</td>
+<td align="left">EUR</td>
+</tr>
+<tr class="even">
+<td align="left">HG00240</td>
+<td align="left">HG00238</td>
+<td align="right">0.0785539</td>
+<td align="right">0.7790516</td>
+<td align="right">0.7979257</td>
+<td align="right">0.1263686</td>
+<td align="left">EUR</td>
+<td align="left">EUR</td>
+<td align="left">EUR</td>
+</tr>
+</tbody>
+</table>
 
 ``` r
 correlationMatrix = reshape2::dcast(dfGrmFinal, Var1~Var2 , value.var = "corrIndividuals")
@@ -323,7 +370,7 @@ finalDf %>% knitr::kable()
 <td align="right">60164.54</td>
 <td align="right">120329.09</td>
 <td align="right">58425.97</td>
-<td align="right">116851.95</td>
+<td align="right">116851.94</td>
 <td align="right">0.3325843</td>
 <td align="right">0.3229736</td>
 <td align="right">0.6666667</td>
@@ -334,8 +381,8 @@ finalDf %>% knitr::kable()
 <td align="right">526383.05</td>
 <td align="right">175066.72</td>
 <td align="right">350133.45</td>
-<td align="right">170757.98</td>
-<td align="right">341515.96</td>
+<td align="right">170757.99</td>
+<td align="right">341515.98</td>
 <td align="right">0.3325843</td>
 <td align="right">0.3243987</td>
 <td align="right">0.6666667</td>
@@ -361,7 +408,7 @@ finalDf %>% knitr::kable()
 <td align="right">10167.96</td>
 <td align="right">20335.92</td>
 <td align="right">0.3325843</td>
-<td align="right">0.3219003</td>
+<td align="right">0.3219004</td>
 <td align="right">0.6666667</td>
 <td align="right">0.6666667</td>
 </tr>
@@ -371,7 +418,7 @@ finalDf %>% knitr::kable()
 <td align="right">12513.52</td>
 <td align="right">25027.03</td>
 <td align="right">10931.32</td>
-<td align="right">21862.64</td>
+<td align="right">21862.65</td>
 <td align="right">0.3325843</td>
 <td align="right">0.2905327</td>
 <td align="right">0.6666667</td>
@@ -385,7 +432,7 @@ finalDf %>% knitr::kable()
 <td align="right">16230.64</td>
 <td align="right">32461.28</td>
 <td align="right">0.3325843</td>
-<td align="right">0.3142156</td>
+<td align="right">0.3142157</td>
 <td align="right">0.6666667</td>
 <td align="right">0.6666667</td>
 </tr>
@@ -406,8 +453,8 @@ finalDf %>% knitr::kable()
 <td align="right">390199.52</td>
 <td align="right">129774.22</td>
 <td align="right">259548.45</td>
-<td align="right">125991.71</td>
-<td align="right">251983.43</td>
+<td align="right">125991.72</td>
+<td align="right">251983.44</td>
 <td align="right">0.3325843</td>
 <td align="right">0.3228905</td>
 <td align="right">0.6666667</td>

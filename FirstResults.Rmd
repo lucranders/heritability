@@ -133,7 +133,7 @@ checkFin %>% ggplot ( aes ( x = corrIndividuals , fill =  ancestries ) ) +
 # display individuals with correlation greater than 10% in the sample
 listGreatCorr = checkFin[ ( checkFin$corrIndividuals > .1 ) & ( checkFin$corrIndividuals < .999 ) , ] %>% distinct( corrIndividuals , .keep_all = TRUE)
 
-listGreatCorr
+knitr::kable(listGreatCorr)
 ```
 
 ```{r}
