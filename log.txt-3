@@ -1,0 +1,1 @@
+/opt/torque/var/mom_priv/jobs/55345-3.darwin.SC: line 14: 103366 Killed                  Rscript /raid/genevol/users/lucas/heritability/manualDistMPartsSerial.r ${chr}
