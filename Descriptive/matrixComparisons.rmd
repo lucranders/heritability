@@ -1,0 +1,117 @@
+Joining multiple gds archives into a single '.gds' file.
+```{r , evaluate = FALSE}
+for(version in 1:3){
+
+    path = paste0("/scratch/genevol/users/lucas/V",version)
+    for(i in 1:22){
+
+        gdsSnp = paste0(path,'/chr',i,'.gds')
+        gdsFin = paste0(path,'/chr',i,'_2.gds')
+        print(gdsSnp)
+        print(gdsFin)
+        SeqArray::seqSNP2GDS(gdsSnp,gdsFin)
+
+    }
+    
+    gds_list = sprintf(paste0(path,"/chr%d_2.gds"), 1:22)
+    gds_file = paste0(path,"/allchrs.gds")
+
+    SeqArray::seqMerge(gds_list, gds_file)
+
+}
+```
+
+```{r , eval = FALSE}
+grmCalc = function(version,saveName,method,listSample=NULL){
+    
+    path = paste0("/scratch/genevol/users/lucas/V",version)
+    pruned = SeqArray::seqOpen(paste0(path , '/allchrs.gds'))
+    grm_obj <- SNPRelate::snpgdsGRM(pruned, method = "GCTA", num.thread = 20L,sample.id=listSample, with.id = TRUE)
+    
+    saveRDS( grm_obj ,paste0(path , '/' , saveName , '.rds') )
+
+    SeqArray::seqClose(pruned)
+
+}
+suppressWarnings(suppressMessages(library(dplyr)))
+listGeuvadis = read.table('/raid/genevol/heritability/samples.txt',header = F)
+colnames(listGeuvadis) = "samples"
+hlaExp = readr::read_tsv("/raid/genevol/heritability/hla_expression.tsv") %>% rename(sampleid = subject_id) %>% filter(sampleid %in% listGeuvadis$samples)
+pops = hlaExp %>%  distinct(sampleid , pop)
+popsNAfr = pops %>% filter(pop != "YRI")
+
+grmCalc(1,'GCTA_NAfr',"GCTA",popsNAfr$sampleid)
+grmCalc(1,'GCTA_geuvadis',"GCTA",listGeuvadis$samples)
+grmCalc(1,'GCTA_all',"GCTA")
+
+grmCalc(2,'GCTA_NAfr',"GCTA",popsNAfr$sampleid)
+grmCalc(2,'GCTA_geuvadis',"GCTA",listGeuvadis$samples)
+grmCalc(2,'GCTA_all',"GCTA")
+
+grmCalc(3,'GCTA_NAfr',"GCTA",popsNAfr$sampleid)
+grmCalc(3,'GCTA_geuvadis',"GCTA",listGeuvadis$samples)
+grmCalc(3,'GCTA_all',"GCTA")
+```
+
+
+```{r}
+suppressMessages(suppressWarnings(library(dplyr)))
+suppressMessages(suppressWarnings(library(ggplot2)))
+descriptiveAnalisysGrm = function(version,nameMatrix,list){
+    
+    path = paste0("/scratch/genevol/users/lucas/V",version)
+    readObj = readRDS( paste0(path , '/' , nameMatrix , '.rds') )
+    GCTAMatrix = readObj$grm
+    rownames(GCTAMatrix) = readObj$sample.id
+    colnames(GCTAMatrix) = readObj$sample.id
+    GCTAFilt = GCTAMatrix[list,list]
+    return(GCTAFilt)
+
+}
+eigenDecomp = function(GRM,label_,pops_){
+    
+    eig = eigen(GRM)
+    
+    eigenValuesDf = cbind(eig$values,1:length(eig$values) ) %>% as.data.frame()
+    colnames ( eigenValuesDf ) = c ( "eigen" , "order" )
+    eigenValuesDf$cummulativeEigen = cumsum( eigenValuesDf$eigen ) / sum(eigenValuesDf$eigen)
+    eigenValuesDf$flag = ifelse ( eigenValuesDf$eigen > mean(eigenValuesDf$eigen) , '>1' , '<=1' )
+    eigenValuesDf$flag2 = ifelse ( eigenValuesDf$cummulativeEigen > .5 , '>1/2' , '<=1/2' )
+    eigenValuesDf$label = label_
+
+
+    pcadf <- as.data.frame(eig$vectors[,1:2]) %>%
+    as_tibble() %>%
+    mutate(sampleid = rownames(GRM) , label = label_) %>%
+    inner_join(pops_, ., by = "sampleid")
+
+
+    return(list(eigenValuesDf,pcadf))
+
+}
+listGeuvadis = read.table('/raid/genevol/heritability/samples.txt',header = F)
+colnames(listGeuvadis) = "samples"
+pops <- readr::read_tsv("/raid/genevol/heritability/hla_expression.tsv") %>% select(sampleid = 1, 2:3) %>% distinct()
+dfEigenVal = NULL
+dfEigenVect = NULL
+for(version in 1:3){
+
+    assign(paste0("kinshipV",version,"Geuvadis") ,  descriptiveAnalisysGrm(version,'GCTA_geuvadis',listGeuvadis$samples))
+    assign(paste0("kinshipV",version,"Full") ,  descriptiveAnalisysGrm(version,'GCTA_all',listGeuvadis$samples))
+    valuesV1Geuvadis = eigenDecomp( get(paste0("kinshipV",version,"Geuvadis")) , paste0('Geuvadis_',version) , pops ) 
+    valuesV1All = eigenDecomp( get(paste0("kinshipV",version,"Full") ) , paste0('All_',version) , pops ) 
+    dfEigenVal = rbind(dfEigenVal , valuesV1Geuvadis[[1]] )
+    dfEigenVal = rbind(dfEigenVal , valuesV1All[[1]] )
+    dfEigenVect = rbind(dfEigenVect , valuesV1Geuvadis[[2]] )
+    dfEigenVect = rbind(dfEigenVect , valuesV1All[[2]] )
+
+}
+
+p1 = dfEigenVect %>% ggplot(aes(x = V1,y = V2 , colour = pop)) +
+geom_point() +
+facet_wrap(~label) +
+labs(x = "PC1" , y = "PC2" , colour = "Pop" , title = "Comparison between methods")
+ggsave('/raid/genevol/users/lucas/heritability/Descriptive/Images/PCcomparison.png' , p1 , device = 'png')
+
+
+```
