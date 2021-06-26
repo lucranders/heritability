@@ -1,0 +1,90 @@
+*******************************************************************
+* Genome-wide Complex Trait Analysis (GCTA)
+* version 1.93.2 beta Linux
+* (C) 2010-present, Jian Yang, The University of Queensland
+* Please report bugs to Jian Yang <jian.yang.qt@gmail.com>
+*******************************************************************
+Analysis started at 23:27:10 -03 on Wed Jun 09 2021.
+Hostname: darwin
+
+Accepted options:
+--reml
+--reml-alg 0
+--reml-maxit 1000
+--grm /scratch/genevol/users/lucas/V3/grmFull
+--pheno /raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DPB1.txt
+--covar /raid/genevol/users/lucas/heritability/02.GCTA/data/envir2.txt
+--reml-est-fix
+--out /raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-DPB1/FullHLA-DPB12
+
+Note: This is a multi-thread program. You could specify the number of threads by the --thread-num option to speed up the computation if there are multiple processors in your machine.
+
+Reading IDs of the GRM from [/scratch/genevol/users/lucas/V3/grmFull.grm.id].
+2504 IDs read from [/scratch/genevol/users/lucas/V3/grmFull.grm.id].
+Reading the GRM from [/scratch/genevol/users/lucas/V3/grmFull.grm.bin].
+GRM for 2504 individuals are included from [/scratch/genevol/users/lucas/V3/grmFull.grm.bin].
+Reading phenotypes from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DPB1.txt].
+Non-missing phenotypes of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DPB1.txt].
+Reading discrete covariate(s) from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir2.txt].
+1 discrete covariate(s) of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir2.txt].
+
+1 discrete variable(s) included as covariate(s).
+445 individuals are in common in these files.
+
+Performing  REML analysis ... (Note: may take hours depending on sample size).
+445 observations, 7 fixed effect(s), and 2 variance component(s)(including residual variance).
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 15090.2 15931.3
+logL: -2501.25
+Running AI-REML algorithm ...
+Iter.	logL	V(G)	V(e)	
+1	-2488.85	21321.67766	3813.87707	
+2	-2483.36	21120.53617	0.03763	(1 component(s) constrained)
+3	-2480.66	19004.53045	0.03763	(1 component(s) constrained)
+4	-2481.50	17892.94513	0.03763	(1 component(s) constrained)
+5	-2483.15	15821.30508	0.03763	(1 component(s) constrained)
+6	-2489.45	16033.38938	0.03763	(1 component(s) constrained)
+7	-2488.57	16036.27035	0.03763	(1 component(s) constrained)
+8	-2488.56	16036.27087	0.03763	(1 component(s) constrained)
+9	-2488.56	16036.27087	0.03763	(1 component(s) constrained)
+Log-likelihood ratio converged.
+
+Calculating the logLikelihood for the reduced model ...
+(variance component 1 is dropped from the model)
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 33035.73031
+logL: -2513.40074
+Running AI-REML algorithm ...
+Iter.	logL	V(e)	
+1	-2511.57	33012.50136	
+2	-2511.57	32996.64026	
+3	-2511.57	32962.34860	
+4	-2511.57	32962.38420	
+5	-2511.57	32962.38420	
+Log-likelihood ratio converged.
+
+Summary result of REML analysis:
+Source	Variance	SE
+V(G)	16036.270871	6719.515052
+V(e)	0.037625	9213.555782
+Vp	16036.308496	2733.325569
+V(G)/Vp	0.999998	0.574543
+
+Sampling variance/covariance of the estimates of variance components:
+4.515188e+07	-6.128521e+07	
+-6.128521e+07	8.488961e+07	
+Estimatesof fixed effects:
+
+Source	Estimate	SE
+mean	548.582948	23.971399
+X_2	-80.822786	27.471260
+X_3	-148.058929	24.119018
+X_4	-121.353033	28.051953
+X_5	-50.794888	24.385961
+X_6	-184.805342	21.007469
+X_7	-46.862443	27.972744
+
+Summary result of REML analysis has been saved in the file [/raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-DPB1/FullHLA-DPB12.hsq].
+
+Analysis finished at 23:27:11 -03 on Wed Jun 09 2021
+Overall computational time: 1.45 sec.

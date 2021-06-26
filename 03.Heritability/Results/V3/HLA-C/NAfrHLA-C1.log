@@ -1,0 +1,375 @@
+*******************************************************************
+* Genome-wide Complex Trait Analysis (GCTA)
+* version 1.93.2 beta Linux
+* (C) 2010-present, Jian Yang, The University of Queensland
+* Please report bugs to Jian Yang <jian.yang.qt@gmail.com>
+*******************************************************************
+Analysis started at 23:26:24 -03 on Wed Jun 09 2021.
+Hostname: darwin
+
+Accepted options:
+--reml
+--reml-alg 0
+--reml-maxit 1000
+--grm /scratch/genevol/users/lucas/V3/grmNAfr
+--pheno /raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-C.txt
+--covar /raid/genevol/users/lucas/heritability/02.GCTA/data/envir1.txt
+--reml-est-fix
+--out /raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-C/NAfrHLA-C1
+
+Note: This is a multi-thread program. You could specify the number of threads by the --thread-num option to speed up the computation if there are multiple processors in your machine.
+
+Reading IDs of the GRM from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.id].
+358 IDs read from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.id].
+Reading the GRM from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.bin].
+GRM for 358 individuals are included from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.bin].
+Reading phenotypes from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-C.txt].
+Non-missing phenotypes of 358 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-C.txt].
+Reading discrete covariate(s) from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir1.txt].
+2 discrete covariate(s) of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir1.txt].
+
+2 discrete variable(s) included as covariate(s).
+358 individuals are in common in these files.
+
+Performing  REML analysis ... (Note: may take hours depending on sample size).
+358 observations, 8 fixed effect(s), and 2 variance component(s)(including residual variance).
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 49638.7 49496.5
+logL: -2183.93
+Running AI-REML algorithm ...
+Iter.	logL	V(G)	V(e)	
+1	-2179.91	81425.47966	12721.25666	
+2	-2178.57	91267.21601	0.11208	(1 component(s) constrained)
+3	-2177.81	89485.14214	0.11208	(1 component(s) constrained)
+4	-2178.32	85834.19744	0.11208	(1 component(s) constrained)
+5	-2178.02	85942.04405	0.11208	(1 component(s) constrained)
+6	-2177.51	85962.51644	0.11208	(1 component(s) constrained)
+7	-2176.67	85942.41254	0.11208	(1 component(s) constrained)
+8	-2177.10	85945.10393	0.11208	(1 component(s) constrained)
+9	-2178.39	85963.93960	0.11208	(1 component(s) constrained)
+10	-2177.96	85961.38171	0.11208	(1 component(s) constrained)
+11	-2177.74	85958.85794	0.11208	(1 component(s) constrained)
+12	-2177.11	85962.63158	0.11208	(1 component(s) constrained)
+13	-2177.71	85962.53406	0.11208	(1 component(s) constrained)
+14	-2177.24	85956.36787	0.11208	(1 component(s) constrained)
+15	-2178.03	85953.38877	0.11208	(1 component(s) constrained)
+16	-2177.05	85948.77586	0.11208	(1 component(s) constrained)
+17	-2177.25	85963.68690	0.11208	(1 component(s) constrained)
+18	-2177.69	85970.17337	0.11208	(1 component(s) constrained)
+19	-2177.48	85959.33260	0.11208	(1 component(s) constrained)
+20	-2178.04	85961.64659	0.11208	(1 component(s) constrained)
+21	-2176.89	85973.12753	0.11208	(1 component(s) constrained)
+22	-2177.53	85965.91684	0.11208	(1 component(s) constrained)
+23	-2177.37	85938.23267	0.11208	(1 component(s) constrained)
+24	-2177.17	85962.70246	0.11208	(1 component(s) constrained)
+25	-2177.11	85965.25606	0.11208	(1 component(s) constrained)
+26	-2178.34	85953.48108	0.11208	(1 component(s) constrained)
+27	-2178.19	85961.96679	0.11208	(1 component(s) constrained)
+28	-2178.84	85950.33332	0.11208	(1 component(s) constrained)
+29	-2178.19	85932.91997	0.11208	(1 component(s) constrained)
+30	-2177.13	85952.33391	0.11208	(1 component(s) constrained)
+31	-2178.54	85955.21317	0.11208	(1 component(s) constrained)
+32	-2177.53	85944.28765	0.11208	(1 component(s) constrained)
+33	-2178.06	85948.89755	0.11208	(1 component(s) constrained)
+34	-2177.05	85955.53450	0.11208	(1 component(s) constrained)
+35	-2178.00	85958.31307	0.11208	(1 component(s) constrained)
+36	-2177.05	85960.63316	0.11208	(1 component(s) constrained)
+37	-2178.05	85965.60850	0.11208	(1 component(s) constrained)
+38	-2176.98	85968.10717	0.11208	(1 component(s) constrained)
+39	-2177.31	85960.80144	0.11208	(1 component(s) constrained)
+40	-2176.98	85950.06449	0.11208	(1 component(s) constrained)
+41	-2178.23	85964.16524	0.11208	(1 component(s) constrained)
+42	-2177.68	85954.79583	0.11208	(1 component(s) constrained)
+43	-2178.30	85964.13562	0.11208	(1 component(s) constrained)
+44	-2178.61	85956.66317	0.11208	(1 component(s) constrained)
+45	-2177.78	85967.77800	0.11208	(1 component(s) constrained)
+46	-2177.02	85975.87158	0.11208	(1 component(s) constrained)
+47	-2178.94	85974.58535	0.11208	(1 component(s) constrained)
+48	-2176.90	85954.96149	0.11208	(1 component(s) constrained)
+49	-2177.96	85955.80169	0.11208	(1 component(s) constrained)
+50	-2177.89	85965.17775	0.11208	(1 component(s) constrained)
+51	-2177.90	85949.24748	0.11208	(1 component(s) constrained)
+52	-2178.62	85952.91030	0.11208	(1 component(s) constrained)
+53	-2177.74	85955.66919	0.11208	(1 component(s) constrained)
+54	-2177.31	85971.13655	0.11208	(1 component(s) constrained)
+55	-2177.79	85947.01392	0.11208	(1 component(s) constrained)
+56	-2177.15	85951.40667	0.11208	(1 component(s) constrained)
+57	-2176.35	85953.42119	0.11208	(1 component(s) constrained)
+58	-2177.74	85953.96465	0.11208	(1 component(s) constrained)
+59	-2177.02	85952.88069	0.11208	(1 component(s) constrained)
+60	-2177.66	85951.80602	0.11208	(1 component(s) constrained)
+61	-2177.80	85955.10707	0.11208	(1 component(s) constrained)
+62	-2178.84	85952.94360	0.11208	(1 component(s) constrained)
+63	-2177.58	85946.04247	0.11208	(1 component(s) constrained)
+64	-2177.78	85950.56808	0.11208	(1 component(s) constrained)
+65	-2177.56	85966.35502	0.11208	(1 component(s) constrained)
+66	-2176.89	85968.56009	0.11208	(1 component(s) constrained)
+67	-2178.06	85949.37654	0.11208	(1 component(s) constrained)
+68	-2177.25	85948.83535	0.11208	(1 component(s) constrained)
+69	-2177.46	85966.43333	0.11208	(1 component(s) constrained)
+70	-2177.71	85956.38848	0.11208	(1 component(s) constrained)
+71	-2178.23	85959.41740	0.11208	(1 component(s) constrained)
+72	-2178.52	85966.43346	0.11208	(1 component(s) constrained)
+73	-2177.61	85966.37252	0.11208	(1 component(s) constrained)
+74	-2176.58	85970.73504	0.11208	(1 component(s) constrained)
+75	-2177.29	85971.86984	0.11208	(1 component(s) constrained)
+76	-2176.64	85957.00191	0.11208	(1 component(s) constrained)
+77	-2178.56	85952.41263	0.11208	(1 component(s) constrained)
+78	-2176.54	85962.88634	0.11208	(1 component(s) constrained)
+79	-2178.34	85956.89666	0.11208	(1 component(s) constrained)
+80	-2178.31	85963.83895	0.11208	(1 component(s) constrained)
+81	-2178.20	85952.18190	0.11208	(1 component(s) constrained)
+82	-2177.51	85951.78415	0.11208	(1 component(s) constrained)
+83	-2177.53	85950.71576	0.11208	(1 component(s) constrained)
+84	-2178.64	85951.07812	0.11208	(1 component(s) constrained)
+85	-2178.21	85953.67571	0.11208	(1 component(s) constrained)
+86	-2178.37	85957.87253	0.11208	(1 component(s) constrained)
+87	-2177.03	85957.52657	0.11208	(1 component(s) constrained)
+88	-2177.32	85954.83870	0.11208	(1 component(s) constrained)
+89	-2176.74	85950.32865	0.11208	(1 component(s) constrained)
+90	-2178.10	85962.84318	0.11208	(1 component(s) constrained)
+91	-2177.58	85944.47745	0.11208	(1 component(s) constrained)
+92	-2177.93	85957.36558	0.11208	(1 component(s) constrained)
+93	-2178.04	85952.38890	0.11208	(1 component(s) constrained)
+94	-2178.31	85974.75448	0.11208	(1 component(s) constrained)
+95	-2177.34	85951.98175	0.11208	(1 component(s) constrained)
+96	-2177.49	85973.31138	0.11208	(1 component(s) constrained)
+97	-2178.20	85970.72138	0.11208	(1 component(s) constrained)
+98	-2178.07	85957.73184	0.11208	(1 component(s) constrained)
+99	-2176.91	85945.99739	0.11208	(1 component(s) constrained)
+100	-2178.00	85946.17258	0.11208	(1 component(s) constrained)
+101	-2178.47	85951.64047	0.11208	(1 component(s) constrained)
+102	-2178.20	85962.42989	0.11208	(1 component(s) constrained)
+103	-2177.64	85952.90365	0.11208	(1 component(s) constrained)
+104	-2177.81	85943.27944	0.11208	(1 component(s) constrained)
+105	-2176.38	85961.35338	0.11208	(1 component(s) constrained)
+106	-2177.20	85958.93404	0.11208	(1 component(s) constrained)
+107	-2177.40	85970.08851	0.11208	(1 component(s) constrained)
+108	-2178.73	85963.94284	0.11208	(1 component(s) constrained)
+109	-2179.02	85954.45423	0.11208	(1 component(s) constrained)
+110	-2177.31	85955.91441	0.11208	(1 component(s) constrained)
+111	-2176.26	85955.99902	0.11208	(1 component(s) constrained)
+112	-2178.94	85961.07755	0.11208	(1 component(s) constrained)
+113	-2178.65	85968.15703	0.11208	(1 component(s) constrained)
+114	-2176.77	85941.21384	0.11208	(1 component(s) constrained)
+115	-2177.74	85944.36309	0.11208	(1 component(s) constrained)
+116	-2176.60	85954.91560	0.11208	(1 component(s) constrained)
+117	-2176.44	85953.56775	0.11208	(1 component(s) constrained)
+118	-2178.04	85954.56202	0.11208	(1 component(s) constrained)
+119	-2178.05	85943.49440	0.11208	(1 component(s) constrained)
+120	-2177.80	85940.26732	0.11208	(1 component(s) constrained)
+121	-2177.89	85964.51927	0.11208	(1 component(s) constrained)
+122	-2176.64	85950.22877	0.11208	(1 component(s) constrained)
+123	-2177.25	85953.87608	0.11208	(1 component(s) constrained)
+124	-2177.65	85960.79043	0.11208	(1 component(s) constrained)
+125	-2177.44	85956.36400	0.11208	(1 component(s) constrained)
+126	-2178.07	85974.55909	0.11208	(1 component(s) constrained)
+127	-2177.70	85964.25000	0.11208	(1 component(s) constrained)
+128	-2176.63	85938.93144	0.11208	(1 component(s) constrained)
+129	-2176.20	85944.79458	0.11208	(1 component(s) constrained)
+130	-2177.34	85959.06229	0.11208	(1 component(s) constrained)
+131	-2178.55	85957.97290	0.11208	(1 component(s) constrained)
+132	-2176.61	85948.95994	0.11208	(1 component(s) constrained)
+133	-2177.61	85949.86641	0.11208	(1 component(s) constrained)
+134	-2177.55	85954.74366	0.11208	(1 component(s) constrained)
+135	-2177.97	85948.98833	0.11208	(1 component(s) constrained)
+136	-2178.55	85960.00713	0.11208	(1 component(s) constrained)
+137	-2178.39	85958.96066	0.11208	(1 component(s) constrained)
+138	-2178.28	85966.18949	0.11208	(1 component(s) constrained)
+139	-2177.92	85959.03960	0.11208	(1 component(s) constrained)
+140	-2178.14	85960.36944	0.11208	(1 component(s) constrained)
+141	-2178.97	85962.13709	0.11208	(1 component(s) constrained)
+142	-2178.74	85960.53190	0.11208	(1 component(s) constrained)
+143	-2177.44	85953.04616	0.11208	(1 component(s) constrained)
+144	-2177.61	85955.20484	0.11208	(1 component(s) constrained)
+145	-2178.54	85951.03884	0.11208	(1 component(s) constrained)
+146	-2177.83	85956.58691	0.11208	(1 component(s) constrained)
+147	-2176.57	85955.43584	0.11208	(1 component(s) constrained)
+148	-2179.04	85952.06520	0.11208	(1 component(s) constrained)
+149	-2178.64	85955.13290	0.11208	(1 component(s) constrained)
+150	-2177.41	85956.78693	0.11208	(1 component(s) constrained)
+151	-2178.05	85958.67875	0.11208	(1 component(s) constrained)
+152	-2178.67	85955.51851	0.11208	(1 component(s) constrained)
+153	-2177.64	85957.59923	0.11208	(1 component(s) constrained)
+154	-2178.37	85962.24073	0.11208	(1 component(s) constrained)
+155	-2177.66	85945.55105	0.11208	(1 component(s) constrained)
+156	-2178.02	85955.54979	0.11208	(1 component(s) constrained)
+157	-2177.08	85956.68245	0.11208	(1 component(s) constrained)
+158	-2177.57	85948.08204	0.11208	(1 component(s) constrained)
+159	-2177.61	85956.77369	0.11208	(1 component(s) constrained)
+160	-2176.87	85966.07361	0.11208	(1 component(s) constrained)
+161	-2178.38	85945.76630	0.11208	(1 component(s) constrained)
+162	-2178.65	85956.81949	0.11208	(1 component(s) constrained)
+163	-2176.85	85944.98986	0.11208	(1 component(s) constrained)
+164	-2178.73	85947.16837	0.11208	(1 component(s) constrained)
+165	-2177.13	85940.30824	0.11208	(1 component(s) constrained)
+166	-2176.84	85944.45696	0.11208	(1 component(s) constrained)
+167	-2177.84	85955.25174	0.11208	(1 component(s) constrained)
+168	-2178.06	85956.01475	0.11208	(1 component(s) constrained)
+169	-2178.04	85955.73674	0.11208	(1 component(s) constrained)
+170	-2178.90	85953.67718	0.11208	(1 component(s) constrained)
+171	-2177.94	85960.91932	0.11208	(1 component(s) constrained)
+172	-2177.60	85966.71267	0.11208	(1 component(s) constrained)
+173	-2177.06	85971.68107	0.11208	(1 component(s) constrained)
+174	-2177.70	85960.54055	0.11208	(1 component(s) constrained)
+175	-2177.34	85953.03691	0.11208	(1 component(s) constrained)
+176	-2178.16	85957.14932	0.11208	(1 component(s) constrained)
+177	-2178.43	85950.26651	0.11208	(1 component(s) constrained)
+178	-2178.35	85947.22185	0.11208	(1 component(s) constrained)
+179	-2177.67	85969.94874	0.11208	(1 component(s) constrained)
+180	-2177.26	85953.25191	0.11208	(1 component(s) constrained)
+181	-2177.47	85971.21912	0.11208	(1 component(s) constrained)
+182	-2178.05	85950.71954	0.11208	(1 component(s) constrained)
+183	-2176.65	85964.12346	0.11208	(1 component(s) constrained)
+184	-2177.98	85964.79503	0.11208	(1 component(s) constrained)
+185	-2178.25	85966.97920	0.11208	(1 component(s) constrained)
+186	-2176.58	85950.53420	0.11208	(1 component(s) constrained)
+187	-2176.67	85950.52423	0.11208	(1 component(s) constrained)
+188	-2177.46	85967.38835	0.11208	(1 component(s) constrained)
+189	-2177.87	85950.67868	0.11208	(1 component(s) constrained)
+190	-2177.66	85954.22682	0.11208	(1 component(s) constrained)
+191	-2178.28	85957.85775	0.11208	(1 component(s) constrained)
+192	-2177.62	85946.51868	0.11208	(1 component(s) constrained)
+193	-2176.69	85946.06250	0.11208	(1 component(s) constrained)
+194	-2177.74	85957.75175	0.11208	(1 component(s) constrained)
+195	-2177.30	85965.73128	0.11208	(1 component(s) constrained)
+196	-2178.78	85956.92789	0.11208	(1 component(s) constrained)
+197	-2177.03	85957.40891	0.11208	(1 component(s) constrained)
+198	-2177.64	85955.40492	0.11208	(1 component(s) constrained)
+199	-2177.93	85939.86103	0.11208	(1 component(s) constrained)
+200	-2177.13	85952.45915	0.11208	(1 component(s) constrained)
+201	-2178.39	85964.43599	0.11208	(1 component(s) constrained)
+202	-2177.46	85970.95626	0.11208	(1 component(s) constrained)
+203	-2177.05	85959.30756	0.11208	(1 component(s) constrained)
+204	-2178.36	85941.69103	0.11208	(1 component(s) constrained)
+205	-2177.62	85956.62682	0.11208	(1 component(s) constrained)
+206	-2178.07	85951.73555	0.11208	(1 component(s) constrained)
+207	-2178.14	85956.01994	0.11208	(1 component(s) constrained)
+208	-2178.42	85962.67289	0.11208	(1 component(s) constrained)
+209	-2177.14	85944.16412	0.11208	(1 component(s) constrained)
+210	-2177.92	85946.69153	0.11208	(1 component(s) constrained)
+211	-2177.29	85955.82737	0.11208	(1 component(s) constrained)
+212	-2178.57	85956.86241	0.11208	(1 component(s) constrained)
+213	-2177.68	85959.80457	0.11208	(1 component(s) constrained)
+214	-2178.23	85952.09453	0.11208	(1 component(s) constrained)
+215	-2178.05	85946.94361	0.11208	(1 component(s) constrained)
+216	-2178.25	85965.06488	0.11208	(1 component(s) constrained)
+217	-2177.34	85949.36611	0.11208	(1 component(s) constrained)
+218	-2178.42	85954.05396	0.11208	(1 component(s) constrained)
+219	-2178.40	85978.23719	0.11208	(1 component(s) constrained)
+220	-2177.51	85971.02229	0.11208	(1 component(s) constrained)
+221	-2179.45	85954.95212	0.11208	(1 component(s) constrained)
+222	-2177.03	85960.71004	0.11208	(1 component(s) constrained)
+223	-2177.83	85958.77118	0.11208	(1 component(s) constrained)
+224	-2177.19	85956.83729	0.11208	(1 component(s) constrained)
+225	-2177.30	85957.35494	0.11208	(1 component(s) constrained)
+226	-2176.44	85957.52205	0.11208	(1 component(s) constrained)
+227	-2177.67	85944.10587	0.11208	(1 component(s) constrained)
+228	-2177.04	85945.71111	0.11208	(1 component(s) constrained)
+229	-2177.76	85952.41883	0.11208	(1 component(s) constrained)
+230	-2178.11	85941.77290	0.11208	(1 component(s) constrained)
+231	-2177.24	85955.04203	0.11208	(1 component(s) constrained)
+232	-2177.61	85958.60351	0.11208	(1 component(s) constrained)
+233	-2178.31	85955.93703	0.11208	(1 component(s) constrained)
+234	-2177.55	85957.84170	0.11208	(1 component(s) constrained)
+235	-2177.75	85950.85204	0.11208	(1 component(s) constrained)
+236	-2177.70	85961.79034	0.11208	(1 component(s) constrained)
+237	-2177.21	85963.78791	0.11208	(1 component(s) constrained)
+238	-2176.79	85960.04571	0.11208	(1 component(s) constrained)
+239	-2178.65	85954.61590	0.11208	(1 component(s) constrained)
+240	-2178.10	85957.81006	0.11208	(1 component(s) constrained)
+241	-2178.07	85970.90631	0.11208	(1 component(s) constrained)
+242	-2178.76	85952.60416	0.11208	(1 component(s) constrained)
+243	-2178.01	85951.55633	0.11208	(1 component(s) constrained)
+244	-2177.22	85963.48708	0.11208	(1 component(s) constrained)
+245	-2177.86	85953.78436	0.11208	(1 component(s) constrained)
+246	-2176.77	85956.42670	0.11208	(1 component(s) constrained)
+247	-2177.15	85951.73172	0.11208	(1 component(s) constrained)
+248	-2176.83	85962.77121	0.11208	(1 component(s) constrained)
+249	-2178.24	85952.45364	0.11208	(1 component(s) constrained)
+250	-2178.12	85966.45914	0.11208	(1 component(s) constrained)
+251	-2178.95	85959.51671	0.11208	(1 component(s) constrained)
+252	-2177.76	85949.81201	0.11208	(1 component(s) constrained)
+253	-2178.00	85953.24465	0.11208	(1 component(s) constrained)
+254	-2177.06	85945.10399	0.11208	(1 component(s) constrained)
+255	-2177.70	85949.38142	0.11208	(1 component(s) constrained)
+256	-2177.03	85962.38050	0.11208	(1 component(s) constrained)
+257	-2177.25	85958.70631	0.11208	(1 component(s) constrained)
+258	-2177.84	85934.74722	0.11208	(1 component(s) constrained)
+259	-2178.17	85958.03789	0.11208	(1 component(s) constrained)
+260	-2176.50	85954.89802	0.11208	(1 component(s) constrained)
+261	-2177.91	85957.04336	0.11208	(1 component(s) constrained)
+262	-2177.95	85964.66705	0.11208	(1 component(s) constrained)
+263	-2178.01	85949.24958	0.11208	(1 component(s) constrained)
+264	-2178.75	85945.96551	0.11208	(1 component(s) constrained)
+265	-2178.12	85951.23846	0.11208	(1 component(s) constrained)
+266	-2177.60	85951.07993	0.11208	(1 component(s) constrained)
+267	-2178.22	85931.78160	0.11208	(1 component(s) constrained)
+268	-2177.85	85960.07257	0.11208	(1 component(s) constrained)
+269	-2177.96	85953.76583	0.11208	(1 component(s) constrained)
+270	-2177.03	85951.90779	0.11208	(1 component(s) constrained)
+271	-2177.92	85969.39827	0.11208	(1 component(s) constrained)
+272	-2177.78	85941.40981	0.11208	(1 component(s) constrained)
+273	-2178.78	85962.11541	0.11208	(1 component(s) constrained)
+274	-2179.19	85958.21245	0.11208	(1 component(s) constrained)
+275	-2178.02	85962.25579	0.11208	(1 component(s) constrained)
+276	-2177.83	85963.84036	0.11208	(1 component(s) constrained)
+277	-2178.02	85948.54265	0.11208	(1 component(s) constrained)
+278	-2177.30	85954.92788	0.11208	(1 component(s) constrained)
+279	-2177.50	85949.01440	0.11208	(1 component(s) constrained)
+280	-2178.39	85954.15014	0.11208	(1 component(s) constrained)
+281	-2178.20	85957.24299	0.11208	(1 component(s) constrained)
+282	-2176.95	85956.44103	0.11208	(1 component(s) constrained)
+283	-2177.78	85958.43477	0.11208	(1 component(s) constrained)
+284	-2177.55	85951.10184	0.11208	(1 component(s) constrained)
+285	-2176.93	85962.59011	0.11208	(1 component(s) constrained)
+286	-2176.89	85955.10402	0.11208	(1 component(s) constrained)
+287	-2177.17	85954.90737	0.11208	(1 component(s) constrained)
+288	-2177.39	85969.04239	0.11208	(1 component(s) constrained)
+289	-2176.96	85969.53317	0.11208	(1 component(s) constrained)
+290	-2179.09	85930.99341	0.11208	(1 component(s) constrained)
+291	-2177.95	85959.75234	0.11208	(1 component(s) constrained)
+292	-2177.65	85954.11483	0.11208	(1 component(s) constrained)
+293	-2177.66	85958.75026	0.11208	(1 component(s) constrained)
+Log-likelihood ratio converged.
+
+Calculating the logLikelihood for the reduced model ...
+(variance component 1 is dropped from the model)
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 86396.99127
+logL: -2184.44510
+Running AI-REML algorithm ...
+Iter.	logL	V(e)	
+1	-2178.73	86210.23452	
+2	-2178.73	86083.17186	
+3	-2178.73	85809.13461	
+4	-2178.72	85810.00420	
+5	-2178.72	85810.00421	
+Log-likelihood ratio converged.
+
+Summary result of REML analysis:
+Source	Variance	SE
+V(G)	85958.750261	98697.919531
+V(e)	0.112078	98104.506992
+Vp	85958.862339	6519.396630
+V(G)/Vp	0.999999	1.141296
+
+Sampling variance/covariance of the estimates of variance components:
+9.741279e+09	-9.661636e+09	
+-9.661636e+09	9.624494e+09	
+Estimatesof fixed effects:
+
+Source	Estimate	SE
+mean	1278.724212	33.100134
+X_2	-23.343051	31.355517
+X_3	-231.132368	59.913492
+X_4	-394.581645	52.720949
+X_5	-341.652412	61.890834
+X_6	-124.041395	54.152360
+X_7	-420.885174	46.381210
+X_8	-96.219595	63.059158
+
+Summary result of REML analysis has been saved in the file [/raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-C/NAfrHLA-C1.hsq].
+
+Analysis finished at 23:26:28 -03 on Wed Jun 09 2021
+Overall computational time: 4.07 sec.

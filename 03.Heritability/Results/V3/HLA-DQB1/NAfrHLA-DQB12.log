@@ -1,0 +1,127 @@
+*******************************************************************
+* Genome-wide Complex Trait Analysis (GCTA)
+* version 1.93.2 beta Linux
+* (C) 2010-present, Jian Yang, The University of Queensland
+* Please report bugs to Jian Yang <jian.yang.qt@gmail.com>
+*******************************************************************
+Analysis started at 23:27:57 -03 on Wed Jun 09 2021.
+Hostname: darwin
+
+Accepted options:
+--reml
+--reml-alg 0
+--reml-maxit 1000
+--grm /scratch/genevol/users/lucas/V3/grmNAfr
+--pheno /raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DQB1.txt
+--covar /raid/genevol/users/lucas/heritability/02.GCTA/data/envir2.txt
+--reml-est-fix
+--out /raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-DQB1/NAfrHLA-DQB12
+
+Note: This is a multi-thread program. You could specify the number of threads by the --thread-num option to speed up the computation if there are multiple processors in your machine.
+
+Reading IDs of the GRM from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.id].
+358 IDs read from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.id].
+Reading the GRM from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.bin].
+GRM for 358 individuals are included from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.bin].
+Reading phenotypes from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DQB1.txt].
+Non-missing phenotypes of 358 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DQB1.txt].
+Reading discrete covariate(s) from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir2.txt].
+1 discrete covariate(s) of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir2.txt].
+
+1 discrete variable(s) included as covariate(s).
+358 individuals are in common in these files.
+
+Performing  REML analysis ... (Note: may take hours depending on sample size).
+358 observations, 7 fixed effect(s), and 2 variance component(s)(including residual variance).
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 18732.2 18610.2
+logL: -2031.45
+Running AI-REML algorithm ...
+Iter.	logL	V(G)	V(e)	
+1	-2031.23	36689.44401	0.03841	(1 component(s) constrained)
+2	-2029.84	35721.28610	0.03841	(1 component(s) constrained)
+3	-2030.02	35729.98039	0.03841	(1 component(s) constrained)
+4	-2029.29	35751.15014	0.03841	(1 component(s) constrained)
+5	-2030.08	35757.94073	0.03841	(1 component(s) constrained)
+6	-2030.20	35748.12145	0.03841	(1 component(s) constrained)
+7	-2029.62	35742.27389	0.03841	(1 component(s) constrained)
+8	-2029.17	35750.41910	0.03841	(1 component(s) constrained)
+9	-2030.31	35748.92290	0.03841	(1 component(s) constrained)
+10	-2030.43	35743.71631	0.03841	(1 component(s) constrained)
+11	-2030.33	35745.98456	0.03841	(1 component(s) constrained)
+12	-2029.51	35746.80935	0.03841	(1 component(s) constrained)
+13	-2029.62	35752.27646	0.03841	(1 component(s) constrained)
+14	-2029.65	35751.53997	0.03841	(1 component(s) constrained)
+15	-2030.15	35750.65066	0.03841	(1 component(s) constrained)
+16	-2030.66	35755.14840	0.03841	(1 component(s) constrained)
+17	-2029.74	35749.55037	0.03841	(1 component(s) constrained)
+18	-2030.12	35746.84223	0.03841	(1 component(s) constrained)
+19	-2030.24	35759.25717	0.03841	(1 component(s) constrained)
+20	-2030.48	35754.86160	0.03841	(1 component(s) constrained)
+21	-2029.51	35746.70698	0.03841	(1 component(s) constrained)
+22	-2029.41	35749.89882	0.03841	(1 component(s) constrained)
+23	-2030.25	35750.07672	0.03841	(1 component(s) constrained)
+24	-2029.99	35750.30259	0.03841	(1 component(s) constrained)
+25	-2028.95	35749.17951	0.03841	(1 component(s) constrained)
+26	-2029.92	35746.96809	0.03841	(1 component(s) constrained)
+27	-2030.67	35752.94877	0.03841	(1 component(s) constrained)
+28	-2030.19	35746.33273	0.03841	(1 component(s) constrained)
+29	-2030.70	35752.99555	0.03841	(1 component(s) constrained)
+30	-2030.39	35755.18207	0.03841	(1 component(s) constrained)
+31	-2029.67	35749.37695	0.03841	(1 component(s) constrained)
+32	-2029.60	35751.01027	0.03841	(1 component(s) constrained)
+33	-2029.91	35752.64796	0.03841	(1 component(s) constrained)
+34	-2030.10	35749.64441	0.03841	(1 component(s) constrained)
+35	-2030.58	35751.31863	0.03841	(1 component(s) constrained)
+36	-2029.30	35750.04009	0.03841	(1 component(s) constrained)
+37	-2030.09	35751.70941	0.03841	(1 component(s) constrained)
+38	-2029.87	35752.04487	0.03841	(1 component(s) constrained)
+39	-2029.94	35749.14877	0.03841	(1 component(s) constrained)
+40	-2029.90	35754.75541	0.03841	(1 component(s) constrained)
+41	-2030.09	35752.35799	0.03841	(1 component(s) constrained)
+42	-2029.14	35750.30414	0.03841	(1 component(s) constrained)
+43	-2031.02	35751.46550	0.03841	(1 component(s) constrained)
+44	-2029.37	35748.37126	0.03841	(1 component(s) constrained)
+45	-2030.23	35749.57449	0.03841	(1 component(s) constrained)
+46	-2029.62	35749.37207	0.03841	(1 component(s) constrained)
+47	-2030.08	35749.37850	0.03841	(1 component(s) constrained)
+48	-2030.08	35748.57624	0.03841	(1 component(s) constrained)
+Log-likelihood ratio converged.
+
+Calculating the logLikelihood for the reduced model ...
+(variance component 1 is dropped from the model)
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 36480.22487
+logL: -2032.60926
+Running AI-REML algorithm ...
+Iter.	logL	V(e)	
+1	-2032.37	36468.02583	
+2	-2032.37	36441.64206	
+3	-2032.37	36441.66113	
+Log-likelihood ratio converged.
+
+Summary result of REML analysis:
+Source	Variance	SE
+V(G)	35748.576243	38577.687306
+V(e)	0.038414	38642.381803
+Vp	35748.614657	2689.795717
+V(G)/Vp	0.999999	1.080948
+
+Sampling variance/covariance of the estimates of variance components:
+1.488238e+09	-1.487118e+09	
+-1.487118e+09	1.493234e+09	
+Estimatesof fixed effects:
+
+Source	Estimate	SE
+mean	621.474953	19.504716
+X_2	-58.395225	38.599837
+X_3	-68.239567	33.891727
+X_4	-57.710337	39.826874
+X_5	-41.550241	34.849303
+X_6	-121.369548	29.884627
+X_7	44.891012	40.612351
+
+Summary result of REML analysis has been saved in the file [/raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-DQB1/NAfrHLA-DQB12.hsq].
+
+Analysis finished at 23:27:59 -03 on Wed Jun 09 2021
+Overall computational time: 1.69 sec.

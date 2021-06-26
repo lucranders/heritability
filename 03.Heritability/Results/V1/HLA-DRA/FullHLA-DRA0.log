@@ -1,0 +1,96 @@
+*******************************************************************
+* Genome-wide Complex Trait Analysis (GCTA)
+* version 1.93.2 beta Linux
+* (C) 2010-present, Jian Yang, The University of Queensland
+* Please report bugs to Jian Yang <jian.yang.qt@gmail.com>
+*******************************************************************
+Analysis started at 23:21:22 -03 on Wed Jun 09 2021.
+Hostname: darwin
+
+Accepted options:
+--reml
+--reml-alg 0
+--reml-maxit 1000
+--grm /scratch/genevol/users/lucas/V1/grmFull
+--pheno /raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DRA.txt
+--covar /raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt
+--reml-est-fix
+--out /raid/genevol/users/lucas/heritability/03.Heritability/Results/V1/HLA-DRA/FullHLA-DRA0
+
+Note: This is a multi-thread program. You could specify the number of threads by the --thread-num option to speed up the computation if there are multiple processors in your machine.
+
+Reading IDs of the GRM from [/scratch/genevol/users/lucas/V1/grmFull.grm.id].
+2504 IDs read from [/scratch/genevol/users/lucas/V1/grmFull.grm.id].
+Reading the GRM from [/scratch/genevol/users/lucas/V1/grmFull.grm.bin].
+GRM for 2504 individuals are included from [/scratch/genevol/users/lucas/V1/grmFull.grm.bin].
+Reading phenotypes from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DRA.txt].
+Non-missing phenotypes of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DRA.txt].
+Reading discrete covariate(s) from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt].
+3 discrete covariate(s) of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt].
+
+3 discrete variable(s) included as covariate(s).
+445 individuals are in common in these files.
+
+Performing  REML analysis ... (Note: may take hours depending on sample size).
+445 observations, 12 fixed effect(s), and 2 variance component(s)(including residual variance).
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 131262 155860
+logL: -2970.8
+Running AI-REML algorithm ...
+Iter.	logL	V(G)	V(e)	
+1	-2938.26	176084.59323	14756.85022	
+2	-2925.02	160323.14806	0.39020	(1 component(s) constrained)
+3	-2919.86	146202.10484	0.39020	(1 component(s) constrained)
+4	-2918.64	138528.25492	0.39020	(1 component(s) constrained)
+5	-2918.76	133936.48891	0.39020	(1 component(s) constrained)
+6	-2919.16	124792.48741	0.39020	(1 component(s) constrained)
+7	-2920.87	125374.14123	0.39020	(1 component(s) constrained)
+8	-2920.72	125376.86469	0.39020	(1 component(s) constrained)
+9	-2920.72	125376.86475	0.39020	(1 component(s) constrained)
+10	-2920.72	125376.86475	0.39020	(1 component(s) constrained)
+Log-likelihood ratio converged.
+
+Calculating the logLikelihood for the reduced model ...
+(variance component 1 is dropped from the model)
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 240055.69835
+logL: -2942.96721
+Running AI-REML algorithm ...
+Iter.	logL	V(e)	
+1	-2919.66	238717.61921	
+2	-2919.64	237814.89162	
+3	-2919.63	235879.03762	
+4	-2919.62	235894.66753	
+5	-2919.62	235894.66857	
+Log-likelihood ratio converged.
+
+Summary result of REML analysis:
+Source	Variance	SE
+V(G)	125376.864746	97476.047679
+V(e)	0.390200	158373.497655
+Vp	125377.254946	61738.012086
+V(G)/Vp	0.999997	1.263174
+
+Sampling variance/covariance of the estimates of variance components:
+9.501580e+09	-1.538608e+10	
+-1.538608e+10	2.508216e+10	
+Estimatesof fixed effects:
+
+Source	Estimate	SE
+mean	2690.980264	110.747460
+X_2	-14.341461	43.701694
+X_3	-82.591772	84.694635
+X_4	-144.323277	74.263998
+X_5	-203.231534	86.220524
+X_6	-100.599379	74.884162
+X_7	-322.051906	64.450065
+X_8	-67.651111	85.423611
+X_9	-930.907971	103.536179
+X_10	-1063.841808	70.829486
+X_11	-910.702287	80.276599
+X_12	-526.812993	215.564743
+
+Summary result of REML analysis has been saved in the file [/raid/genevol/users/lucas/heritability/03.Heritability/Results/V1/HLA-DRA/FullHLA-DRA0.hsq].
+
+Analysis finished at 23:21:23 -03 on Wed Jun 09 2021
+Overall computational time: 1.56 sec.

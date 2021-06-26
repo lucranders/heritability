@@ -1,0 +1,94 @@
+*******************************************************************
+* Genome-wide Complex Trait Analysis (GCTA)
+* version 1.93.2 beta Linux
+* (C) 2010-present, Jian Yang, The University of Queensland
+* Please report bugs to Jian Yang <jian.yang.qt@gmail.com>
+*******************************************************************
+Analysis started at 23:28:33 -03 on Wed Jun 09 2021.
+Hostname: darwin
+
+Accepted options:
+--reml
+--reml-alg 0
+--reml-maxit 1000
+--grm /scratch/genevol/users/lucas/V3/grmFull
+--pheno /raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DRB1.txt
+--covar /raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt
+--reml-est-fix
+--out /raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-DRB1/FullHLA-DRB10
+
+Note: This is a multi-thread program. You could specify the number of threads by the --thread-num option to speed up the computation if there are multiple processors in your machine.
+
+Reading IDs of the GRM from [/scratch/genevol/users/lucas/V3/grmFull.grm.id].
+2504 IDs read from [/scratch/genevol/users/lucas/V3/grmFull.grm.id].
+Reading the GRM from [/scratch/genevol/users/lucas/V3/grmFull.grm.bin].
+GRM for 2504 individuals are included from [/scratch/genevol/users/lucas/V3/grmFull.grm.bin].
+Reading phenotypes from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DRB1.txt].
+Non-missing phenotypes of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneHLA-DRB1.txt].
+Reading discrete covariate(s) from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt].
+3 discrete covariate(s) of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt].
+
+3 discrete variable(s) included as covariate(s).
+445 individuals are in common in these files.
+
+Performing  REML analysis ... (Note: may take hours depending on sample size).
+445 observations, 12 fixed effect(s), and 2 variance component(s)(including residual variance).
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 57836.5 61876.2
+logL: -2769.73
+Running AI-REML algorithm ...
+Iter.	logL	V(G)	V(e)	
+1	-2754.16	78972.59764	0.14851	(1 component(s) constrained)
+2	-2744.55	66521.87825	0.14851	(1 component(s) constrained)
+3	-2746.90	61001.73637	0.14851	(1 component(s) constrained)
+4	-2750.81	51373.91102	0.14851	(1 component(s) constrained)
+5	-2764.80	52653.63091	0.14851	(1 component(s) constrained)
+6	-2762.25	52686.30206	0.14851	(1 component(s) constrained)
+7	-2762.18	52686.30846	0.14851	(1 component(s) constrained)
+8	-2762.18	52686.32233	0.14851	(1 component(s) constrained)
+Log-likelihood ratio converged.
+
+Calculating the logLikelihood for the reduced model ...
+(variance component 1 is dropped from the model)
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 108239.01575
+logL: -2759.10647
+Running AI-REML algorithm ...
+Iter.	logL	V(e)	
+1	-2748.73	107882.69305	
+2	-2748.72	107640.93981	
+3	-2748.72	107120.53432	
+4	-2748.72	107123.03813	
+5	-2748.72	107123.03819	
+Log-likelihood ratio converged.
+
+Summary result of REML analysis:
+Source	Variance	SE
+V(G)	52686.322327	28192.276590
+V(e)	0.148507	38590.568995
+Vp	52686.470834	10962.371496
+V(G)/Vp	0.999997	0.732456
+
+Sampling variance/covariance of the estimates of variance components:
+7.948045e+08	-1.081931e+09	
+-1.081931e+09	1.489232e+09	
+Estimatesof fixed effects:
+
+Source	Estimate	SE
+mean	1127.529227	73.470232
+X_2	-12.414389	25.874973
+X_3	-129.693702	50.030954
+X_4	-201.001326	43.900301
+X_5	-186.625325	51.046934
+X_6	-79.505043	44.365661
+X_7	-251.577955	38.144796
+X_8	19.532212	50.798906
+X_9	-294.479161	59.092295
+X_10	-350.543848	41.124929
+X_11	-152.256976	47.422425
+X_12	136.818173	153.792980
+
+Summary result of REML analysis has been saved in the file [/raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-DRB1/FullHLA-DRB10.hsq].
+
+Analysis finished at 23:28:34 -03 on Wed Jun 09 2021
+Overall computational time: 1.38 sec.

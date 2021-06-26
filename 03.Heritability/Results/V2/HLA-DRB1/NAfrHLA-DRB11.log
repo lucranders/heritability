@@ -1,0 +1,236 @@
+*******************************************************************
+* Genome-wide Complex Trait Analysis (GCTA)
+* version 1.93.2 beta Linux
+* (C) 2010-present, Jian Yang, The University of Queensland
+* Please report bugs to Jian Yang <jian.yang.qt@gmail.com>
+*******************************************************************
+Analysis started at 23:25:12 -03 on Wed Jun 09 2021.
+Hostname: darwin
+
+Accepted options:
+--reml
+--reml-alg 0
+--reml-maxit 1000
+--grm /scratch/genevol/users/lucas/V2/grmNAfr
+--pheno /raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DRB1.txt
+--covar /raid/genevol/users/lucas/heritability/02.GCTA/data/envir1.txt
+--reml-est-fix
+--out /raid/genevol/users/lucas/heritability/03.Heritability/Results/V2/HLA-DRB1/NAfrHLA-DRB11
+
+Note: This is a multi-thread program. You could specify the number of threads by the --thread-num option to speed up the computation if there are multiple processors in your machine.
+
+Reading IDs of the GRM from [/scratch/genevol/users/lucas/V2/grmNAfr.grm.id].
+358 IDs read from [/scratch/genevol/users/lucas/V2/grmNAfr.grm.id].
+Reading the GRM from [/scratch/genevol/users/lucas/V2/grmNAfr.grm.bin].
+GRM for 358 individuals are included from [/scratch/genevol/users/lucas/V2/grmNAfr.grm.bin].
+Reading phenotypes from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DRB1.txt].
+Non-missing phenotypes of 358 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DRB1.txt].
+Reading discrete covariate(s) from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir1.txt].
+2 discrete covariate(s) of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir1.txt].
+
+2 discrete variable(s) included as covariate(s).
+358 individuals are in common in these files.
+
+Performing  REML analysis ... (Note: may take hours depending on sample size).
+358 observations, 8 fixed effect(s), and 2 variance component(s)(including residual variance).
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 58642.2 57891.1
+logL: -2225.57
+Running AI-REML algorithm ...
+Iter.	logL	V(G)	V(e)	
+1	-2225.18	113583.63536	0.12097	(1 component(s) constrained)
+2	-2223.33	107483.52105	0.12097	(1 component(s) constrained)
+3	-2223.59	107581.00363	0.12097	(1 component(s) constrained)
+4	-2222.79	107795.69547	0.12097	(1 component(s) constrained)
+5	-2223.80	107807.84749	0.12097	(1 component(s) constrained)
+6	-2223.28	107791.72651	0.12097	(1 component(s) constrained)
+7	-2223.23	107788.61023	0.12097	(1 component(s) constrained)
+8	-2223.60	107792.66035	0.12097	(1 component(s) constrained)
+9	-2223.22	107783.93464	0.12097	(1 component(s) constrained)
+10	-2222.88	107789.90398	0.12097	(1 component(s) constrained)
+11	-2223.38	107791.01067	0.12097	(1 component(s) constrained)
+12	-2222.78	107778.18829	0.12097	(1 component(s) constrained)
+13	-2223.65	107787.23044	0.12097	(1 component(s) constrained)
+14	-2222.71	107778.14816	0.12097	(1 component(s) constrained)
+15	-2223.11	107773.30711	0.12097	(1 component(s) constrained)
+16	-2222.98	107793.35542	0.12097	(1 component(s) constrained)
+17	-2223.76	107799.57685	0.12097	(1 component(s) constrained)
+18	-2222.49	107780.63832	0.12097	(1 component(s) constrained)
+19	-2223.16	107778.27618	0.12097	(1 component(s) constrained)
+20	-2223.62	107797.09273	0.12097	(1 component(s) constrained)
+21	-2223.02	107782.89439	0.12097	(1 component(s) constrained)
+22	-2223.26	107788.34969	0.12097	(1 component(s) constrained)
+23	-2223.34	107802.71446	0.12097	(1 component(s) constrained)
+24	-2224.23	107791.98013	0.12097	(1 component(s) constrained)
+25	-2222.85	107795.45143	0.12097	(1 component(s) constrained)
+26	-2222.73	107792.94139	0.12097	(1 component(s) constrained)
+27	-2223.21	107783.91123	0.12097	(1 component(s) constrained)
+28	-2223.49	107788.19342	0.12097	(1 component(s) constrained)
+29	-2223.03	107789.50514	0.12097	(1 component(s) constrained)
+30	-2223.33	107790.67949	0.12097	(1 component(s) constrained)
+31	-2222.77	107786.80118	0.12097	(1 component(s) constrained)
+32	-2222.48	107789.68002	0.12097	(1 component(s) constrained)
+33	-2222.77	107785.88862	0.12097	(1 component(s) constrained)
+34	-2223.16	107799.71568	0.12097	(1 component(s) constrained)
+35	-2223.09	107770.19350	0.12097	(1 component(s) constrained)
+36	-2222.76	107788.83883	0.12097	(1 component(s) constrained)
+37	-2222.68	107787.91733	0.12097	(1 component(s) constrained)
+38	-2223.36	107793.60965	0.12097	(1 component(s) constrained)
+39	-2223.36	107793.52594	0.12097	(1 component(s) constrained)
+40	-2222.72	107795.51987	0.12097	(1 component(s) constrained)
+41	-2223.29	107794.83930	0.12097	(1 component(s) constrained)
+42	-2222.78	107792.29745	0.12097	(1 component(s) constrained)
+43	-2224.02	107799.67676	0.12097	(1 component(s) constrained)
+44	-2222.67	107802.81878	0.12097	(1 component(s) constrained)
+45	-2222.94	107801.27261	0.12097	(1 component(s) constrained)
+46	-2222.55	107782.75292	0.12097	(1 component(s) constrained)
+47	-2222.99	107790.28592	0.12097	(1 component(s) constrained)
+48	-2223.57	107778.16775	0.12097	(1 component(s) constrained)
+49	-2222.58	107780.01089	0.12097	(1 component(s) constrained)
+50	-2223.57	107796.19713	0.12097	(1 component(s) constrained)
+51	-2223.06	107793.68374	0.12097	(1 component(s) constrained)
+52	-2222.92	107801.47697	0.12097	(1 component(s) constrained)
+53	-2222.65	107791.09109	0.12097	(1 component(s) constrained)
+54	-2223.43	107802.29204	0.12097	(1 component(s) constrained)
+55	-2223.21	107808.51559	0.12097	(1 component(s) constrained)
+56	-2223.00	107803.44754	0.12097	(1 component(s) constrained)
+57	-2223.16	107778.46989	0.12097	(1 component(s) constrained)
+58	-2223.39	107788.64775	0.12097	(1 component(s) constrained)
+59	-2223.20	107776.23023	0.12097	(1 component(s) constrained)
+60	-2223.55	107798.05835	0.12097	(1 component(s) constrained)
+61	-2222.99	107795.51042	0.12097	(1 component(s) constrained)
+62	-2223.57	107794.96150	0.12097	(1 component(s) constrained)
+63	-2223.40	107775.95034	0.12097	(1 component(s) constrained)
+64	-2222.99	107778.34375	0.12097	(1 component(s) constrained)
+65	-2223.13	107781.32696	0.12097	(1 component(s) constrained)
+66	-2222.37	107789.20703	0.12097	(1 component(s) constrained)
+67	-2223.13	107780.32523	0.12097	(1 component(s) constrained)
+68	-2223.80	107786.88608	0.12097	(1 component(s) constrained)
+69	-2222.93	107802.66450	0.12097	(1 component(s) constrained)
+70	-2223.11	107802.80998	0.12097	(1 component(s) constrained)
+71	-2223.87	107799.96754	0.12097	(1 component(s) constrained)
+72	-2222.68	107781.30429	0.12097	(1 component(s) constrained)
+73	-2222.41	107787.26410	0.12097	(1 component(s) constrained)
+74	-2223.88	107787.40705	0.12097	(1 component(s) constrained)
+75	-2223.35	107785.71802	0.12097	(1 component(s) constrained)
+76	-2222.87	107773.23437	0.12097	(1 component(s) constrained)
+77	-2222.97	107797.41181	0.12097	(1 component(s) constrained)
+78	-2223.23	107775.23634	0.12097	(1 component(s) constrained)
+79	-2223.39	107794.87310	0.12097	(1 component(s) constrained)
+80	-2223.21	107776.94401	0.12097	(1 component(s) constrained)
+81	-2222.80	107793.84923	0.12097	(1 component(s) constrained)
+82	-2222.73	107797.88166	0.12097	(1 component(s) constrained)
+83	-2223.66	107787.88932	0.12097	(1 component(s) constrained)
+84	-2223.37	107798.31618	0.12097	(1 component(s) constrained)
+85	-2223.13	107795.94119	0.12097	(1 component(s) constrained)
+86	-2222.81	107793.34701	0.12097	(1 component(s) constrained)
+87	-2223.12	107777.40465	0.12097	(1 component(s) constrained)
+88	-2223.15	107786.87256	0.12097	(1 component(s) constrained)
+89	-2223.11	107806.32704	0.12097	(1 component(s) constrained)
+90	-2222.44	107790.10170	0.12097	(1 component(s) constrained)
+91	-2223.00	107806.76799	0.12097	(1 component(s) constrained)
+92	-2223.62	107812.23471	0.12097	(1 component(s) constrained)
+93	-2223.12	107796.13524	0.12097	(1 component(s) constrained)
+94	-2223.53	107777.18246	0.12097	(1 component(s) constrained)
+95	-2223.45	107800.04665	0.12097	(1 component(s) constrained)
+96	-2223.50	107782.31690	0.12097	(1 component(s) constrained)
+97	-2223.88	107792.51701	0.12097	(1 component(s) constrained)
+98	-2222.18	107792.07431	0.12097	(1 component(s) constrained)
+99	-2223.02	107788.43645	0.12097	(1 component(s) constrained)
+100	-2222.93	107780.15304	0.12097	(1 component(s) constrained)
+101	-2222.97	107786.59343	0.12097	(1 component(s) constrained)
+102	-2223.56	107783.60057	0.12097	(1 component(s) constrained)
+103	-2223.47	107775.28251	0.12097	(1 component(s) constrained)
+104	-2222.44	107788.71142	0.12097	(1 component(s) constrained)
+105	-2222.97	107791.79626	0.12097	(1 component(s) constrained)
+106	-2223.51	107796.56392	0.12097	(1 component(s) constrained)
+107	-2223.96	107786.24234	0.12097	(1 component(s) constrained)
+108	-2223.74	107794.01762	0.12097	(1 component(s) constrained)
+109	-2223.53	107794.92052	0.12097	(1 component(s) constrained)
+110	-2222.73	107790.31208	0.12097	(1 component(s) constrained)
+111	-2222.35	107774.72202	0.12097	(1 component(s) constrained)
+112	-2223.52	107792.79747	0.12097	(1 component(s) constrained)
+113	-2223.14	107803.98936	0.12097	(1 component(s) constrained)
+114	-2223.76	107806.95040	0.12097	(1 component(s) constrained)
+115	-2222.74	107790.31381	0.12097	(1 component(s) constrained)
+116	-2223.18	107792.40829	0.12097	(1 component(s) constrained)
+117	-2223.02	107791.56489	0.12097	(1 component(s) constrained)
+118	-2223.13	107779.19419	0.12097	(1 component(s) constrained)
+119	-2223.64	107812.80062	0.12097	(1 component(s) constrained)
+120	-2222.96	107777.64235	0.12097	(1 component(s) constrained)
+121	-2223.54	107790.54680	0.12097	(1 component(s) constrained)
+122	-2222.90	107778.70631	0.12097	(1 component(s) constrained)
+123	-2222.40	107788.63911	0.12097	(1 component(s) constrained)
+124	-2222.97	107793.32697	0.12097	(1 component(s) constrained)
+125	-2223.05	107790.66563	0.12097	(1 component(s) constrained)
+126	-2223.21	107808.62260	0.12097	(1 component(s) constrained)
+127	-2222.92	107806.09732	0.12097	(1 component(s) constrained)
+128	-2223.40	107793.41633	0.12097	(1 component(s) constrained)
+129	-2223.65	107772.44316	0.12097	(1 component(s) constrained)
+130	-2223.37	107781.69020	0.12097	(1 component(s) constrained)
+131	-2223.18	107786.32862	0.12097	(1 component(s) constrained)
+132	-2223.67	107779.33937	0.12097	(1 component(s) constrained)
+133	-2223.22	107783.48408	0.12097	(1 component(s) constrained)
+134	-2222.99	107779.47034	0.12097	(1 component(s) constrained)
+135	-2222.99	107790.61614	0.12097	(1 component(s) constrained)
+136	-2223.12	107771.16924	0.12097	(1 component(s) constrained)
+137	-2223.25	107791.47673	0.12097	(1 component(s) constrained)
+138	-2222.98	107805.56592	0.12097	(1 component(s) constrained)
+139	-2223.09	107802.48143	0.12097	(1 component(s) constrained)
+140	-2222.81	107794.26248	0.12097	(1 component(s) constrained)
+141	-2222.72	107772.97889	0.12097	(1 component(s) constrained)
+142	-2223.39	107788.49232	0.12097	(1 component(s) constrained)
+143	-2222.89	107788.54081	0.12097	(1 component(s) constrained)
+144	-2222.97	107778.79178	0.12097	(1 component(s) constrained)
+145	-2222.84	107789.06165	0.12097	(1 component(s) constrained)
+146	-2223.00	107793.06232	0.12097	(1 component(s) constrained)
+147	-2223.34	107799.11065	0.12097	(1 component(s) constrained)
+148	-2223.13	107803.47713	0.12097	(1 component(s) constrained)
+149	-2223.89	107792.08816	0.12097	(1 component(s) constrained)
+150	-2223.17	107783.29263	0.12097	(1 component(s) constrained)
+151	-2222.55	107785.33459	0.12097	(1 component(s) constrained)
+152	-2222.68	107799.18608	0.12097	(1 component(s) constrained)
+153	-2222.44	107785.67217	0.12097	(1 component(s) constrained)
+154	-2223.54	107787.17008	0.12097	(1 component(s) constrained)
+155	-2222.80	107791.51198	0.12097	(1 component(s) constrained)
+156	-2222.81	107795.40916	0.12097	(1 component(s) constrained)
+Log-likelihood ratio converged.
+
+Calculating the logLikelihood for the reduced model ...
+(variance component 1 is dropped from the model)
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 114253.45187
+logL: -2228.88250
+Running AI-REML algorithm ...
+Iter.	logL	V(e)	
+1	-2228.59	114204.90453	
+2	-2228.59	114099.93095	
+3	-2228.59	114100.02735	
+Log-likelihood ratio converged.
+
+Summary result of REML analysis:
+Source	Variance	SE
+V(G)	107795.409159	90330.302414
+V(e)	0.120966	91079.213522
+Vp	107795.530125	8107.111367
+V(G)/Vp	0.999999	0.844926
+
+Sampling variance/covariance of the estimates of variance components:
+8.159564e+09	-8.194631e+09	
+-8.194631e+09	8.295423e+09	
+Estimatesof fixed effects:
+
+Source	Estimate	SE
+mean	901.640536	37.098587
+X_2	-0.371758	35.120900
+X_3	-154.593534	67.142854
+X_4	-194.635819	59.040856
+X_5	-131.858009	69.397531
+X_6	-75.857797	60.674651
+X_7	-200.635743	51.988335
+X_8	71.630590	70.614888
+
+Summary result of REML analysis has been saved in the file [/raid/genevol/users/lucas/heritability/03.Heritability/Results/V2/HLA-DRB1/NAfrHLA-DRB11.hsq].
+
+Analysis finished at 23:25:16 -03 on Wed Jun 09 2021
+Overall computational time: 4.10 sec.

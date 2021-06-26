@@ -1,0 +1,323 @@
+*******************************************************************
+* Genome-wide Complex Trait Analysis (GCTA)
+* version 1.93.2 beta Linux
+* (C) 2010-present, Jian Yang, The University of Queensland
+* Please report bugs to Jian Yang <jian.yang.qt@gmail.com>
+*******************************************************************
+Analysis started at 23:28:35 -03 on Wed Jun 09 2021.
+Hostname: darwin
+
+Accepted options:
+--reml
+--reml-alg 0
+--reml-maxit 1000
+--grm /scratch/genevol/users/lucas/V3/grmNAfr
+--pheno /raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DRB1.txt
+--covar /raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt
+--reml-est-fix
+--out /raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-DRB1/NAfrHLA-DRB10
+
+Note: This is a multi-thread program. You could specify the number of threads by the --thread-num option to speed up the computation if there are multiple processors in your machine.
+
+Reading IDs of the GRM from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.id].
+358 IDs read from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.id].
+Reading the GRM from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.bin].
+GRM for 358 individuals are included from [/scratch/genevol/users/lucas/V3/grmNAfr.grm.bin].
+Reading phenotypes from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DRB1.txt].
+Non-missing phenotypes of 358 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/geneNAfrHLA-DRB1.txt].
+Reading discrete covariate(s) from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt].
+3 discrete covariate(s) of 445 individuals are included from [/raid/genevol/users/lucas/heritability/02.GCTA/data/envir0.txt].
+
+3 discrete variable(s) included as covariate(s).
+358 individuals are in common in these files.
+
+Performing  REML analysis ... (Note: may take hours depending on sample size).
+358 observations, 11 fixed effect(s), and 2 variance component(s)(including residual variance).
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 54752.4 54227.1
+logL: -2189.68
+Running AI-REML algorithm ...
+Iter.	logL	V(G)	V(e)	
+1	-2186.75	102084.20651	0.12097	(1 component(s) constrained)
+2	-2184.44	98710.55180	0.12097	(1 component(s) constrained)
+3	-2184.05	96584.75402	0.12097	(1 component(s) constrained)
+4	-2183.46	92233.59955	0.12097	(1 component(s) constrained)
+5	-2184.51	92419.49032	0.12097	(1 component(s) constrained)
+6	-2184.75	92429.75105	0.12097	(1 component(s) constrained)
+7	-2184.09	92411.35349	0.12097	(1 component(s) constrained)
+8	-2183.73	92431.14538	0.12097	(1 component(s) constrained)
+9	-2183.61	92435.73363	0.12097	(1 component(s) constrained)
+10	-2184.04	92420.12236	0.12097	(1 component(s) constrained)
+11	-2182.83	92427.40086	0.12097	(1 component(s) constrained)
+12	-2183.44	92426.88685	0.12097	(1 component(s) constrained)
+13	-2184.56	92427.11212	0.12097	(1 component(s) constrained)
+14	-2183.33	92437.70047	0.12097	(1 component(s) constrained)
+15	-2184.18	92430.40008	0.12097	(1 component(s) constrained)
+16	-2184.27	92434.96469	0.12097	(1 component(s) constrained)
+17	-2184.92	92400.25009	0.12097	(1 component(s) constrained)
+18	-2183.98	92432.44270	0.12097	(1 component(s) constrained)
+19	-2183.36	92464.84678	0.12097	(1 component(s) constrained)
+20	-2185.03	92416.70676	0.12097	(1 component(s) constrained)
+21	-2183.82	92426.64554	0.12097	(1 component(s) constrained)
+22	-2183.73	92426.66011	0.12097	(1 component(s) constrained)
+23	-2182.75	92405.71099	0.12097	(1 component(s) constrained)
+24	-2184.56	92439.66265	0.12097	(1 component(s) constrained)
+25	-2184.78	92412.75311	0.12097	(1 component(s) constrained)
+26	-2184.97	92427.19738	0.12097	(1 component(s) constrained)
+27	-2183.36	92436.22644	0.12097	(1 component(s) constrained)
+28	-2184.09	92431.22445	0.12097	(1 component(s) constrained)
+29	-2185.04	92416.98282	0.12097	(1 component(s) constrained)
+30	-2183.63	92385.84394	0.12097	(1 component(s) constrained)
+31	-2182.80	92395.59277	0.12097	(1 component(s) constrained)
+32	-2184.21	92408.86931	0.12097	(1 component(s) constrained)
+33	-2182.84	92417.65739	0.12097	(1 component(s) constrained)
+34	-2184.53	92418.10516	0.12097	(1 component(s) constrained)
+35	-2183.70	92438.74262	0.12097	(1 component(s) constrained)
+36	-2184.54	92415.96184	0.12097	(1 component(s) constrained)
+37	-2183.28	92422.83808	0.12097	(1 component(s) constrained)
+38	-2184.10	92414.87194	0.12097	(1 component(s) constrained)
+39	-2184.29	92425.31524	0.12097	(1 component(s) constrained)
+40	-2184.93	92450.76426	0.12097	(1 component(s) constrained)
+41	-2184.16	92435.99341	0.12097	(1 component(s) constrained)
+42	-2184.45	92424.06368	0.12097	(1 component(s) constrained)
+43	-2184.42	92408.92307	0.12097	(1 component(s) constrained)
+44	-2183.32	92421.22841	0.12097	(1 component(s) constrained)
+45	-2184.10	92417.82064	0.12097	(1 component(s) constrained)
+46	-2184.34	92433.26048	0.12097	(1 component(s) constrained)
+47	-2183.55	92407.85049	0.12097	(1 component(s) constrained)
+48	-2184.39	92421.06284	0.12097	(1 component(s) constrained)
+49	-2185.65	92409.59034	0.12097	(1 component(s) constrained)
+50	-2184.62	92408.91693	0.12097	(1 component(s) constrained)
+51	-2183.06	92414.13813	0.12097	(1 component(s) constrained)
+52	-2184.08	92420.43925	0.12097	(1 component(s) constrained)
+53	-2183.85	92416.49780	0.12097	(1 component(s) constrained)
+54	-2183.64	92394.80213	0.12097	(1 component(s) constrained)
+55	-2183.96	92422.43540	0.12097	(1 component(s) constrained)
+56	-2184.42	92414.72652	0.12097	(1 component(s) constrained)
+57	-2183.64	92401.59937	0.12097	(1 component(s) constrained)
+58	-2184.97	92417.05299	0.12097	(1 component(s) constrained)
+59	-2184.06	92401.52266	0.12097	(1 component(s) constrained)
+60	-2183.09	92393.68417	0.12097	(1 component(s) constrained)
+61	-2184.52	92412.73021	0.12097	(1 component(s) constrained)
+62	-2184.25	92422.48426	0.12097	(1 component(s) constrained)
+63	-2184.42	92417.65746	0.12097	(1 component(s) constrained)
+64	-2184.14	92406.65513	0.12097	(1 component(s) constrained)
+65	-2184.05	92433.39810	0.12097	(1 component(s) constrained)
+66	-2183.35	92392.84037	0.12097	(1 component(s) constrained)
+67	-2183.40	92409.36184	0.12097	(1 component(s) constrained)
+68	-2183.80	92420.97611	0.12097	(1 component(s) constrained)
+69	-2183.84	92435.25641	0.12097	(1 component(s) constrained)
+70	-2182.85	92417.25409	0.12097	(1 component(s) constrained)
+71	-2184.61	92419.87784	0.12097	(1 component(s) constrained)
+72	-2183.96	92410.12117	0.12097	(1 component(s) constrained)
+73	-2183.37	92408.95542	0.12097	(1 component(s) constrained)
+74	-2183.35	92418.37015	0.12097	(1 component(s) constrained)
+75	-2183.95	92389.35503	0.12097	(1 component(s) constrained)
+76	-2184.15	92396.84316	0.12097	(1 component(s) constrained)
+77	-2183.71	92392.38474	0.12097	(1 component(s) constrained)
+78	-2183.13	92432.26398	0.12097	(1 component(s) constrained)
+79	-2183.81	92411.67340	0.12097	(1 component(s) constrained)
+80	-2183.08	92417.46020	0.12097	(1 component(s) constrained)
+81	-2183.53	92418.89801	0.12097	(1 component(s) constrained)
+82	-2184.68	92419.87713	0.12097	(1 component(s) constrained)
+83	-2184.17	92402.27544	0.12097	(1 component(s) constrained)
+84	-2184.10	92411.13087	0.12097	(1 component(s) constrained)
+85	-2182.95	92429.92052	0.12097	(1 component(s) constrained)
+86	-2184.18	92429.28496	0.12097	(1 component(s) constrained)
+87	-2183.88	92405.33320	0.12097	(1 component(s) constrained)
+88	-2184.32	92389.83518	0.12097	(1 component(s) constrained)
+89	-2183.36	92408.49458	0.12097	(1 component(s) constrained)
+90	-2184.02	92418.07556	0.12097	(1 component(s) constrained)
+91	-2183.52	92438.19728	0.12097	(1 component(s) constrained)
+92	-2184.28	92439.95598	0.12097	(1 component(s) constrained)
+93	-2183.46	92411.71571	0.12097	(1 component(s) constrained)
+94	-2183.78	92454.29919	0.12097	(1 component(s) constrained)
+95	-2183.94	92410.03755	0.12097	(1 component(s) constrained)
+96	-2184.47	92398.07169	0.12097	(1 component(s) constrained)
+97	-2183.49	92427.35328	0.12097	(1 component(s) constrained)
+98	-2184.77	92407.97063	0.12097	(1 component(s) constrained)
+99	-2183.52	92423.32050	0.12097	(1 component(s) constrained)
+100	-2184.53	92415.10378	0.12097	(1 component(s) constrained)
+101	-2184.91	92417.50035	0.12097	(1 component(s) constrained)
+102	-2183.53	92422.41707	0.12097	(1 component(s) constrained)
+103	-2183.89	92426.16525	0.12097	(1 component(s) constrained)
+104	-2183.66	92430.61947	0.12097	(1 component(s) constrained)
+105	-2184.99	92402.80084	0.12097	(1 component(s) constrained)
+106	-2183.65	92415.55730	0.12097	(1 component(s) constrained)
+107	-2184.04	92411.83298	0.12097	(1 component(s) constrained)
+108	-2183.75	92420.37261	0.12097	(1 component(s) constrained)
+109	-2184.57	92433.37924	0.12097	(1 component(s) constrained)
+110	-2184.10	92431.17633	0.12097	(1 component(s) constrained)
+111	-2183.18	92414.68806	0.12097	(1 component(s) constrained)
+112	-2184.39	92413.01411	0.12097	(1 component(s) constrained)
+113	-2184.37	92407.41789	0.12097	(1 component(s) constrained)
+114	-2184.41	92440.55118	0.12097	(1 component(s) constrained)
+115	-2183.23	92408.47053	0.12097	(1 component(s) constrained)
+116	-2184.26	92412.49849	0.12097	(1 component(s) constrained)
+117	-2183.27	92432.85900	0.12097	(1 component(s) constrained)
+118	-2184.95	92422.99235	0.12097	(1 component(s) constrained)
+119	-2184.64	92429.42127	0.12097	(1 component(s) constrained)
+120	-2184.56	92426.28916	0.12097	(1 component(s) constrained)
+121	-2184.10	92393.96258	0.12097	(1 component(s) constrained)
+122	-2183.34	92415.70010	0.12097	(1 component(s) constrained)
+123	-2183.34	92416.44136	0.12097	(1 component(s) constrained)
+124	-2183.53	92414.44597	0.12097	(1 component(s) constrained)
+125	-2184.70	92422.74382	0.12097	(1 component(s) constrained)
+126	-2183.82	92414.96446	0.12097	(1 component(s) constrained)
+127	-2183.54	92440.18159	0.12097	(1 component(s) constrained)
+128	-2183.72	92412.50614	0.12097	(1 component(s) constrained)
+129	-2183.22	92410.94470	0.12097	(1 component(s) constrained)
+130	-2183.51	92432.45530	0.12097	(1 component(s) constrained)
+131	-2185.20	92441.62855	0.12097	(1 component(s) constrained)
+132	-2183.92	92410.25321	0.12097	(1 component(s) constrained)
+133	-2184.68	92415.54557	0.12097	(1 component(s) constrained)
+134	-2183.82	92412.76771	0.12097	(1 component(s) constrained)
+135	-2183.70	92407.77048	0.12097	(1 component(s) constrained)
+136	-2185.14	92422.68642	0.12097	(1 component(s) constrained)
+137	-2183.60	92421.48737	0.12097	(1 component(s) constrained)
+138	-2184.98	92424.54524	0.12097	(1 component(s) constrained)
+139	-2184.56	92416.88780	0.12097	(1 component(s) constrained)
+140	-2183.43	92419.15325	0.12097	(1 component(s) constrained)
+141	-2183.77	92424.61341	0.12097	(1 component(s) constrained)
+142	-2184.18	92400.86228	0.12097	(1 component(s) constrained)
+143	-2183.26	92421.98502	0.12097	(1 component(s) constrained)
+144	-2183.61	92427.98937	0.12097	(1 component(s) constrained)
+145	-2183.48	92432.62454	0.12097	(1 component(s) constrained)
+146	-2184.18	92422.49495	0.12097	(1 component(s) constrained)
+147	-2183.42	92431.55678	0.12097	(1 component(s) constrained)
+148	-2183.39	92413.57274	0.12097	(1 component(s) constrained)
+149	-2183.39	92423.42185	0.12097	(1 component(s) constrained)
+150	-2182.49	92432.50211	0.12097	(1 component(s) constrained)
+151	-2184.79	92426.39668	0.12097	(1 component(s) constrained)
+152	-2183.71	92419.79930	0.12097	(1 component(s) constrained)
+153	-2184.62	92421.59932	0.12097	(1 component(s) constrained)
+154	-2184.75	92418.28423	0.12097	(1 component(s) constrained)
+155	-2183.57	92441.66619	0.12097	(1 component(s) constrained)
+156	-2184.03	92438.30825	0.12097	(1 component(s) constrained)
+157	-2183.48	92419.77533	0.12097	(1 component(s) constrained)
+158	-2183.30	92433.78396	0.12097	(1 component(s) constrained)
+159	-2183.27	92424.80511	0.12097	(1 component(s) constrained)
+160	-2183.56	92414.50463	0.12097	(1 component(s) constrained)
+161	-2183.64	92407.68332	0.12097	(1 component(s) constrained)
+162	-2184.36	92422.37458	0.12097	(1 component(s) constrained)
+163	-2183.95	92425.29734	0.12097	(1 component(s) constrained)
+164	-2184.48	92402.77444	0.12097	(1 component(s) constrained)
+165	-2184.07	92415.50661	0.12097	(1 component(s) constrained)
+166	-2184.05	92412.16891	0.12097	(1 component(s) constrained)
+167	-2183.13	92437.82715	0.12097	(1 component(s) constrained)
+168	-2183.84	92411.75958	0.12097	(1 component(s) constrained)
+169	-2183.30	92423.47215	0.12097	(1 component(s) constrained)
+170	-2183.20	92398.12626	0.12097	(1 component(s) constrained)
+171	-2184.11	92425.89622	0.12097	(1 component(s) constrained)
+172	-2183.60	92408.41074	0.12097	(1 component(s) constrained)
+173	-2183.94	92416.91638	0.12097	(1 component(s) constrained)
+174	-2184.37	92427.24791	0.12097	(1 component(s) constrained)
+175	-2184.44	92433.78232	0.12097	(1 component(s) constrained)
+176	-2183.01	92436.08479	0.12097	(1 component(s) constrained)
+177	-2184.14	92434.23376	0.12097	(1 component(s) constrained)
+178	-2183.90	92408.02083	0.12097	(1 component(s) constrained)
+179	-2184.00	92396.92468	0.12097	(1 component(s) constrained)
+180	-2183.99	92403.57894	0.12097	(1 component(s) constrained)
+181	-2183.53	92419.83764	0.12097	(1 component(s) constrained)
+182	-2184.84	92427.87992	0.12097	(1 component(s) constrained)
+183	-2183.89	92396.19975	0.12097	(1 component(s) constrained)
+184	-2183.59	92422.90600	0.12097	(1 component(s) constrained)
+185	-2184.16	92418.58877	0.12097	(1 component(s) constrained)
+186	-2184.42	92410.68231	0.12097	(1 component(s) constrained)
+187	-2182.90	92437.66859	0.12097	(1 component(s) constrained)
+188	-2184.56	92435.29419	0.12097	(1 component(s) constrained)
+189	-2183.56	92405.37166	0.12097	(1 component(s) constrained)
+190	-2184.93	92420.47457	0.12097	(1 component(s) constrained)
+191	-2183.27	92420.61385	0.12097	(1 component(s) constrained)
+192	-2183.31	92422.83897	0.12097	(1 component(s) constrained)
+193	-2184.25	92419.99167	0.12097	(1 component(s) constrained)
+194	-2184.71	92425.83875	0.12097	(1 component(s) constrained)
+195	-2184.57	92407.84244	0.12097	(1 component(s) constrained)
+196	-2183.32	92422.29636	0.12097	(1 component(s) constrained)
+197	-2183.86	92422.26235	0.12097	(1 component(s) constrained)
+198	-2184.56	92416.10067	0.12097	(1 component(s) constrained)
+199	-2183.43	92409.39394	0.12097	(1 component(s) constrained)
+200	-2184.33	92414.10630	0.12097	(1 component(s) constrained)
+201	-2184.39	92414.71780	0.12097	(1 component(s) constrained)
+202	-2184.21	92455.90920	0.12097	(1 component(s) constrained)
+203	-2185.38	92422.74995	0.12097	(1 component(s) constrained)
+204	-2183.51	92419.97370	0.12097	(1 component(s) constrained)
+205	-2183.73	92419.35353	0.12097	(1 component(s) constrained)
+206	-2182.68	92418.51600	0.12097	(1 component(s) constrained)
+207	-2183.72	92408.48109	0.12097	(1 component(s) constrained)
+208	-2183.62	92423.19681	0.12097	(1 component(s) constrained)
+209	-2184.03	92416.61284	0.12097	(1 component(s) constrained)
+210	-2183.08	92439.18019	0.12097	(1 component(s) constrained)
+211	-2183.54	92412.69353	0.12097	(1 component(s) constrained)
+212	-2183.33	92428.00852	0.12097	(1 component(s) constrained)
+213	-2184.03	92393.84758	0.12097	(1 component(s) constrained)
+214	-2183.22	92435.92732	0.12097	(1 component(s) constrained)
+215	-2183.92	92413.55463	0.12097	(1 component(s) constrained)
+216	-2183.96	92411.17090	0.12097	(1 component(s) constrained)
+217	-2183.36	92446.22563	0.12097	(1 component(s) constrained)
+218	-2183.76	92415.07275	0.12097	(1 component(s) constrained)
+219	-2183.95	92418.65730	0.12097	(1 component(s) constrained)
+220	-2183.03	92408.92132	0.12097	(1 component(s) constrained)
+221	-2184.40	92423.84833	0.12097	(1 component(s) constrained)
+222	-2183.19	92402.30145	0.12097	(1 component(s) constrained)
+223	-2184.29	92406.45524	0.12097	(1 component(s) constrained)
+224	-2184.98	92423.98032	0.12097	(1 component(s) constrained)
+225	-2184.63	92408.52127	0.12097	(1 component(s) constrained)
+226	-2183.72	92413.53391	0.12097	(1 component(s) constrained)
+227	-2183.98	92440.36040	0.12097	(1 component(s) constrained)
+228	-2184.44	92417.42493	0.12097	(1 component(s) constrained)
+229	-2184.77	92413.83019	0.12097	(1 component(s) constrained)
+230	-2183.81	92418.83980	0.12097	(1 component(s) constrained)
+231	-2183.62	92432.50821	0.12097	(1 component(s) constrained)
+232	-2183.63	92433.47348	0.12097	(1 component(s) constrained)
+233	-2184.36	92410.26732	0.12097	(1 component(s) constrained)
+234	-2184.02	92442.26240	0.12097	(1 component(s) constrained)
+235	-2183.98	92420.32002	0.12097	(1 component(s) constrained)
+236	-2183.65	92413.18385	0.12097	(1 component(s) constrained)
+237	-2183.86	92429.18633	0.12097	(1 component(s) constrained)
+238	-2183.86	92427.87488	0.12097	(1 component(s) constrained)
+Log-likelihood ratio converged.
+
+Calculating the logLikelihood for the reduced model ...
+(variance component 1 is dropped from the model)
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 97653.29579
+logL: -2191.28644
+Running AI-REML algorithm ...
+Iter.	logL	V(e)	
+1	-2187.33	97417.98715	
+2	-2187.32	97257.98952	
+3	-2187.32	96913.06454	
+4	-2187.32	96914.28348	
+5	-2187.32	96914.28349	
+Log-likelihood ratio converged.
+
+Summary result of REML analysis:
+Source	Variance	SE
+V(G)	92427.874884	107851.562710
+V(e)	0.120966	108486.978263
+Vp	92427.995850	6946.966116
+V(G)/Vp	0.999999	1.173746
+
+Sampling variance/covariance of the estimates of variance components:
+1.163196e+10	-1.167656e+10	
+-1.167656e+10	1.176942e+10	
+Estimatesof fixed effects:
+
+Source	Estimate	SE
+mean	1103.370999	46.911608
+X_2	-6.113721	32.596740
+X_3	-123.297215	62.278939
+X_4	-190.018716	54.722309
+X_5	-143.897575	64.376038
+X_6	-88.398712	56.199115
+X_7	-216.611883	48.146277
+X_8	68.586912	65.524969
+X_9	-288.264855	63.912476
+X_10	-349.694717	46.808896
+X_11	-148.693505	55.257441
+
+Summary result of REML analysis has been saved in the file [/raid/genevol/users/lucas/heritability/03.Heritability/Results/V3/HLA-DRB1/NAfrHLA-DRB10.hsq].
+
+Analysis finished at 23:28:39 -03 on Wed Jun 09 2021
+Overall computational time: 3.75 sec.
