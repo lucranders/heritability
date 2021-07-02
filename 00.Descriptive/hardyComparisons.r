@@ -35,17 +35,17 @@ finalPltDf = merge(hweDf,refDf)
 
 qqman::manhattan(finalPltDf %>% filter(Sample == 'NAfr'),suggestiveline =  -log10(1e-04),main = "HW disequilibrium, considering only europeans which phenotype is known (n=358)")
 p = recordPlot()
-g = grid::grid.grabExpr(grid.echo(p))
+g = grid::grid.grabExpr(grid::grid.echo(p))
 ggsave("/raid/genevol/users/lucas/heritability/00.Descriptive/Images/Hardy/nAfr.png", g, bg = "transparent")
 
 qqman::manhattan(finalPltDf %>% filter(Sample == 'Geuvadis'),suggestiveline =  -log10(1e-04), main = "HW disequilibrium, considering only individuals which phenotype is known (n=445)")
 p = recordPlot()
-g = grid::grid.grabExpr(grid.echo(p))
+g = grid::grid.grabExpr(grid::grid.echo(p))
 ggsave("/raid/genevol/users/lucas/heritability/00.Descriptive/Images/Hardy/geuvadis.png", g, bg = "transparent")
 
 qqman::manhattan(finalPltDf %>% filter(Sample == 'Full'),suggestiveline =  -log10(1e-04), main = "HW disequilibrium, all genotyped individuals (n=2504)")
 p = recordPlot()
-g = grid::grid.grabExpr(grid.echo(p))
+g = grid::grid.grabExpr(grid::grid.echo(p))
 ggsave("/raid/genevol/users/lucas/heritability/00.Descriptive/Images/Hardy/Full.png", g, bg = "transparent")
 
 table(finalPltDf$CHR)
