@@ -22,8 +22,8 @@ samp=/raid/genevol/users/lucas/heritability/02.GCTA/data/nAfr.txt
 samp2=/raid/genevol/users/lucas/heritability/02.GCTA/data/samples.txt
 
 echo ${chr}
-plink --vcf $input --hardy --vcf-half-call missing --keep $samp --out $output
-plink --vcf $input --hardy --vcf-half-call missing --keep $samp2 --out $output2
-plink --vcf $input --hardy --vcf-half-call missing --out $output3
+plink --vcf $input --hardy --freq --vcf-half-call missing --keep $samp --out $output
+plink --vcf $input --hardy --freq --vcf-half-call missing --keep $samp2 --out $output2
+plink --vcf $input --hardy --freq --vcf-half-call missing --out $output3
 
 done
