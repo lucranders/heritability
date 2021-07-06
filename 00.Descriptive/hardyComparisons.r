@@ -142,9 +142,17 @@ for(idx_ in 1:3){
 plotMHwe = manhattanPlt(dfPltManhattanHwe,dfPltAxisManhattanHwe,4,'hwe')
 ggsave(paste0(rootSave,'allFramesHwe',".png"), plotMHwe, bg = "transparent",width=4, height=6, dpi=300)
 
-plotMMaf = manhattanPlt(dfPltManhattanMaf,dfPltAxisManhattanMaf,.01,'maf')
-ggsave(paste0(rootSave,'allFramesMaf',".png"), plotMMaf, bg = "transparent",width=6, height=4, dpi=300)
-#savePlt(finalPltDf,'NAfr',rootSave,'europeansOnly')
-#savePlt(finalPltDf,'Geuvadis',rootSave,'Geuvadis')
-#savePlt(finalPltDf,'Full',rootSave,'everyone')
-#table(finalPltDf$CHR)
+dfMaf = NULL
+cuts = c(.001 , .005 , (1:5)/100)
+for(cut_ in cuts){
+  dfSum = dfPltManhattanMaf %>% filter(MAF <= cut_) %>% group_by(Sample,CHR) %>% summarise(n=n()) %>% ungroup() %>% mutate(cut = cut_)
+  dfMaf = rbind(dfMaf,dfSum)
+}
+knitr::kable(dfMaf)
+
+plotMaf = dfMaf %>% ggplot(aes(x = CHR,y=n , colour = cut)) + 
+geom_point() +
+geom_line() + 
+facet_wrap(~Sample) +
+labs(x = 'Chromosome',y='Frequency',main = "Frequency of alleles cut by MAF" , colour = 'Cut')
+ggsave(paste0(rootSave,'allFramesMaf',".png"), plotMaf, bg = "transparent",width=4, height=6, dpi=300)
