@@ -27,7 +27,7 @@ manhattanPltDf = function(df_,samp_){
 manhattanPlt = function(dfPrep_,axisdf_,cutPoint_,type_){
 #adapted from:https://www.r-graph-gallery.com/101_Manhattan_plot.html
 
-  if(type == 'hwe'){
+  if(type_ == 'hwe'){
     plt0 = ggplot(dfPrep_, aes(x=BPcum, y=-log10(P)))
   } else{
     plt0 = ggplot(dfPrep_, aes(x=BPcum, y=MAF))
@@ -80,19 +80,19 @@ for(i in 1:22){
     auxNafrHwe = data.table::fread(paste0(root,'Hardy_NAfr_chr',i,'.hwe'), header = T,select = c('CHR' , 'SNP' , 'P')) %>% 
     mutate(Sample = 'NAfr') # Labelling df
     # Maf from individuals whose phenotype is known, considering only europeans (n=358)
-    auxNafrMaf = data.table::fread(paste0(root,'Hardy_NAfr_chr',i,'.freq'), header = T,select = c('CHR' , 'SNP' , 'MAF')) %>% 
+    auxNafrMaf = data.table::fread(paste0(root,'Maf/Hardy_NAfr_chr',i,'.frq'), header = T,select = c('CHR' , 'SNP' , 'MAF')) %>% 
     mutate(Sample = 'NAfr') # Labelling df
     # Hwe test from individuals whose phenotype is known (n=445)
     auxGeuvadisHwe = data.table::fread(paste0(root,'Hardy_Geuvadis_chr',i,'.hwe'), header = T,select = c('CHR' , 'SNP' , 'P')) %>% 
     mutate(Sample = 'Geuvadis') # Labelling df
     # Maf from individuals whose phenotype is known (n=445)
-    auxGeuvadisMaf = data.table::fread(paste0(root,'Hardy_Geuvadis_chr',i,'.freq'), header = T,select = c('CHR' , 'SNP' , 'MAF')) %>% 
+    auxGeuvadisMaf = data.table::fread(paste0(root,'Maf/Hardy_Geuvadis_chr',i,'.frq'), header = T,select = c('CHR' , 'SNP' , 'MAF')) %>% 
     mutate(Sample = 'Geuvadis') # Labelling df
     # Hwe test from all genotyped individuals (n=2504)
     auxFullHwe = data.table::fread(paste0(root,'Hardy_Full_chr',i,'.hwe'), header = T,select = c('CHR' , 'SNP' , 'P')) %>% 
     mutate(Sample = 'Full') # Labelling df
     # Maf from all genotyped individuals (n=2504)
-    auxFullMaf = data.table::fread(paste0(root,'Hardy_Full_chr',i,'.freq'), header = T,select = c('CHR' , 'SNP' , 'MAF')) %>% 
+    auxFullMaf = data.table::fread(paste0(root,'Maf/Hardy_Full_chr',i,'.frq'), header = T,select = c('CHR' , 'SNP' , 'MAF')) %>% 
     mutate(Sample = 'Full') # Labelling df
     # Reading SNP's position
     auxRef = data.table::fread(paste0(root,'basicInfoChr',i,'.txt'), header = F)
@@ -120,19 +120,19 @@ dfPltAxisManhattanMaf = NULL
 
 filters_ = c('NAfr','Geuvadis','Full')
 names_ = c('Only europeans' , 'Known phenotypes' , 'All genotyped individuals')
-for(samp_ in 1:3){
+for(idx_ in 1:3){
 
-    print(paste0('HWE, sample:',samp_))
-    auxFiltHwe = finalPltDfHwe %>% filter(Sample == samp_)
-    auxListHwe = manhattanPltDf(auxFiltHwe,samp_)
+    print(paste0('HWE, sample:',names_[idx_]))
+    auxFiltHwe = finalPltDfHwe %>% filter(Sample == filters_[idx_])
+    auxListHwe = manhattanPltDf(auxFiltHwe,names_[idx_])
     dfPltManhattanHwe = rbind(dfPltManhattanHwe , auxListHwe[[1]])
     dfPltAxisManhattanHwe = rbind(dfPltAxisManhattanHwe , auxListHwe[[2]])
     auxListHwe = NULL
     auxFiltHwe = NULL
 
-    print(paste0('MAF, sample:',samp_))
-    auxFiltMaf = finalPltDfMaf %>% filter(Sample == samp_)
-    auxListMaf = manhattanPltDf(auxFiltMaf,samp_)
+    print(paste0('MAF, sample:',names_[idx_]))
+    auxFiltMaf = finalPltDfMaf %>% filter(Sample == filters_[idx_])
+    auxListMaf = manhattanPltDf(auxFiltMaf,names_[idx_])
     dfPltManhattanMaf = rbind(dfPltManhattanMaf , auxListMaf[[1]])
     dfPltAxisManhattanMaf = rbind(dfPltAxisManhattanMaf , auxListMaf[[2]])
     auxListMaf = NULL
@@ -140,10 +140,10 @@ for(samp_ in 1:3){
 }
 
 plotMHwe = manhattanPlt(dfPltManhattanHwe,dfPltAxisManhattanHwe,4,'hwe')
-ggsave(paste0(rootSave,'allFramesHwe',".png"), plotMHwe, bg = "transparent")
+ggsave(paste0(rootSave,'allFramesHwe',".png"), plotMHwe, bg = "transparent",width=4, height=6, dpi=300)
 
 plotMMaf = manhattanPlt(dfPltManhattanMaf,dfPltAxisManhattanMaf,.01,'maf')
-ggsave(paste0(rootSave,'allFramesMaf',".png"), plotMMaf, bg = "transparent")
+ggsave(paste0(rootSave,'allFramesMaf',".png"), plotMMaf, bg = "transparent",width=6, height=4, dpi=300)
 #savePlt(finalPltDf,'NAfr',rootSave,'europeansOnly')
 #savePlt(finalPltDf,'Geuvadis',rootSave,'Geuvadis')
 #savePlt(finalPltDf,'Full',rootSave,'everyone')
