@@ -1,5 +1,6 @@
 suppressMessages(suppressWarnings(library(dplyr)))
 suppressMessages(suppressWarnings(library(ggplot2)))
+suppressMessages(suppressWarnings(library(gtable)))
 
 manhattanPltDf = function(df_,samp_){
 #adapted from:https://www.r-graph-gallery.com/101_Manhattan_plot.html
@@ -139,20 +140,74 @@ for(idx_ in 1:3){
 
 }
 
+Sys.time()
 plotMHwe = manhattanPlt(dfPltManhattanHwe,dfPltAxisManhattanHwe,4,'hwe')
-ggsave(paste0(rootSave,'allFramesHwe',".png"), plotMHwe, bg = "transparent",width=4, height=6, dpi=300)
+ggsave(paste0(rootSave,'allFramesHwe',".png"), plotMHwe, bg = "transparent",width=12, height=6, dpi=300)
+Sys.time()
+
+dfHwe = NULL
+cuts = c(.05 , 1e-2 , 1e-3 , 1e-4 , 1e-5 , 1e-6 , 1e-7 , 1e-8 )
+totSnps = dfPltManhattanMaf %>% group_by(Sample,CHR) %>% summarise(nTot=n()) %>% ungroup()
+for(cut_ in cuts){
+  print(cut_)
+  dfCuts = merge(
+    finalPltDfHwe %>% filter(P <= cut_) %>% group_by(Sample,CHR) %>% summarise(n=n()) %>% ungroup() %>% mutate(cut = cut_)
+    ,
+    totSnps
+  )
+  dfHwe = rbind(dfHwe,dfCuts)
+}
+
+
+dfHwe = dfHwe %>% mutate(freq = n/nTot)
 
 dfMaf = NULL
 cuts = c(.001 , .005 , (1:5)/100)
+
 for(cut_ in cuts){
-  dfSum = dfPltManhattanMaf %>% filter(MAF <= cut_) %>% group_by(Sample,CHR) %>% summarise(n=n()) %>% ungroup() %>% mutate(cut = cut_)
-  dfMaf = rbind(dfMaf,dfSum)
+  print(cut_)
+  dfCuts = merge(
+    dfPltManhattanMaf %>% filter(MAF <= cut_) %>% group_by(Sample,CHR) %>% summarise(n=n()) %>% ungroup() %>% mutate(cut = cut_)
+    ,
+    totSnps
+  )
+  dfMaf = rbind(dfMaf,dfCuts)
 }
+
+dfMaf = dfMaf %>% mutate(freq = n/nTot)
+
 knitr::kable(dfMaf)
 
-plotMaf = dfMaf %>% ggplot(aes(x = CHR,y=n , colour = cut)) + 
+plotMafLog = dfMaf %>% ggplot(aes(x = CHR,y=log10(n) , colour = as.factor(cut))) + 
 geom_point() +
 geom_line() + 
-facet_wrap(~Sample) +
-labs(x = 'Chromosome',y='Frequency',main = "Frequency of alleles cut by MAF" , colour = 'Cut')
-ggsave(paste0(rootSave,'allFramesMaf',".png"), plotMaf, bg = "transparent",width=4, height=6, dpi=300)
+facet_wrap(~Sample,ncol = 1) +
+theme_bw() +
+theme( 
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    ) +
+labs(x = 'Chromosome',y= expression(Frequency ~ (log[10]) ) , colour = 'Cutpoint')
+
+plotMafRelativeFr = dfMaf %>% ggplot(aes(x = CHR,y = freq , colour = as.factor(cut))) + 
+geom_point() +
+geom_line() + 
+facet_wrap(~Sample,ncol = 1) +
+theme_bw() +
+theme( 
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    ) +
+labs(x = 'Chromosome',y= "Relative frequency" , colour = 'Cutpoint')
+
+grobLog = ggplotGrob(plotMafLog)
+grobLog = gtable_add_cols(grobLog,unit(0,'mm'))
+grobRel = ggplotGrob(plotMafRelativeFr)
+grobRel = gtable_add_cols(grobRel,unit(0,'mm'))
+bindGrobs = rbind(grobLog,grobRel , size = 'first')
+
+
+ggsave(paste0(rootSave,'allFramesMafx',".png"), bindGrobs, bg = "transparent",width=10, height=8, dpi=300)
+
