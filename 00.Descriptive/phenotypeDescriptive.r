@@ -7,6 +7,62 @@ listGeuvadis = read.table('/raid/genevol/heritability/samples.txt',header = F)
 colnames(listGeuvadis) = "samples"
 hlaExp = readr::read_tsv("/raid/genevol/heritability/hla_expression.tsv") %>% rename(sampleid = subject_id) %>% filter(sampleid %in% listGeuvadis$samples)
 
+# List of all unique genes of interest
+genesLoop = sort(unique(hlaExp$gene_name))
+# Creating data frame to plot assymetry
+dfSymmetryPhen = as.data.frame(NULL)
+dfGreatesValues = as.data.frame(1:5)
+idsHigher = c()
+
+for( idx_ in 1:length(genesLoop) ){
+    # For each gene:
+    gene_ = genesLoop[idx_]
+    # Filter gene associated information
+    aux = hlaExp %>% filter(gene_name == gene_)
+    top10 = aux %>% arrange(-tpm) %>% mutate(n = 1:n()) %>% filter(n <= 10) %>% select(c('sampleid','tpm'))
+    idsHigher = c(idsHigher,top10$sampleid)
+    colnames(top10) = c(paste0(gene_,'_sample') , paste0(gene_,'_tpm'))
+    dfGreatesValues = cbind(dfGreatesValues,top10)
+    # Sort in ascending order gene expression (tpm)
+    tpmSort = sort(aux$tpm)
+    # Separate ordered set in two parts:
+    # the 50% lower values - valuesInf
+    #  and the 50% greater values - valuesSup
+    # Then measure the distance to the median
+    lengthSamp = length(tpmSort)
+    sizeParts = round(lengthSamp/2)
+    valuesInf = quantile(aux$tpm,.5) - tpmSort[1:sizeParts]
+    valuesSup = tpmSort[seq(from = lengthSamp , to = (lengthSamp - sizeParts + 1))] - quantile(aux$tpm,.5)
+    # create auxiliary df to append info
+    dfAppend = as.data.frame(valuesInf)
+    dfAppend$Sup_ = valuesSup
+    dfAppend$gene_ = gene_
+    # Append in final df
+    dfSymmetryPhen = rbind(dfSymmetryPhen , dfAppend)
+}
+
+idsHigher = as.data.frame(idsHigher)
+idsHigher %>% group_by(idsHigher) %>% summarise(n=n()) %>% ungroup() %>% arrange(-n)
+write.table(dfGreatesValues[,2:7],'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/top10TpmPt1.txt',sep = '&',quote = F , row.names = F,col.names = T)
+write.table(dfGreatesValues[,8:13],'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/top10TpmPt2.txt',sep = '&',quote = F , row.names = F,col.names = T)
+write.table(dfGreatesValues[,14:19],'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/top10TpmPt3.txt',sep = '&',quote = F , row.names = F,col.names = T)
+
+# Rename column
+colnames(dfSymmetryPhen)[1] = 'Inf_'
+
+# Plot assymetry
+plotSymmetry = dfSymmetryPhen %>% ggplot(aes(x = Inf_ , y = Sup_ , colour = gene_)) +
+geom_point(alpha = .8) +
+geom_abline(intercept = 0 , slope = 1) +
+theme_bw() +
+theme( 
+      legend.position='none',
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    ) +
+facet_wrap(~gene_ , scales = 'free')+
+labs(x = "Distance from median (lower)" , y= 'Distance from median (upper)' , colour = 'Gene')
 
 # Plot phenotypes by gene (boxplot)
 boxplotGenes = hlaExp %>% ggplot(aes(x = gene_name , y=tpm , fill = gene_name)) +
@@ -20,10 +76,14 @@ theme(
     ) +
 labs(x = 'Gene',y= "Transcriptions per million" , fill = 'Gene')
 
-ggsave(paste0(rootSave,'densityPheno',".png"), boxplotGenes, bg = "transparent",width=10, height=8, dpi=300)
+# Bind plots 
+bindPlots = gridExtra::grid.arrange(boxplotGenes,plotSymmetry, ncol = 1)
+# Save plots
+ggsave(paste0(rootSave,'PhenoDensitySym',".png"), bindPlots, bg = "transparent",width=10, height=8, dpi=300)
+
+
 
 normalComparisonDf = as.data.frame(NULL)
-genesLoop = sort(unique(hlaExp$gene_name))
 
 for( idx_ in 1:length(genesLoop) ){
     
@@ -37,6 +97,8 @@ for( idx_ in 1:length(genesLoop) ){
     normalComparisonDf[idx_,'KS'] = round(100*ks_$p.value,2)
     normalComparisonDf[idx_,'AD'] = round(100*ad_$p.value,2)
     normalComparisonDf[idx_,'Ties'] = ifelse(check_ == T , 'No' , 'Yes')
+
+    normalComparisonDf[idx_,'Skewness'] = moments::skewness(aux$tpm)
     
 }
 write.table(normalComparisonDf,paste0(rootSaveTables,'normalityTest.txt'), sep = '&', quote = F,row.names = F)
