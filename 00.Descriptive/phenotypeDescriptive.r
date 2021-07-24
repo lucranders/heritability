@@ -41,14 +41,14 @@ for( idx_ in 1:length(genesLoop) ){
     dfSymmetryPhen = rbind(dfSymmetryPhen , dfAppend)
 }
 
+# Rename column
+colnames(dfSymmetryPhen)[1] = 'Inf_'
+
 idsHigher = as.data.frame(idsHigher)
 idsHigher %>% group_by(idsHigher) %>% summarise(n=n()) %>% ungroup() %>% arrange(-n)
 write.table(dfGreatesValues[,2:7],'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/top10TpmPt1.txt',sep = '&',quote = F , row.names = F,col.names = T)
 write.table(dfGreatesValues[,8:13],'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/top10TpmPt2.txt',sep = '&',quote = F , row.names = F,col.names = T)
 write.table(dfGreatesValues[,14:19],'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/top10TpmPt3.txt',sep = '&',quote = F , row.names = F,col.names = T)
-
-# Rename column
-colnames(dfSymmetryPhen)[1] = 'Inf_'
 
 # Plot assymetry
 plotSymmetry = dfSymmetryPhen %>% ggplot(aes(x = Inf_ , y = Sup_ , colour = gene_)) +
@@ -81,7 +81,34 @@ bindPlots = gridExtra::grid.arrange(boxplotGenes,plotSymmetry, ncol = 1)
 # Save plots
 ggsave(paste0(rootSave,'PhenoDensitySym',".png"), bindPlots, bg = "transparent",width=10, height=8, dpi=300)
 
+horizontalExpDf = tidyr::spread(hlaExp,gene_name,tpm)
+horizontalTpm = horizontalExpDf[,grepl('HLA|sample',colnames(horizontalExpDf))]
 
+meanExp = colMeans(horizontalTpm[,2:10])
+covExp = cov(horizontalTpm[,2:10])
+mahalanobisD = mahalanobis(horizontalTpm[,2:10],center = meanExp,cov = covExp)
+horizontalExpDf$Mahalanobis = mahalanobisD
+horizontalExpDf$idx = 1:445
+cutMahalanobis = qchisq(.99, df = 9)
+horizontalExpDf = horizontalExpDf %>% mutate(threshold = ifelse(Mahalanobis > cutMahalanobis , 'yes' , 'no'))
+
+plotMahalanobis = horizontalExpDf %>% 
+ggplot(aes(x = idx , y = Mahalanobis , colour =  threshold)) +
+geom_point() +
+geom_hline(yintercept=cutMahalanobis) +
+geom_text(data=subset(horizontalExpDf, Mahalanobis > cutMahalanobis),
+            aes(idx,Mahalanobis,label=sampleid)) +
+theme_bw() +
+theme( 
+      legend.position='none',
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    )
+
+ggsave(paste0(rootSave,'mahalanobis',".png"), plotMahalanobis, bg = "transparent",width=10, height=8, dpi=300)
+
+horizontalTpm[,2:10] = scale(horizontalTpm[,2:10],center = T , scale = T)
 
 normalComparisonDf = as.data.frame(NULL)
 
