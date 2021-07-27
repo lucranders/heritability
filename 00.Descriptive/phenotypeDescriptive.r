@@ -96,7 +96,7 @@ plotMahalanobis = horizontalExpDf %>%
 ggplot(aes(x = idx , y = Mahalanobis , colour =  threshold)) +
 geom_point() +
 geom_hline(yintercept=cutMahalanobis) +
-geom_text(data=subset(horizontalExpDf, Mahalanobis > cutMahalanobis),
+ggrepel::geom_text_repel(data=subset(horizontalExpDf, Mahalanobis > cutMahalanobis),
             aes(idx,Mahalanobis,label=sampleid)) +
 theme_bw() +
 theme( 
@@ -119,7 +119,7 @@ plotBiplot = biplotDf %>% ggplot() +
 geom_text(data=subset(biplotDf, threshold == 'yes'),
             aes(Comp.1,Comp.2,label=sampleid,colour = threshold),alpha = .7) +
 geom_text(data=subset(biplotDf, threshold == 'no'),
-            aes(Comp.1,Comp.2,label=sampleid,colour = threshold),alpha = .4) +
+            aes(Comp.1,Comp.2,label=sampleid,colour = threshold),alpha = .5) +
 geom_hline(yintercept = 0, size=.2) + 
 geom_vline(xintercept = 0, size=.2) +
 theme_bw() +
@@ -135,6 +135,27 @@ labs(x = 'Principal Component 1' , y = 'Principal Component 2')
 
 
 ggsave(paste0(rootSave,'biplotGeneExp',".png"), plotBiplot, bg = "transparent",width=10, height=8, dpi=300)
+
+samplesDf = horizontalExpDf %>% filter(threshold == 'yes') %>% select(sampleid,Mahalanobis) %>% 
+mutate(MahalanobisRound = round(Mahalanobis,2))
+for( gene_ in colnames(horizontalTpm)[-1] ){
+    # For each gene:
+    # Filter gene associated information
+    aux = hlaExp %>% filter(gene_name == gene_)
+    cdf_ = ecdf(aux$tpm)
+    aux[,gsub('-','',gene_)] = paste0(round(100*cdf_(aux$tpm),2))
+    filterSamples = aux %>% filter(sampleid %in% samplesDf$sampleid) %>% select(sampleid,gsub('-','',gene_))
+    samplesDf = merge(samplesDf ,filterSamples)
+
+}
+
+samplesDf = samplesDf %>% arrange(-Mahalanobis)
+outliersPt1 = samplesDf[,c(1,3:8)]
+outliersPt2 = samplesDf[,c(1,3,9:12)]
+
+write.table(outliersPt1,'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/multiOutPt1.txt',sep = '&',quote = F , row.names = F,col.names = T)
+write.table(outliersPt2,'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/multiOutPt2.txt',sep = '&',quote = F , row.names = F,col.names = T)
+
 
 normalComparisonDf = as.data.frame(NULL)
 
