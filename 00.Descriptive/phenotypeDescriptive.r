@@ -109,6 +109,32 @@ theme(
 ggsave(paste0(rootSave,'mahalanobis',".png"), plotMahalanobis, bg = "transparent",width=10, height=8, dpi=300)
 
 horizontalTpm[,2:10] = scale(horizontalTpm[,2:10],center = T , scale = T)
+biplotFit = princomp(x = horizontalTpm[,2:10], cor=TRUE)
+biplotDf = data.frame(sampleid = horizontalTpm[,1] , biplotFit$scores)
+biplotDf = merge(biplotDf,horizontalExpDf[,c('sampleid','threshold')])
+pcLoads = data.frame(biplotFit$loadings[,1:9])
+scaleBip = 2
+
+plotBiplot = biplotDf %>% ggplot() + 
+geom_text(data=subset(biplotDf, threshold == 'yes'),
+            aes(Comp.1,Comp.2,label=sampleid,colour = threshold),alpha = .7) +
+geom_text(data=subset(biplotDf, threshold == 'no'),
+            aes(Comp.1,Comp.2,label=sampleid,colour = threshold),alpha = .4) +
+geom_hline(yintercept = 0, size=.2) + 
+geom_vline(xintercept = 0, size=.2) +
+theme_bw() +
+theme( 
+      legend.position='none',
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    ) +
+geom_segment(data = pcLoads , aes(x=0, y=0,xend = scaleBip*Comp.1 , yend = scaleBip*Comp.2), arrow=arrow(length=unit(0.1,"cm")), alpha=0.75) +
+ggrepel::geom_text_repel(data = pcLoads , aes(x=scaleBip*Comp.1, y=scaleBip*Comp.2, label=row.names(pcLoads) , size = 5, vjust=1) , ) +
+labs(x = 'Principal Component 1' , y = 'Principal Component 2')
+
+
+ggsave(paste0(rootSave,'biplotGeneExp',".png"), plotBiplot, bg = "transparent",width=10, height=8, dpi=300)
 
 normalComparisonDf = as.data.frame(NULL)
 
