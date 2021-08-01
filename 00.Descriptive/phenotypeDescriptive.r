@@ -19,6 +19,7 @@ for( idx_ in 1:length(genesLoop) ){
     gene_ = genesLoop[idx_]
     # Filter gene associated information
     aux = hlaExp %>% filter(gene_name == gene_)
+    # Selecting samples in top 10 tpm
     top10 = aux %>% arrange(-tpm) %>% mutate(n = 1:n()) %>% filter(n <= 10) %>% select(c('sampleid','tpm'))
     idsHigher = c(idsHigher,top10$sampleid)
     colnames(top10) = c(paste0(gene_,'_sample') , paste0(gene_,'_tpm'))
@@ -44,6 +45,8 @@ for( idx_ in 1:length(genesLoop) ){
 # Rename column
 colnames(dfSymmetryPhen)[1] = 'Inf_'
 
+# Univariate analysus:
+# Saving tables containing top 10 samples by gene
 idsHigher = as.data.frame(idsHigher)
 idsHigher %>% group_by(idsHigher) %>% summarise(n=n()) %>% ungroup() %>% arrange(-n)
 write.table(dfGreatesValues[,2:7],'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/top10TpmPt1.txt',sep = '&',quote = F , row.names = F,col.names = T)
@@ -81,17 +84,112 @@ bindPlots = gridExtra::grid.arrange(boxplotGenes,plotSymmetry, ncol = 1)
 # Save plots
 ggsave(paste0(rootSave,'PhenoDensitySym',".png"), bindPlots, bg = "transparent",width=10, height=8, dpi=300)
 
+# Multivariate analysis
+# Transforming original dataset in horizontal position to analyse
 horizontalExpDf = tidyr::spread(hlaExp,gene_name,tpm)
+# Filter columns of interest - gene expressions and samples
 horizontalTpm = horizontalExpDf[,grepl('HLA|sample',colnames(horizontalExpDf))]
 
+# Calculate means and covariance matrix
 meanExp = colMeans(horizontalTpm[,2:10])
 covExp = cov(horizontalTpm[,2:10])
+# Calculate Mahalanobis distance
 mahalanobisD = mahalanobis(horizontalTpm[,2:10],center = meanExp,cov = covExp)
 horizontalExpDf$Mahalanobis = mahalanobisD
 horizontalExpDf$idx = 1:445
+# Defining threshold on 99% chi-squared (9 df) quantile 
 cutMahalanobis = qchisq(.99, df = 9)
+# Create dummy variable to define colours in the plot
 horizontalExpDf = horizontalExpDf %>% mutate(threshold = ifelse(Mahalanobis > cutMahalanobis , 'yes' , 'no'))
 
+dfOrderedMahalanobis = as.data.frame( sort ( horizontalExpDf$Mahalanobis) )
+dfOrderedMahalanobis$idx = ((1:nrow(dfOrderedMahalanobis)) - .5)/nrow(dfOrderedMahalanobis)
+dfOrderedMahalanobis$chisqQ = qchisq(dfOrderedMahalanobis$idx, df = 9)
+dfOrderedMahalanobisPlt = dfOrderedMahalanobis[,c(1,3)]
+colnames(dfOrderedMahalanobisPlt) = c('Observed','Expected')
+dfOrderedMahalanobisPlt = dfOrderedMahalanobisPlt %>% mutate(Threshold = ifelse(Observed > cutMahalanobis , 'yes' , 'no'))
+
+confidenceBandsMahalanobis = function(n,qtTrials = 1000,idxInf = 25 , idxSup = 975){
+
+    sample_ = matrix(0,n,qtTrials)
+    limInf = numeric(n)
+    limSup = numeric(n)
+    #
+    set.seed(9297791)
+    for(i in 1:qtTrials){
+        sample_[,i] = rchisq(n,df = 9)
+        sample_[,i] = sort(sample_[,i]) 
+        }
+    #
+    for(i in 1:n){
+        quantiles_ = sort(sample_[i,])
+        limInf[i]  = quantiles_[idxInf]
+        limSup[i]  = quantiles_[idxSup]
+        
+        }
+    return(list(limInf,limSup))
+}
+
+intervalFull = confidenceBandsMahalanobis(n = nrow(dfOrderedMahalanobisPlt) , idxInf = 50 , idxSup = 9950 , qtTrials = 10000)
+dfOrderedMahalanobisPlt$LimInf = intervalFull[[1]]
+dfOrderedMahalanobisPlt$LimSup = intervalFull[[2]]
+
+
+plotQQFull = dfOrderedMahalanobisPlt %>% 
+ggplot() +
+geom_point( aes ( x = Expected , y = Observed , colour = Threshold) ) +
+geom_line ( aes ( x = Expected , y = LimInf ) , linetype = 2 , colour = 'red' ) +
+geom_line ( aes ( x = Expected , y = LimSup ) , linetype = 2 , colour = 'red' ) +
+geom_abline( slope = 1 , intercept = 0 ) +
+theme_bw() +
+theme( 
+      legend.position='none',
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    ) 
+
+ggsave(paste0(rootSave,'mahalanobisQq',".png"), plotQQFull, bg = "transparent",width=10, height=8, dpi=300)
+
+
+filterOut = horizontalExpDf %>% filter(threshold == 'no')
+newMaha = filterOut[grepl('HLA|sample',colnames(horizontalExpDf))]
+
+meanExpF = colMeans(newMaha[,2:10])
+covExpF = cov(newMaha[,2:10])
+# Calculate Mahalanobis distance
+mahalanobisDF = mahalanobis(newMaha[,2:10],center = meanExpF,cov = covExpF)
+filterOut$Mahalanobis = mahalanobisDF
+
+dfOrderedMahalanobisF = as.data.frame( sort ( filterOut$Mahalanobis) )
+dfOrderedMahalanobisF$idx = ((1:nrow(dfOrderedMahalanobisF)) - .5)/nrow(dfOrderedMahalanobisF)
+dfOrderedMahalanobisF$chisqQ = qchisq(dfOrderedMahalanobisF$idx, df = 9)
+dfOrderedMahalanobisPltF = dfOrderedMahalanobisF[,c(1,3)]
+colnames(dfOrderedMahalanobisPltF) = c('Observed','Expected')
+
+intervalFilt = confidenceBandsMahalanobis(n = nrow(dfOrderedMahalanobisPltF)  , idxInf = 50 , idxSup = 9950 , qtTrials = 10000)
+dfOrderedMahalanobisPltF$LimInf = intervalFilt[[1]]
+dfOrderedMahalanobisPltF$LimSup = intervalFilt[[2]]
+
+
+plotQQFilt =  dfOrderedMahalanobisPltF %>% 
+ggplot() +
+geom_point( aes ( x = Expected , y = Observed ) ) +
+geom_line ( aes ( x = Expected , y = LimInf ) , linetype = 2 , colour = 'red' ) +
+geom_line ( aes ( x = Expected , y = LimSup ) , linetype = 2 , colour = 'red' ) +
+geom_abline( slope = 1 , intercept = 0 ) +
+theme_bw() +
+theme( 
+      legend.position='none',
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    ) 
+
+ggsave(paste0(rootSave,'mahalanobisQqFilt',".png"), plotQQFilt, bg = "transparent",width=10, height=8, dpi=300)
+
+
+# Plot Mahalanobis Distance by index
 plotMahalanobis = horizontalExpDf %>% 
 ggplot(aes(x = idx , y = Mahalanobis , colour =  threshold)) +
 geom_point() +
@@ -108,13 +206,17 @@ theme(
 
 ggsave(paste0(rootSave,'mahalanobis',".png"), plotMahalanobis, bg = "transparent",width=10, height=8, dpi=300)
 
+# Standardize gene expressions
 horizontalTpm[,2:10] = scale(horizontalTpm[,2:10],center = T , scale = T)
+# Create biplot - PCA for XX'and X'X
 biplotFit = princomp(x = horizontalTpm[,2:10], cor=TRUE)
 biplotDf = data.frame(sampleid = horizontalTpm[,1] , biplotFit$scores)
+# Merge df with dummy variable based on Mahalanobis distance and threshold
 biplotDf = merge(biplotDf,horizontalExpDf[,c('sampleid','threshold')])
 pcLoads = data.frame(biplotFit$loadings[,1:9])
 scaleBip = 2
 
+# Plot biplot
 plotBiplot = biplotDf %>% ggplot() + 
 geom_text(data=subset(biplotDf, threshold == 'yes'),
             aes(Comp.1,Comp.2,label=sampleid,colour = threshold),alpha = .7) +
@@ -136,8 +238,10 @@ labs(x = 'Principal Component 1' , y = 'Principal Component 2')
 
 ggsave(paste0(rootSave,'biplotGeneExp',".png"), plotBiplot, bg = "transparent",width=10, height=8, dpi=300)
 
+# Selecting 'outliers'
 samplesDf = horizontalExpDf %>% filter(threshold == 'yes') %>% select(sampleid,Mahalanobis) %>% 
 mutate(MahalanobisRound = round(Mahalanobis,2))
+# Calculating quantiles for each sample (for gene)
 for( gene_ in colnames(horizontalTpm)[-1] ){
     # For each gene:
     # Filter gene associated information
@@ -149,6 +253,7 @@ for( gene_ in colnames(horizontalTpm)[-1] ){
 
 }
 
+# Saving tables
 samplesDf = samplesDf %>% arrange(-Mahalanobis)
 outliersPt1 = samplesDf[,c(1,3:8)]
 outliersPt2 = samplesDf[,c(1,3,9:12)]
@@ -157,13 +262,16 @@ write.table(outliersPt1,'/raid/genevol/users/lucas/heritability/00.Descriptive/T
 write.table(outliersPt2,'/raid/genevol/users/lucas/heritability/00.Descriptive/Tables/multiOutPt2.txt',sep = '&',quote = F , row.names = F,col.names = T)
 
 
+# Comparing distributions of gene expressions with normal distribution
 normalComparisonDf = as.data.frame(NULL)
-
 for( idx_ in 1:length(genesLoop) ){
-    
+
+    # for each gene
     print(gene_)
     gene_ = genesLoop[idx_]
+    # Filter gene associated information
     aux = hlaExp %>% filter(gene_name == gene_)
+    # Calculate metrics
     ks_ = ks.test(aux$tpm,'pnorm',mean(aux$tpm),sd(aux$tpm))
     ad_ = nortest::ad.test(aux$tpm)
     check_ = length(unique(aux$tpm)) == 445
@@ -171,11 +279,13 @@ for( idx_ in 1:length(genesLoop) ){
     normalComparisonDf[idx_,'KS'] = round(100*ks_$p.value,2)
     normalComparisonDf[idx_,'AD'] = round(100*ad_$p.value,2)
     normalComparisonDf[idx_,'Ties'] = ifelse(check_ == T , 'No' , 'Yes')
-
     normalComparisonDf[idx_,'Skewness'] = moments::skewness(aux$tpm)
     
 }
+
+# Saving table
 write.table(normalComparisonDf,paste0(rootSaveTables,'normalityTest.txt'), sep = '&', quote = F,row.names = F)
+
 # Checking if data is discrete
 for( idx_ in 1:length(genesLoop) ){
     
@@ -185,6 +295,7 @@ for( idx_ in 1:length(genesLoop) ){
     print(length(unique(aux$tpm)))
     
 }
+# It is not
 
 
 # Plot phenotypes by sex (boxplot)
