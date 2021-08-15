@@ -1,24 +1,20 @@
 #!/bin/bash
 
-#PBS -l nodes=1:ppn=1
-#PBS -l mem=16gb
-#PBS -l walltime=24:00:00
-#PBS -q short
+#PBS -l nodes=1:ppn=4
+#PBS -l mem=64gb
+#PBS -l walltime=720:00:00
+#PBS -q long
+#PBS -t 1-22
 #PBS -N VifFilters
 #PBS -j oe
 #PBS -o VifFilters.txt
 
+chr=$PBS_ARRAYID
 pathSave=/scratch/genevol/users/lucas/
 
-for chr in $(seq 1 22); do
 for vif_ in 1.11 2.5 5; do
-for maf_ in 0.05 1e-2 1e-3 1e-4 1e-5 1e-6 1e-7 1e-8; do
+for maf_ in 0.05 1e-02 1e-03 1e-04 1e-05 1e-06 1e-07 1e-08; do
 for hwe_ in 0.001 0.005 0.01 0.02 0.03 0.04 0.05; do
-
-echo ${chr}
-echo ${vif_}
-echo ${maf_}
-echo ${hwe_}
 
 input=/raid/genevol/vcf_1000G/phase3_20130502_grch38positions/ALL.chr"$chr"_GRCh38.genotypes.20170504.vcf.gz
 
@@ -42,7 +38,6 @@ plink --vcf $input --indep 50 5 $vif_ --extract $fileprune --vcf-half-call missi
 plink --vcf $input --indep 50 5 $vif_ --extract $fileprune2 --vcf-half-call missing --keep $samp2 --out $outputVif2 &
 plink --vcf $input --indep 50 5 $vif_ --extract $fileprune3 --vcf-half-call missing --out $outputVif3
 
-done
 done
 done
 done
