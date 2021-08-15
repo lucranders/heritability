@@ -38,8 +38,8 @@ fileprune3="$pathSave"ListSnpFilters/"$file3_".txt
 
 
 
-plink --vcf $input --indep 50 5 $vif_ --extract $fileprune --vcf-half-call missing --keep $samp --out $outputVif
-plink --vcf $input --indep 50 5 $vif_ --extract $fileprune2 --vcf-half-call missing --keep $samp2 --out $outputVif2
+plink --vcf $input --indep 50 5 $vif_ --extract $fileprune --vcf-half-call missing --keep $samp --out $outputVif &
+plink --vcf $input --indep 50 5 $vif_ --extract $fileprune2 --vcf-half-call missing --keep $samp2 --out $outputVif2 &
 plink --vcf $input --indep 50 5 $vif_ --extract $fileprune3 --vcf-half-call missing --out $outputVif3
 
 done
