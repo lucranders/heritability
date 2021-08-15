@@ -27,9 +27,9 @@ samp=/raid/genevol/users/lucas/heritability/02.GCTA/data/nAfr.txt
 samp2=/raid/genevol/users/lucas/heritability/02.GCTA/data/samples.txt
 
 
-plink --vcf $input --indep 50 $vif_ --vcf-half-call missing --keep $samp --out $outputVif
-plink --vcf $input --indep 50 $vif_ --vcf-half-call missing --keep $samp2 --out $outputVif2
-plink --vcf $input --indep 50 $vif_ --vcf-half-call missing --out $outputVif3
+plink --vcf $input --indep 50 5 $vif_ --vcf-half-call missing --keep $samp --out $outputVif
+plink --vcf $input --indep 50 5 $vif_ --vcf-half-call missing --keep $samp2 --out $outputVif2
+plink --vcf $input --indep 50 5 $vif_ --vcf-half-call missing --out $outputVif3
 
 done
 done
