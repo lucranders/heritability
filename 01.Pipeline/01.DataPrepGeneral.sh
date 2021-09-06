@@ -13,9 +13,8 @@
 
 chr=$PBS_ARRAYID
 
-pathRead=pathSave=/scratch/genevol/users/lucas/Vif/
 
-filteredSnps=Vif/Vif_"$pop"_chr"$chr"_maf_"$maf_"_hwe_"$hwe_"_vif_"$vif_".prune.in
+filteredSnps=/scratch/genevol/users/lucas/Vif/Vif_"$pop"_chr"$chr"_maf_"$maf_"_hwe_"$hwe_"_vif_"$vif_".prune.in
 input=/raid/genevol/vcf_1000G/phase3_20130502_grch38positions/ALL.chr"$chr"_GRCh38.genotypes.20170504.vcf.gz
 bed=/scratch/genevol/users/lucas/TempBed/chr"$chr"
 
