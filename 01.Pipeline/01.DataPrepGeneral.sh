@@ -12,10 +12,6 @@
 
 
 chr=$PBS_ARRAYID
-pop=$1
-maf=$2
-hwe=$3
-vif=$4
 
 pathRead=pathSave=/scratch/genevol/users/lucas/Vif/
 
@@ -24,10 +20,10 @@ input=/raid/genevol/vcf_1000G/phase3_20130502_grch38positions/ALL.chr"$chr"_GRCh
 bed=/scratch/genevol/users/lucas/TempBed/chr"$chr"
 
 
-if [ $1 = NAfr ]; then
+if [ $pop = NAfr ]; then
     filesamp=/raid/genevol/users/lucas/heritability/02.GCTA/data/nAfr.txt
     plink --vcf $input --vcf-half-call missing --keep $filesamp --extract $filteredSnps --make-bed --out $pruneddata
-elif [ $2 = Geuvadis ]; then
+elif [ $pop = Geuvadis ]; then
     filesamp=/raid/genevol/users/lucas/heritability/02.GCTA/data/samples.txt
     plink --vcf $input --vcf-half-call missing --keep $filesamp --extract $filteredSnps --make-bed --out $pruneddata
 else
