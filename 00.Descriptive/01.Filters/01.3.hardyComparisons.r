@@ -148,9 +148,10 @@ dfPltAxisManhattanMaf = NULL
 
 
 names_ = c('Only europeans' , 'Known phenotypes' , 'All genotyped individuals')
+filters_ = c('NAfr' , 'Geuvadis' , 'Full')
 for(idx_ in 1:3){
 
-    print(paste0('HWE, sample:',names_[idx_]))
+    print(paste0('sample:',names_[idx_]))
     auxFiltHwe = finalPltDf %>% filter(Sample == filters_[idx_]) %>% distinct(CHR,SNP,P,Sample,BP)
     auxListHwe = manhattanPltDf(auxFiltHwe,names_[idx_])
     dfPltManhattanHwe = rbind(dfPltManhattanHwe , auxListHwe[[1]])
@@ -162,7 +163,7 @@ for(idx_ in 1:3){
 
 Sys.time()
 plotMHwe = manhattanPlt(dfPltManhattanHwe,dfPltAxisManhattanHwe,4,'hwe')
-ggsave(paste0(rootSave,'allFramesHwe',".png"), plotMHwe, bg = "transparent",width=12, height=6, dpi=300)
+ggsave(paste0(rootSave,'allFramesHwe2',".png"), plotMHwe, bg = "transparent",width=12, height=6, dpi=300)
 Sys.time()
 
 dfTotVol = NULL
