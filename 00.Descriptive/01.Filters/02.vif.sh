@@ -13,7 +13,7 @@ chr=$PBS_ARRAYID
 pathSave=/scratch/genevol/users/lucas/
 
 for vif_ in 1.11 2.5 5; do
-for hwe_ in 1e-08 1e-07 1e-06 1e-05 1e-04 1e-03 1e-02 0.05; do
+for hwe_ in 1e-08 1e-07 1e-06 1e-05 1e-04 0.001 0.01 0.05; do
 for maf_ in 0.001 0.005 0.01 0.02 0.03 0.04 0.05; do
 
 input=/raid/genevol/vcf_1000G/phase3_20130502_grch38positions/ALL.chr"$chr"_GRCh38.genotypes.20170504.vcf.gz
