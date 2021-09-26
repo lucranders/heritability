@@ -16,8 +16,10 @@ chr=$PBS_ARRAYID
 
 filteredSnps=/scratch/genevol/users/lucas/Vif/Vif_"$pop"_chr"$chr"_maf_"$maf_"_hwe_"$hwe_"_vif_"$vif_".prune.in
 input=/raid/genevol/vcf_1000G/phase3_20130502_grch38positions/ALL.chr"$chr"_GRCh38.genotypes.20170504.vcf.gz
-bed=/scratch/genevol/users/lucas/TempBed/chr"$chr"
 
+tempPath=/scratch/genevol/users/lucas/TempBed_pop_"$pop"_maf_"$maf_"_hwe_"$hwe_"_vif_"$vif_"
+bed=$tempPath/chr"$chr"
+mkdir $tempPath
 
 if [ $pop = NAfr ]; then
     filesamp=/raid/genevol/users/lucas/heritability/02.GCTA/data/nAfr.txt
@@ -28,5 +30,3 @@ elif [ $pop = Geuvadis ]; then
 else
     plink --vcf $input --vcf-half-call missing --extract $filteredSnps --make-bed --out $bed
 fi
-
-
