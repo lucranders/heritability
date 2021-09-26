@@ -16,7 +16,7 @@ The structure of this project:
       * 03.comparisonsAllFilters.r  - Analyse how based on thresholds for MAF, HWE and VIF, the resulting SNPs' sets are influenced (in volume);
   *  02.Phenotype - Analysis of phenotypes and its relation with individuals features.
 * 01.Pipeline - Pipeline built to study heritability:
-  *  01.DataPrepGeneral.sh - Given lists of SNPs' previously generated in 00.Descriptive/01.Filters/, generate environment to produce .bed files and calculate GRM
+  *  01.DataPrepGeneral.sh - Given lists of SNPs' previously generated in 00.Descriptive/01.Filters/02.vif.sh, generate environment to produce .bed files and calculate GRM
   *  exec.py - Execute pipeline
 * 99.Old - Old codes, used in previous studies
 
