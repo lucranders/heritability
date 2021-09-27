@@ -19,7 +19,6 @@ input=/raid/genevol/vcf_1000G/phase3_20130502_grch38positions/ALL.chr"$chr"_GRCh
 
 tempPath=/scratch/genevol/users/lucas/TempBed_pop_"$pop"_maf_"$maf_"_hwe_"$hwe_"_vif_"$vif_"
 bed=$tempPath/chr"$chr"
-mkdir $tempPath
 
 if [ $pop = NAfr ]; then
     filesamp=/raid/genevol/users/lucas/heritability/01.Pipeline/Samples/nAfr.filt
