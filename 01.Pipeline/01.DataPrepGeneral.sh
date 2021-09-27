@@ -22,10 +22,10 @@ bed=$tempPath/chr"$chr"
 mkdir $tempPath
 
 if [ $pop = NAfr ]; then
-    filesamp=/raid/genevol/users/lucas/heritability/02.GCTA/data/nAfr.txt
+    filesamp=/raid/genevol/users/lucas/heritability/01.Pipeline/Samples/nAfr.filt
     plink --vcf $input --vcf-half-call missing --keep $filesamp --extract $filteredSnps --make-bed --out $bed
 elif [ $pop = Geuvadis ]; then
-    filesamp=/raid/genevol/users/lucas/heritability/02.GCTA/data/samples.txt
+    filesamp=/raid/genevol/users/lucas/heritability/01.Pipeline/Samples/samples.filt
     plink --vcf $input --vcf-half-call missing --keep $filesamp --extract $filteredSnps --make-bed --out $bed
 else
     plink --vcf $input --vcf-half-call missing --extract $filteredSnps --make-bed --out $bed
