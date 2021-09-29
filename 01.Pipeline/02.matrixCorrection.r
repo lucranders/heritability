@@ -100,5 +100,5 @@ colnames(matrizCorrigida) = GRM[[3]][,1]
 # vectNew = matrizCorrigida[upper.tri(matrizCorrigida, diag = FALSE)]
 # diagNew = diag(matrizCorrigida)
 elements = matrizCorrigida[upper.tri(matrizCorrigida, diag = TRUE)]
-writeGRMBin(element_ = elements,prefix)
+writeGRMBin(element_ = elements,prefix_)
 write.table('finished',paste0(path_,'/statusGRMCorrection.txt'))
