@@ -4,6 +4,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 import pandas as pd
+import numpy as np
+import pyreadr
 
 # Check log sizes from bash processes
 def checkLogSizes(path_):
@@ -31,13 +33,14 @@ def updateLog(path_,status_,file_):
     f.close()
 
 class pipelineGCTA:
-    def __init__(self,pop,maf,hwe,vif,threads,genes,covs,db,pathPipeline,pathTmp,pathGCTA):
+    def __init__(self,pop,maf,hwe,vif,threads,genes,covs,extraRE,db,pathPipeline,pathTmp,pathGCTA):
         self.pop_ = pop
         self.maf_ = maf
         self.hwe_ = hwe
         self.vif_ = vif
         self.genes_ = genes
         self.covs_ = covs
+        self.extraRE = extraRE
         self.threads_ = str(threads)
         self.pathPipeline_ = pathPipeline
         self.pathTmp_ = pathTmp
@@ -127,7 +130,8 @@ class pipelineGCTA:
         while not cond:
             cond = check_.is_file()
             time.sleep(1)
-    def heritability(self):
+        self.correctedGRM = pyreadr.read_r(self.path_ + '/GCTA.rds')
+    def heritabilityGCTA(self):
         for geneExp_ in self.genes_:
             gctaLoc = '/raid/genevol/users/lucas/gcta/gcta64'
             method = '--reml'
@@ -146,6 +150,20 @@ class pipelineGCTA:
             outV = self.path_ + '/Results' + geneExp_.replace('-','')
             cmd = [gctaLoc, method, algotithm, algotithmV, maxit, maxitV, grm, grmV, pheno, phenoV, covs, covsV, fix, out, outV]
             subprocess.Popen(cmd)
+    def defineREM(self):
+        self.randomCovs = dict()
+        self.randomCovs['Genes'] = self.correctedGRM
+        if self.extraRE != None:
+            self.randomCovs = dict()
+            for var_ in self.extraRE:
+                oneHotEncoding = pd.get_dummies(self.db[var_]).values
+                covMat = np.matmul( oneHotEncoding , np.transpose(oneHotEncoding) )
+                self.randomCovs[var_] = covMat.copy()
+                del(covMat)
+        self.randomCovs['Residuals'] = np.diag(np.full(self.correctedGRM.shape[0],1))
+
+
+
 
 
 
