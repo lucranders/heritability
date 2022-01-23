@@ -154,20 +154,53 @@ class heritabilityGCTA:
             self.heritabilityGCTA(geneExpr_)
         
 class heritabilityAlt:
+    def __init__(self,individuals,db,catCovs,numCovs,genes,oldParams,additiveMatrixList,extraRE):
+        self.pop_ = oldParams.pop_
+        self.maf_ = oldParams.maf_
+        self.hwe_ = oldParams.hwe_
+        self.vif_ = oldParams.vif_
+        self.genes_ = genes
+        self.catCovs_ = catCovs
+        self.numCovs_ = numCovs
+        self.pathPipeline_ = oldParams.pathPipeline_
+        self.pathTmp_ = oldParams.pathTmp_
+        self.pathGCTA_ = oldParams.pathGCTA_
+        self.path_ = self.pathTmp_ + '/TempBed_pop_' + self.pop_ + "_maf_" + str(self.maf_) + "_hwe_" + str(self.hwe_) + "_vif_" + str(self.vif_)
+        self.db_ = db
+        self.individuals_ = individuals
+        self.additiveMatrixDictionary_ = additiveMatrixList
+        self.extraRE_ = extraRE
+    def defineFEM_PV(self,geneExpr_):
+        basicCols = ['subject_id']
+        X_ = basicCols.copy()
+        Y_ = basicCols.copy()
+        Y_.append('tpm')
+        if self.catCovs_ != None:
+            for cov_ in self.catCovs_:
+                X_.append(cov_)
+        if self.numCovs_ != None:
+            for cov_ in self.numCovs_:
+                X_.append(cov_)
+        dbToMerge = self.individuals_.copy()
+        covariatesX = self.db_.loc[self.db_.gene_name == geneExpr_,X_]
+        expressionY = self.db_.loc[self.db_.gene_name == geneExpr_,Y_]
+        XPopPre_ = dbToMerge.merge(covariatesX)
+        XPopPre_.drop(basicCols, axis = 1, inplace = True)
+        dumVars = pd.get_dummies(XPopPre_.loc[:,self.catCovs_])
+        XPop_ = pd.concat([XPopPre_.drop(self.catCovs_,axis = 1) , dumVars],axis = 1)
+        YPop_ = dbToMerge.merge(expressionY)
+        YPop_.drop(basicCols, axis = 1, inplace = True)
+        self.xMatrix = XPop_
+        self.yVector = YPop_
     def defineREM(self,currentGene):
-        self.randomCovs = dict()
-        self.randomCovs['Genes'] = self.correctedGRM.copy()
-        if self.extraRE != None:
-            for var_ in self.extraRE:
+        self.randomCovs = self.additiveMatrixDictionary_
+        if self.extraRE_ != None:
+            for var_ in self.extraRE_:
                 oneHotEncoding = pd.get_dummies(self.db_.loc[self.db_.gene_name == currentGene , var_]).values
                 covMat = np.matmul( oneHotEncoding , np.transpose(oneHotEncoding) )
                 self.randomCovs[var_] = covMat.copy()
                 del(covMat)
-        self.randomCovs['Residuals'] = np.diag(np.full(self.correctedGRM.shape[0],1))
-
-
-
-
+        self.randomCovs['Residuals'] = np.diag(np.full(self.additiveMatrixDictionary_[list(self.additiveMatrixDictionary_)[0]].shape[0],1))
 
 
 pathPipelinePrograms = '/raid/genevol/users/lucas/heritability/01.Pipeline'
@@ -180,23 +213,34 @@ hwe = 1e-07
 vif = 5
 threads = 10
 genes = ['HLA-A','HLA-B','HLA-C']
-covs = ['sex','lab','pop']
+catCovs = ['sex','lab','pop']
+numCovs = None
+extraRE = ['sex','lab','pop']
 dbIndividuals = pd.read_csv(samplesFile,header = None,sep = '\t')
 individuals = dbIndividuals.loc[:,[0]]
 individuals.columns = ['subject_id']
 db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
 
+# Build Additive Variance Matrix - required to estimate narrow sense heritability
 buildAVM = buildAdditiveVarianceMatrix(pop = pop,maf = maf , hwe = hwe, vif = vif,
                         threads=threads , pathPipeline=pathPipelinePrograms,
                         pathTmp=pathTmp , pathGCTA=pathGCTA
                         )
-calculateH2GCTA = heritabilityGCTA(individuals = individuals,db = db , covs = covs , genes = genes,oldParams=buildAVM)
 buildAVM.createTmpFolder()
 buildAVM.createBedFile()
 buildAVM.calculateGCTA()
 buildAVM.correctGRM()
 
+# Narrow sense heritability calculation
+# Calculating heritability for all required genes, in a classical manner
+calculateH2GCTA = heritabilityGCTA(individuals = individuals,db = db , covs = catCovs , genes = genes,oldParams=buildAVM)
 calculateH2GCTA.calculateAll()
+# Paramaters needed to estimate in a more generalized way 
+additiveMatrixList = dict()
+additiveMatrixList['Genes'] = buildAVM.correctedGRM
+calculateH2Alt = heritabilityAlt(individuals = individuals,db = db,catCovs = catCovs , numCovs=numCovs , genes = genes,oldParams=calculateH2GCTA,additiveMatrixList=additiveMatrixList,extraRE=extraRE)
+calculateH2Alt.defineFEM_PV('HLA-A')
+calculateH2Alt.defineREM('HLA-A')
 
 # TODO:
-    # parallelize process
+    # code generalized ML/REML algorithms
