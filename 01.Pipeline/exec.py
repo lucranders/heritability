@@ -1,3 +1,4 @@
+from ast import Expression
 import subprocess
 import os
 import time
@@ -6,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import rpy2.robjects as robjects
-from rpy2.robjects import pandas2ri
+import patsy
 
 
 # Check log sizes from bash processes
@@ -154,14 +155,14 @@ class heritabilityGCTA:
             self.heritabilityGCTA(geneExpr_)
         
 class heritabilityAlt:
-    def __init__(self,individuals,db,catCovs,numCovs,genes,oldParams,additiveMatrixList,extraRE):
+    def __init__(self,individuals,db,formulaFE,expression,genes,oldParams,additiveMatrixList,extraRE):
         self.pop_ = oldParams.pop_
         self.maf_ = oldParams.maf_
         self.hwe_ = oldParams.hwe_
         self.vif_ = oldParams.vif_
+        self.formulaFE_ = formulaFE
+        self.expression_ = expression
         self.genes_ = genes
-        self.catCovs_ = catCovs
-        self.numCovs_ = numCovs
         self.pathPipeline_ = oldParams.pathPipeline_
         self.pathTmp_ = oldParams.pathTmp_
         self.pathGCTA_ = oldParams.pathGCTA_
@@ -171,36 +172,26 @@ class heritabilityAlt:
         self.additiveMatrixDictionary_ = additiveMatrixList
         self.extraRE_ = extraRE
     def defineFEM_PV(self,geneExpr_):
-        basicCols = ['subject_id']
-        X_ = basicCols.copy()
-        Y_ = basicCols.copy()
-        Y_.append('tpm')
-        if self.catCovs_ != None:
-            for cov_ in self.catCovs_:
-                X_.append(cov_)
-        if self.numCovs_ != None:
-            for cov_ in self.numCovs_:
-                X_.append(cov_)
         dbToMerge = self.individuals_.copy()
-        covariatesX = self.db_.loc[self.db_.gene_name == geneExpr_,X_]
-        expressionY = self.db_.loc[self.db_.gene_name == geneExpr_,Y_]
-        XPopPre_ = dbToMerge.merge(covariatesX)
-        XPopPre_.drop(basicCols, axis = 1, inplace = True)
-        dumVars = pd.get_dummies(XPopPre_.loc[:,self.catCovs_])
-        XPop_ = pd.concat([XPopPre_.drop(self.catCovs_,axis = 1) , dumVars],axis = 1)
-        YPop_ = dbToMerge.merge(expressionY)
-        YPop_.drop(basicCols, axis = 1, inplace = True)
+        filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
+        givenDb = dbToMerge.merge(filterGene)
+        XPop_ = patsy.dmatrix( self.formulaFE_ ,data = givenDb)
+        YPop_ = givenDb.loc[:,self.expression_].copy()
         self.xMatrix = XPop_
         self.yVector = YPop_
-    def defineREM(self,currentGene):
+    def defineREM(self,geneExpr_):
         self.randomCovs = self.additiveMatrixDictionary_
         if self.extraRE_ != None:
+            dbToMerge = self.individuals_.copy()
+            filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
+            givenDb = dbToMerge.merge(filterGene)
             for var_ in self.extraRE_:
-                oneHotEncoding = pd.get_dummies(self.db_.loc[self.db_.gene_name == currentGene , var_]).values
+                oneHotEncoding = pd.get_dummies(givenDb.loc[:, var_]).values
                 covMat = np.matmul( oneHotEncoding , np.transpose(oneHotEncoding) )
                 self.randomCovs[var_] = covMat.copy()
                 del(covMat)
         self.randomCovs['Residuals'] = np.diag(np.full(self.additiveMatrixDictionary_[list(self.additiveMatrixDictionary_)[0]].shape[0],1))
+
 
 
 pathPipelinePrograms = '/raid/genevol/users/lucas/heritability/01.Pipeline'
@@ -219,6 +210,8 @@ extraRE = ['sex','lab','pop']
 dbIndividuals = pd.read_csv(samplesFile,header = None,sep = '\t')
 individuals = dbIndividuals.loc[:,[0]]
 individuals.columns = ['subject_id']
+formulaFE = '~pop * sex'
+expression = 'tpm'
 db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
 
 # Build Additive Variance Matrix - required to estimate narrow sense heritability
@@ -238,7 +231,7 @@ calculateH2GCTA.calculateAll()
 # Paramaters needed to estimate in a more generalized way 
 additiveMatrixList = dict()
 additiveMatrixList['Genes'] = buildAVM.correctedGRM
-calculateH2Alt = heritabilityAlt(individuals = individuals,db = db,catCovs = catCovs , numCovs=numCovs , genes = genes,oldParams=calculateH2GCTA,additiveMatrixList=additiveMatrixList,extraRE=extraRE)
+calculateH2Alt = heritabilityAlt(individuals = individuals,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=calculateH2GCTA,additiveMatrixList=additiveMatrixList,extraRE=extraRE)
 calculateH2Alt.defineFEM_PV('HLA-A')
 calculateH2Alt.defineREM('HLA-A')
 
