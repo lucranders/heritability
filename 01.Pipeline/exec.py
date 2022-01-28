@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import rpy2.robjects as robjects
+from rpy2.robjects import pandas2ri
 import patsy
 
 
@@ -155,7 +156,7 @@ class heritabilityGCTA:
             self.heritabilityGCTA(geneExpr_)
         
 class heritabilityAlt:
-    def __init__(self,individuals,db,formulaFE,expression,genes,oldParams,additiveMatrixList,extraRE):
+    def __init__(self,individuals,db,formulaFE,expression,genes,oldParams,additiveMatrixList,extraRE,parametersOpt):
         self.pop_ = oldParams.pop_
         self.maf_ = oldParams.maf_
         self.hwe_ = oldParams.hwe_
@@ -171,6 +172,7 @@ class heritabilityAlt:
         self.individuals_ = individuals
         self.additiveMatrixDictionary_ = additiveMatrixList
         self.extraRE_ = extraRE
+        self.parametersOpt_ = parametersOpt
     def defineFEM_PV(self,geneExpr_):
         dbToMerge = self.individuals_.copy()
         filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
@@ -178,7 +180,7 @@ class heritabilityAlt:
         XPop_ = patsy.dmatrix( self.formulaFE_ ,data = givenDb)
         YPop_ = givenDb.loc[:,self.expression_].copy()
         self.xMatrix = XPop_
-        self.yVector = YPop_
+        self.yVector = YPop_.values
     def defineREM(self,geneExpr_):
         self.randomCovs = self.additiveMatrixDictionary_
         if self.extraRE_ != None:
@@ -191,6 +193,85 @@ class heritabilityAlt:
                 self.randomCovs[var_] = covMat.copy()
                 del(covMat)
         self.randomCovs['Residuals'] = np.diag(np.full(self.additiveMatrixDictionary_[list(self.additiveMatrixDictionary_)[0]].shape[0],1))
+    def estimateAddVarML(self):
+        # main definitions to start algorithm
+        X = self.xMatrix.copy()
+        y = self.yVector.copy()
+        givenMatrixes = self.randomCovs.copy()
+        dimSquareMatrixes = givenMatrixes[list(givenMatrixes)[0]].shape[0]
+        nameComponents = list(givenMatrixes)
+        numberMatrixes = len(givenMatrixes)
+        if 'sigmasInit' in list(self.parametersOpt_):
+            sigmas2Init = self.parametersOpt_['sigmasInit']
+        else:
+            # if not given initial values, initializes with variance from expression, divided by number of covariance matrixes
+            sigmas2Init = dict()
+            for var_ in nameComponents: 
+                sigmas2Init[var_] = y.var()/numberMatrixes
+        if 'conv' in list(self.parametersOpt_):
+            conv = self.parametersOpt_['conv']
+        else:
+            conv = 1e-4
+        if 'maxIt' in list(self.parametersOpt_):
+            maxIt = self.parametersOpt_['maxIt']
+        else:
+            maxIt = 10
+        betas = dict()
+        logLik = dict()
+        # Initializing - first iteraction
+        V = np.zeros([dimSquareMatrixes,dimSquareMatrixes])
+        for var_ in nameComponents:
+            V = V + (givenMatrixes[var_] * sigmas2Init[var_])
+        vInverse = np.linalg.inv(V)
+        beta_ = np.linalg.inv(np.transpose(X) @ vInverse @ X) @ np.transpose(X) @ vInverse @ y
+        difMean = y - (X @ beta_)
+        likelihood_ = np.linalg.slogdet(V)[1] + (np.transpose(difMean) @ vInverse @ difMean)
+        logLik[0] = -.5*likelihood_.copy()
+        betas[0] = beta_.copy()
+        thetas = dict()
+        thetas[0] = sigmas2Init.copy()
+        k = 1
+        while k < maxIt:
+            s = list()
+            Hessian = np.zeros([numberMatrixes,numberMatrixes])
+            for numRow,cov1 in enumerate(nameComponents):
+                # score vector element
+                sElement = np.trace(vInverse @ givenMatrixes[cov1]) - (np.transpose(difMean) @ vInverse @ givenMatrixes[cov1] @ vInverse @ difMean)
+                s.append(-.5*sElement.copy())
+                del(sElement)
+                for numCol,cov2 in enumerate(nameComponents):
+                    hElement = np.trace(vInverse @ givenMatrixes[cov1] @ vInverse @ givenMatrixes[cov2])
+                    Hessian[numRow,numCol] = -.5*hElement.copy()
+                    del(hElement)
+            invHessian = np.linalg.inv(Hessian)
+            V = np.zeros([dimSquareMatrixes,dimSquareMatrixes])
+            thetas_ = dict()
+            for numRow,var_ in enumerate(nameComponents):
+                thetaNew = sigmas2Init[var_].copy() - (invHessian[numRow,:] @ np.c_[s])
+                thetas_[var_] = thetaNew.copy()
+                V = V + (givenMatrixes[var_] * thetas_[var_])
+            sigmas2Init = thetas_.copy()
+            thetas[k] = thetas_.copy()
+            vInverse = np.linalg.inv(V)
+            beta_ = np.linalg.inv(np.transpose(X) @ vInverse @ X) @ np.transpose(X) @ vInverse @ y
+            betas[k] = beta_.copy()
+            difMean = y - (X @ beta_)
+            likelihood_ = np.linalg.slogdet(V)[1] + (np.transpose(difMean) @ vInverse @ difMean)
+            logLik[k] = -.5*likelihood_.copy()
+            print(logLik[k])
+            if np.absolute(logLik[k] - logLik[k-1]) < conv:
+                break
+            k = k+1
+        self.sigma2 = thetas
+        self.logLikelihood = logLik
+        self.betas = betas
+    def calculateHerit(self,column_):
+        totSum = 0
+        lastRun = self.sigma2[len(self.sigma2)-1]
+        for cov_ in list(lastRun):
+            totSum += lastRun[cov_]
+        self.h2 = lastRun[column_] / totSum
+
 
 
 
@@ -204,14 +285,15 @@ hwe = 1e-07
 vif = 5
 threads = 10
 genes = ['HLA-A','HLA-B','HLA-C']
-catCovs = ['sex','lab','pop']
+catCovs = ['sex','pop']
 numCovs = None
-extraRE = ['sex','lab','pop']
+extraRE = None
 dbIndividuals = pd.read_csv(samplesFile,header = None,sep = '\t')
 individuals = dbIndividuals.loc[:,[0]]
 individuals.columns = ['subject_id']
-formulaFE = '~pop * sex'
+formulaFE = '~sex + lab'
 expression = 'tpm'
+parametersOpt = {}
 db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
 
 # Build Additive Variance Matrix - required to estimate narrow sense heritability
@@ -231,9 +313,12 @@ calculateH2GCTA.calculateAll()
 # Paramaters needed to estimate in a more generalized way 
 additiveMatrixList = dict()
 additiveMatrixList['Genes'] = buildAVM.correctedGRM
-calculateH2Alt = heritabilityAlt(individuals = individuals,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=calculateH2GCTA,additiveMatrixList=additiveMatrixList,extraRE=extraRE)
+calculateH2Alt = heritabilityAlt(individuals = individuals,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=calculateH2GCTA,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt)
 calculateH2Alt.defineFEM_PV('HLA-A')
 calculateH2Alt.defineREM('HLA-A')
+calculateH2Alt.estimateAddVarML()
+calculateH2Alt.calculateHerit('Genes')
+
 
 # TODO:
     # code generalized ML/REML algorithms
