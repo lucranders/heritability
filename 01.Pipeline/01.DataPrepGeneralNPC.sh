@@ -16,4 +16,4 @@ chr=$PBS_ARRAYID
 input=/raid/genevol/vcf_1000G/phase3_20130502_grch38positions/ALL.chr"$chr"_GRCh38.genotypes.20170504.vcf.gz
 
 bed=$tempPath/chr"$chr"
-$query_
+eval $query_
