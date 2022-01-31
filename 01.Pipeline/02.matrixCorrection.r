@@ -1,4 +1,5 @@
 path_ =  commandArgs(TRUE)[1]
+nameMatrix_ = commandArgs(TRUE)[2]
 # Read estimated GRM elements
 ReadGRMBin=function(prefix, AllN=F, size=4){
   sum_i=function(i){
@@ -81,7 +82,7 @@ blockDiagonalPDMatrix <- function(randomCor,...) {
 
 options(digits=6)
 
-prefix_ = paste0(path_,'/GCTA')
+prefix_ = paste0(path_,'/' ,nameMatrix_)
 GRM = ReadGRMBin(prefix_)
 M <- matrix(0, dim(GRM[[3]])[1], dim(GRM[[3]])[1])
 M[upper.tri(M, diag = FALSE)] = GRM[[2]]
