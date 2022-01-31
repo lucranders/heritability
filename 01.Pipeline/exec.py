@@ -31,8 +31,9 @@ def updateLog(path_,status_,file_):
     f.write(msg_ + '\n')
     f.close()
 class buildAdditiveVarianceMatrix:
-    def __init__(self,pop,maf,hwe,vif,threads,pathPipeline,pathTmp,pathGCTA):
+    def __init__(self,samplesFile,pop,maf,hwe,vif,threads,pathPipeline,pathTmp,pathGCTA):
         self.pop_ = pop
+        self.samplesFile_ = samplesFile
         self.maf_ = maf
         self.hwe_ = hwe
         self.vif_ = vif
@@ -45,9 +46,20 @@ class buildAdditiveVarianceMatrix:
     def createTmpFolder(self):
         # Create temp folder
         subprocess.Popen(['mkdir',self.path_])
-    def createBedFile(self):
+    def createBedFileNPC(self):
+        query_ = "plink --vcf $input"
+        if self.vif_ != None:
+            query_ += " --indep 50 5 " + str(self.vif_)
+        if self.maf_ != None:
+            query_ += " --maf " + str(self.maf_)
+        if self.hwe_ != None:
+            query_ += " --hwe " + str(self.hwe_)
+        if self.samplesFile_ != None:
+            query_ += " --keep " + self.samplesFile_
+        query_ += ' --mind 0.05 --geno 0.05 --make-bed --out $bed'
+        self.query_ = query_
         # Create .bed files - 22 chromossomes
-        cmd = ['qsub', '-v' ,'pop=' + self.pop_ + ',maf_=' + str(self.maf_) +',hwe_=' + str(self.hwe_) + ',vif_=' + str(self.vif_) , self.pathPipeline_ + '/01.DataPrepGeneral.sh']
+        cmd = ['qsub', '-v' ,'query_=' + self.query_ + ',tempPath=' + self.path_ , self.pathPipeline_ + '/01.DataPrepGeneralNPC.sh']
         subprocess.Popen(cmd)
         # Check if all 22 .bed files are created
         sizes = checkLogSizes(self.path_)
@@ -68,30 +80,53 @@ class buildAdditiveVarianceMatrix:
             f = open(self.path_ + '/chrs.txt', "a")
             f.write(self.path_+'/chr' + str(chr_) + '\n')
             f.close()
-    def calculateGCTA(self):
-        if self.pop_ == 'NAfr':
-            filesamp = self.pathPipeline_ + '/Samples/nAfr.filt'
-            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + '/chrs.txt','--keep',filesamp,'--make-grm','--out',self.path_+'/GCTA','--thread-num',self.threads_]
-        elif self.pop_ == 'Geuvadis':
-            filesamp = self.pathPipeline_ + '/Samples/samples.filt'
-            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + '/chrs.txt','--keep',filesamp,'--make-grm','--out',self.path_+'/GCTA','--thread-num',self.threads_]
+    def createBedFile(self):
+        # Create .bed files - 22 chromossomes
+        cmd = ['qsub', '-v' ,'pop=' + self.pop_ + ',maf_=' + str(self.maf_) +',hwe_=' + str(self.hwe_) + ',vif_=' + str(self.vif_) + ',sampleFile_=' + str(self.sampleFile_) , self.pathPipeline_ + '/01.DataPrepGeneral.sh']
+        subprocess.Popen(cmd)
+        # Check if all 22 .bed files are created
+        sizes = checkLogSizes(self.path_)
+        cond = sum(sizes) < 22
+        # If not, waits until so
+        while cond:
+            sizes = checkLogSizes(self.path_)
+            cond = sum(sizes) < 22
+            if cond:
+                # Updates status (inside tmp folder)
+                updateLog(self.path_,0,"bedStatus.txt")
+                time.sleep(10)
+            else:
+                # Updates status (inside tmp folder)
+                updateLog(self.path_,1,"bedStatus.txt")
+        # Create references to calculate GCTA
+        for chr_ in range(1,23):
+            f = open(self.path_ + '/chrs.txt', "a")
+            f.write(self.path_+'/chr' + str(chr_) + '\n')
+            f.close()
+    def calculateGCTA(self,refChrs,nameMatrix):
+        if nameMatrix != None:
+            self.nameMatrix_ = 'GCTA_' + nameMatrix
         else:
-            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + '/chrs.txt','--make-grm','--out',self.path_+'/GCTA','--thread-num',self.threads_]
+            self.nameMatrix_ = 'GCTA'
+        if self.samplesFile_ != None:
+            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + refChrs,'--keep',self.samplesFile_,'--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
+        else:
+            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + refChrs,'--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
         subprocess.Popen(cmd)
         # check whether GRM binaries already exists - means process is finished
-        check_ = Path(self.path_ + '/GCTA.grm.bin')
+        check_ = Path(self.path_ + self.nameMatrix_ + '.grm.bin')
         cond = check_.is_file()
         while not cond:
             cond = check_.is_file()
             if not cond:
                 # Updates status (inside tmp folder)
-                updateLog(self.path_,0,'GRMStatus.txt')
+                updateLog(self.path_,0,'GRM' + self.nameMatrix_ + 'Status.txt')
                 time.sleep(10)
             else:
                 # Updates status (inside tmp folder)
-                updateLog(self.path_,1,'GRMStatus.txt')
+                updateLog(self.path_,1,'GRM' + self.nameMatrix_ + 'Status.txt')
     def correctGRM(self):
-        subprocess.Popen(['Rscript',self.pathPipeline_ + '/02.matrixCorrection.r',self.path_])
+        subprocess.Popen(['Rscript',self.pathPipeline_ + '/02.matrixCorrection.r',self.path_,self.nameMatrix_])
         check_ = Path(self.path_ + '/statusGRMCorrection.txt')
         cond = check_.is_file()
         while not cond:
@@ -101,7 +136,7 @@ class buildAdditiveVarianceMatrix:
     def readGRM(self):
         pandas2ri.activate()
         readRDS = robjects.r['readRDS']
-        self.GRM = readRDS(self.path_ + '/GCTA.rds')
+        self.GRM = readRDS(self.path_ + '/' + self.nameMatrix_ +'.rds')
 class heritabilityGCTA:
     def __init__(self,individuals,db,covs,genes,oldParams):
         self.pop_ = oldParams.pop_
@@ -413,8 +448,8 @@ individuals.columns = ['subject_id']
 pop = 'Geuvadis'
 sampleInference = 'all'
 maf = 0.01
-hwe = 1e-07
-vif = 5
+hwe = 0.1
+vif = 1.5
 threads = 10
 catCovs = ['sex','lab']
 numCovs = None
@@ -423,12 +458,13 @@ formulaFE = '~sex+lab'
 parametersOpt = {'maxIt':50}
 
 # Build Additive Variance Matrix - required to estimate narrow sense heritability
-buildAVM = buildAdditiveVarianceMatrix(pop = pop,maf = maf , hwe = hwe, vif = vif,
+buildAVM = buildAdditiveVarianceMatrix(samplesFile=samplesFile,pop = pop,maf = maf , hwe = hwe, vif = vif,
                         threads=threads , pathPipeline=pathPipelinePrograms,
                         pathTmp=pathTmp , pathGCTA=pathGCTA
                         )
 buildAVM.createTmpFolder()
-buildAVM.createBedFile()
+# buildAVM.createBedFile()
+buildAVM.createBedFileNPC()
 buildAVM.calculateGCTA()
 buildAVM.correctGRM()
 
