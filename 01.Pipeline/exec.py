@@ -154,11 +154,12 @@ class heritabilityGCTA:
             self.createFiles(geneExpr_)
             self.heritabilityGCTA(geneExpr_)
 class heritabilityAlt:
-    def __init__(self,individuals,db,formulaFE,expression,genes,oldParams,additiveMatrixList,extraRE,parametersOpt):
+    def __init__(self,individuals,sampInf,db,formulaFE,expression,genes,oldParams,additiveMatrixList,extraRE,parametersOpt,method,resultsFile):
         self.pop_ = oldParams.pop_
         self.maf_ = oldParams.maf_
         self.hwe_ = oldParams.hwe_
         self.vif_ = oldParams.vif_
+        self.sampInf_ = sampInf
         self.formulaFE_ = formulaFE
         self.expression_ = expression
         self.genes_ = genes
@@ -171,6 +172,8 @@ class heritabilityAlt:
         self.additiveMatrixDictionary_ = additiveMatrixList
         self.extraRE_ = extraRE
         self.parametersOpt_ = parametersOpt
+        self.method_ = method
+        self.saveRef_ = resultsFile
     def defineFEM_PV(self,geneExpr_):
         dbToMerge = self.individuals_.copy()
         filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
@@ -345,30 +348,79 @@ class heritabilityAlt:
         for cov_ in list(lastRun):
             totSum += lastRun[cov_]
         self.h2 = lastRun[column_] / totSum
+        self.finalDesiredSigma2 = lastRun[column_]
+        self.finalTotalSigma = totSum
+    def calculateAll(self,column_):
+        finalTuple = []
+        for geneExpr_ in self.genes_:
+            self.defineFEM_PV(geneExpr_)
+            self.defineREM(geneExpr_)
+            if self.method_ == 'REML':
+                self.estimateAddVarREML()
+            elif self.method_ == 'ML':
+                self.estimateAddVarML()
+            else:
+                print("Invalid option")
+                break
+            self.calculateHerit(column_)
+            h2 = self.h2[0].copy()
+            finalDesiredSigma2 = self.finalDesiredSigma2[0].copy()
+            finalTotalSigma = self.finalTotalSigma[0].copy()
+            pop = self.pop_
+            maf = self.maf_
+            hwe = self.hwe_
+            vif = self.vif_
+            sampInf = self.sampInf_
+            namesRE = list(self.randomCovs)
+            for num_,x in enumerate(namesRE):
+                if num_ == 0:
+                    RE = x
+                else:
+                    RE += "+" + x
+            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2,finalDesiredSigma2,finalTotalSigma,self.method_,self.formulaFE_,RE]
+            finalTuple.append(tuple_)
+        finalDf = pd.DataFrame(finalTuple)
+        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
+        self.results = finalDf
+    def saveResults(self):
+        check_ = 0
+        try:
+            df_ = pd.read_csv(self.saveRef_,sep = '|',header = 0)
+        except:
+            check_ = 1
+        if check_ == 1:
+            self.results.to_csv(self.saveRef_,index = False, header = True, sep = "|")
+        else:
+            df_ = df_.append(self.results)
+            df_.drop_duplicates(inplace = True)
+            df_.to_csv(self.saveRef_,index = False, header = True, sep = "|")
 
 
 
-
+# Static params
 pathPipelinePrograms = '/raid/genevol/users/lucas/heritability/01.Pipeline'
 pathGCTA = '/raid/genevol/users/lucas/gcta'
 pathTmp = '/scratch/genevol/users/lucas'
+resultsFile = pathPipelinePrograms + '/Results/results.txt'
+expression = 'tpm'
+db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
+genes = sorted(db.gene_name.unique())
+# Mutable params
 samplesFile = pathPipelinePrograms + '/Samples/samples.filt' 
+dbIndividuals = pd.read_csv(samplesFile,header = None,sep = '\t')
+individuals = dbIndividuals.loc[:,[0]]
+individuals.columns = ['subject_id']
 pop = 'Geuvadis'
+sampleInference = 'all'
 maf = 0.01
 hwe = 1e-07
 vif = 5
 threads = 10
-genes = ['HLA-A']
 catCovs = ['sex','lab']
 numCovs = None
 extraRE = None
-dbIndividuals = pd.read_csv(samplesFile,header = None,sep = '\t')
-individuals = dbIndividuals.loc[:,[0]]
-individuals.columns = ['subject_id']
 formulaFE = '~sex+lab'
-expression = 'tpm'
-parametersOpt = {'maxIt':50,'sigmas2Init':{'Genes':80000,'Residuals':65000}}
-db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
+parametersOpt = {'maxIt':50}
 
 # Build Additive Variance Matrix - required to estimate narrow sense heritability
 buildAVM = buildAdditiveVarianceMatrix(pop = pop,maf = maf , hwe = hwe, vif = vif,
@@ -388,14 +440,6 @@ calculateH2GCTA.calculateAll()
 additiveMatrixList = dict()
 buildAVM.readGRM()
 additiveMatrixList['Genes'] = buildAVM.GRM
-calculateH2Alt = heritabilityAlt(individuals = individuals,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt)
-calculateH2Alt.defineFEM_PV('HLA-A')
-calculateH2Alt.defineREM('HLA-A')
-calculateH2Alt.estimateAddVarML()
-calculateH2Alt.estimateAddVarREML()
-calculateH2Alt.calculateHerit('Genes')
-calculateH2Alt.h2
-calculateH2Alt.sigma2
-
-# TODO:
-    # code generalized ML/REML algorithms
+calculateH2Alt = heritabilityAlt(individuals = individuals,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='ML',resultsFile=resultsFile)
+calculateH2Alt.calculateAll('Genes')
+calculateH2Alt.saveResults()
