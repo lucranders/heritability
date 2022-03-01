@@ -8,6 +8,7 @@ import numpy as np
 import rpy2.robjects as robjects
 from rpy2.robjects import pandas2ri
 import patsy
+from multiprocessing import Pool
 
 
 # Check log sizes from bash processes
@@ -429,6 +430,64 @@ class heritabilityAlt:
             df_ = df_.append(self.results)
             df_.drop_duplicates(inplace = True)
             df_.to_csv(self.saveRef_,index = False, header = True, sep = "|")
+class selectNested:
+    def __init__(self, dfPop, varPop, varSubject, maf, hwe, vif, pathTmp, pathPipeline):
+        self.dfPop_ = dfPop
+        self.varPop_ = varPop
+        self.varSubject_ = varSubject
+        self.difPops_ = self.dfPop_.loc[:,self.varPop_].unique()
+        self.maf_ = maf
+        self.vif_ = vif
+        self.hwe_ = hwe
+        self.path_ = dict()
+        self.pathFilt_ = dict()
+        self.pathPipeline_ = pathPipeline
+        self.pathTmp_ = pathTmp
+    def createTmpFolders(self):
+        for pop_ in self.difPops_:
+            self.path_[pop_] = self.pathTmp_ + '/TempBed_pop_' + pop_ + "_maf_" + str(self.maf_) + "_hwe_" + str(self.hwe_) + "_vif_" + str(self.vif_)
+            subprocess.Popen(['mkdir',self.path_[pop_]])
+            self.pathFilt_[pop_] = self.path_[pop_] + '/' + pop_ + '.filt'
+            self.dfPop_.loc[self.dfPop_[self.varPop_] == pop_,[self.varSubject_,self.varSubject_]].drop_duplicates().to_csv(self.pathFilt_[pop_],index = False, header = False,sep = '\t')
+    def createBedFileNPC(self):
+        cmd = list()
+        pool = Pool()
+        for pop_ in self.difPops_:
+            query_ = "plink --vcf $input"
+            if self.vif_ != None:
+                query_ += " --indep 50 5 " + str(self.vif_)
+            if self.maf_ != None:
+                query_ += " --maf " + str(self.maf_)
+            if self.hwe_ != None:
+                query_ += " --hwe " + str(self.hwe_)
+            query_ += " --keep " + self.pathFilt_[pop_] + ' --mind 0.05 --geno 0.05 --make-bed --out $bed'
+            # Create .bed files - 22 chromossomes
+            cmd.append(['qsub', '-v' ,'query_=' + query_ + ',tempPath=' + self.path_[pop_] , self.pathPipeline_ + '/01.DataPrepGeneralNPC.sh'])
+        pool.map(subprocess.Popen, cmd)
+    def constantCheck(self,pop_):
+        sizes = checkLogSizes(self.path_[pop_])
+        cond = sum(sizes) < 22
+        # If not, waits until so
+        if cond == True:
+            while cond:
+                sizes = checkLogSizes(self.path_[pop_])
+                cond = sum(sizes) < 22
+                if cond:
+                    # Updates status (inside tmp folder)
+                    updateLog(self.path_[pop_],0,"bedStatus.txt")
+                    time.sleep(10)
+                else:
+                    # Updates status (inside tmp folder)
+                    updateLog(self.path_[pop_],1,"bedStatus.txt")
+            # Create references to calculate GCTA
+            for chr_ in range(1,23):
+                f = open(self.path_[pop_] + '/chrs.txt', "a")
+                f.write(self.path_[pop_]+'/chr' + str(chr_) + '\n')
+                f.close()
+    def checkBeds(self):
+        pool = Pool()
+        pool.map(self.constantCheck, list(self.difPops_))
+
 
 
 
@@ -479,3 +538,25 @@ additiveMatrixList['Genes'] = buildAVM.GRM
 calculateH2Alt = heritabilityAlt(individuals = individuals,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='ML',resultsFile=resultsFile)
 calculateH2Alt.calculateAll('Genes')
 calculateH2Alt.saveResults()
+
+# Static params Nested
+pathPipelinePrograms = '/raid/genevol/users/lucas/heritability/01.Pipeline'
+pathGCTA = '/raid/genevol/users/lucas/gcta'
+pathTmp = '/scratch/genevol/users/lucas'
+resultsFile = pathPipelinePrograms + '/Results/results.txt'
+expression = 'tpm'
+db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
+genes = sorted(db.gene_name.unique())
+dbPop = db.loc[:,['pop','subject_id']].copy().drop_duplicates()
+# Mutable params
+maf = 0.01
+hwe = 0.1
+vif = 1.5
+
+buildAVMNested = selectNested(dfPop = dbPop, varPop = 'pop', varSubject = 'subject_id',
+                                maf = maf, hwe = hwe , vif = vif, 
+                                pathTmp = pathTmp, pathPipeline = pathPipelinePrograms)
+buildAVMNested.createTmpFolders()
+buildAVMNested.createBedFileNPC()
+buildAVMNested.checkBeds()
+
