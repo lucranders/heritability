@@ -43,10 +43,11 @@ class buildAdditiveVarianceMatrix:
         self.pathTmp_ = pathTmp
         self.pathGCTA_ = pathGCTA
         self.path_ = pathTmp + '/TempBed_pop_' + pop + "_maf_" + str(maf) + "_hwe_" + str(hwe) + "_vif_" + str(vif)
-    # Create .bed files
+    # Create temporary folders
     def createTmpFolder(self):
         # Create temp folder
         subprocess.Popen(['mkdir',self.path_])
+    # Create list of snps from given parameters (maf, hwe and vif) and .bed files
     def createBedFileNPC(self):
         query_ = "plink --vcf $input"
         if self.vif_ != None:
@@ -81,6 +82,7 @@ class buildAdditiveVarianceMatrix:
             f = open(self.path_ + '/chrs.txt', "a")
             f.write(self.path_+'/chr' + str(chr_) + '\n')
             f.close()
+    # Create .bed files using a pre-processed list of snps as reference
     def createBedFile(self):
         # Create .bed files - 22 chromossomes
         cmd = ['qsub', '-v' ,'pop=' + self.pop_ + ',maf_=' + str(self.maf_) +',hwe_=' + str(self.hwe_) + ',vif_=' + str(self.vif_) + ',sampleFile_=' + str(self.sampleFile_) , self.pathPipeline_ + '/01.DataPrepGeneral.sh']
@@ -104,6 +106,7 @@ class buildAdditiveVarianceMatrix:
             f = open(self.path_ + '/chrs.txt', "a")
             f.write(self.path_+'/chr' + str(chr_) + '\n')
             f.close()
+    # Calculate ZZ' for the given set of snps
     def calculateGCTA(self,refChrs,nameMatrix):
         if nameMatrix != None:
             self.nameMatrix_ = 'GCTA_' + nameMatrix
@@ -126,6 +129,7 @@ class buildAdditiveVarianceMatrix:
             else:
                 # Updates status (inside tmp folder)
                 updateLog(self.path_,1,'GRM' + self.nameMatrix_ + 'Status.txt')
+    # Corrects matrix ZZ' if it not positive definite
     def correctGRM(self):
         subprocess.Popen(['Rscript',self.pathPipeline_ + '/02.matrixCorrection.r',self.path_,self.nameMatrix_])
         check_ = Path(self.path_ + '/statusGRMCorrection.txt')
@@ -134,6 +138,7 @@ class buildAdditiveVarianceMatrix:
             cond = check_.is_file()
             time.sleep(1)
         subprocess.Popen(['rm',self.path_ + '/statusGRMCorrection.txt'])
+    # Reads and stores as a variable the calculated matrix
     def readGRM(self):
         pandas2ri.activate()
         readRDS = robjects.r['readRDS']
@@ -152,6 +157,7 @@ class heritabilityGCTA:
         self.path_ = self.pathTmp_ + '/TempBed_pop_' + self.pop_ + "_maf_" + str(self.maf_) + "_hwe_" + str(self.hwe_) + "_vif_" + str(self.vif_)
         self.db_ = db
         self.individuals_ = individuals
+    # Creates required files to estimate heritability through GCTA software
     def createFiles(self,geneExpr_):
         basicCols = ['subject_id']
         X_ = basicCols.copy()
@@ -167,6 +173,7 @@ class heritabilityGCTA:
         YPop_ = pd.concat([dbToMerge.loc[:,['subject_id']] , dbToMerge.merge(expressionY)] , axis = 1)
         XPop_.to_csv(self.path_ + '/X_' + geneExpr_.replace('-','') +'.txt',sep = ' ',index = False, header = False)
         YPop_.to_csv(self.path_ + '/Y_' + geneExpr_.replace('-','') +'.txt',sep = ' ',index = False, header = False)
+    # Estimates heritability through GCTA software for one gene expression
     def heritabilityGCTA(self,geneExpr_):
         gctaLoc = '/raid/genevol/users/lucas/gcta/gcta64'
         method = '--reml'
@@ -185,6 +192,7 @@ class heritabilityGCTA:
         outV = self.path_ + '/Results' + geneExpr_.replace('-','')
         cmd = [gctaLoc, method, algotithm, algotithmV, maxit, maxitV, grm, grmV, pheno, phenoV, covs, covsV, fix, out, outV]
         subprocess.Popen(cmd)
+    # Estimates heritability through GCTA software for all gene expressions
     def calculateAll(self):
         for geneExpr_ in self.genes_:
             self.createFiles(geneExpr_)
@@ -210,6 +218,7 @@ class heritabilityAlt:
         self.parametersOpt_ = parametersOpt
         self.method_ = method
         self.saveRef_ = resultsFile
+    # Define Fixed Effects Matrix and Phenotype Vector
     def defineFEM_PV(self,geneExpr_):
         dbToMerge = self.individuals_.copy()
         filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
@@ -218,6 +227,7 @@ class heritabilityAlt:
         YPop_ = givenDb.loc[:,self.expression_].copy()
         self.xMatrix = XPop_
         self.yVector = YPop_.values
+    # Define Random Effects Matrix (Covariances)
     def defineREM(self,geneExpr_):
         self.randomCovs = self.additiveMatrixDictionary_
         if self.extraRE_ != None:
@@ -232,6 +242,7 @@ class heritabilityAlt:
                 del(covMat)
         # Diagonal matrix, representing residuals
         self.randomCovs['Residuals'] = np.diag(np.full(self.additiveMatrixDictionary_[list(self.additiveMatrixDictionary_)[0]].shape[0],1))
+    # Estimate parameters from additive model through Maximum Likelihood
     def estimateAddVarML(self):
         # main definitions to start algorithm
         X = self.xMatrix.copy()
@@ -304,6 +315,7 @@ class heritabilityAlt:
         self.sigma2 = thetas
         self.logLikelihood = logLik
         self.betas = betas
+    # Estimate parameters from additive model through Restricted/Residual Maximum Likelihood (REML)
     def estimateAddVarREML(self):
         # main definitions to start algorithm
         X = self.xMatrix.copy()
@@ -378,6 +390,7 @@ class heritabilityAlt:
         self.sigma2 = thetas
         self.logLikelihood = logLik
         self.betas = betas
+    # Calculate heritability for one gene expression
     def calculateHerit(self,column_):
         totSum = 0
         lastRun = self.sigma2[len(self.sigma2)-1]
@@ -386,6 +399,7 @@ class heritabilityAlt:
         self.h2 = lastRun[column_] / totSum
         self.finalDesiredSigma2 = lastRun[column_]
         self.finalTotalSigma = totSum
+    # Calculate heritability for all gene expressions
     def calculateAll(self,column_):
         finalTuple = []
         for geneExpr_ in self.genes_:
@@ -418,6 +432,7 @@ class heritabilityAlt:
         finalDf = pd.DataFrame(finalTuple)
         finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
         self.results = finalDf
+    # Save results
     def saveResults(self):
         check_ = 0
         try:
@@ -443,12 +458,14 @@ class selectNested:
         self.pathFilt_ = dict()
         self.pathPipeline_ = pathPipeline
         self.pathTmp_ = pathTmp
+    # Create one temporary folder for each population
     def createTmpFolders(self):
         for pop_ in self.difPops_:
             self.path_[pop_] = self.pathTmp_ + '/TempBed_pop_' + pop_ + "_maf_" + str(self.maf_) + "_hwe_" + str(self.hwe_) + "_vif_" + str(self.vif_)
             subprocess.Popen(['mkdir',self.path_[pop_]])
             self.pathFilt_[pop_] = self.path_[pop_] + '/' + pop_ + '.filt'
             self.dfPop_.loc[self.dfPop_[self.varPop_] == pop_,[self.varSubject_,self.varSubject_]].drop_duplicates().to_csv(self.pathFilt_[pop_],index = False, header = False,sep = '\t')
+    # Create list of snps from given parameters (maf, hwe and vif) and .bed files for each population, parallelized
     def createBedFileNPC(self):
         cmd = list()
         pool = Pool()
@@ -464,6 +481,7 @@ class selectNested:
             # Create .bed files - 22 chromossomes
             cmd.append(['qsub', '-v' ,'query_=' + query_ + ',tempPath=' + self.path_[pop_] , self.pathPipeline_ + '/01.DataPrepGeneralNPC.sh'])
         pool.map(subprocess.Popen, cmd)
+    # Writes files, containing status of Bed files creation for a given population
     def constantCheck(self,pop_):
         sizes = checkLogSizes(self.path_[pop_])
         cond = sum(sizes) < 22
@@ -484,6 +502,7 @@ class selectNested:
                 f = open(self.path_[pop_] + '/chrs.txt', "a")
                 f.write(self.path_[pop_]+'/chr' + str(chr_) + '\n')
                 f.close()
+    # Writes files, containing status of Bed files creation for all given populations, parallelized
     def checkBeds(self):
         pool = Pool()
         pool.map(self.constantCheck, list(self.difPops_))
