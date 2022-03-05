@@ -509,73 +509,73 @@ class selectNested:
 
 
 
+if __name__ == '__main__':
+    # Static params
+    pathPipelinePrograms = '/raid/genevol/users/lucas/heritability/01.Pipeline'
+    pathGCTA = '/raid/genevol/users/lucas/gcta'
+    pathTmp = '/scratch/genevol/users/lucas'
+    resultsFile = pathPipelinePrograms + '/Results/results.txt'
+    expression = 'tpm'
+    db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
+    genes = sorted(db.gene_name.unique())
+    # Mutable params
+    samplesFile = pathPipelinePrograms + '/Samples/samples.filt' 
+    dbIndividuals = pd.read_csv(samplesFile,header = None,sep = '\t')
+    individuals = dbIndividuals.loc[:,[0]]
+    individuals.columns = ['subject_id']
+    pop = 'Geuvadis'
+    sampleInference = 'all'
+    maf = 0.01
+    hwe = 0.1
+    vif = 1.5
+    threads = 10
+    catCovs = ['sex','lab']
+    numCovs = None
+    extraRE = None
+    formulaFE = '~sex+lab'
+    parametersOpt = {'maxIt':50}
 
-# Static params
-pathPipelinePrograms = '/raid/genevol/users/lucas/heritability/01.Pipeline'
-pathGCTA = '/raid/genevol/users/lucas/gcta'
-pathTmp = '/scratch/genevol/users/lucas'
-resultsFile = pathPipelinePrograms + '/Results/results.txt'
-expression = 'tpm'
-db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
-genes = sorted(db.gene_name.unique())
-# Mutable params
-samplesFile = pathPipelinePrograms + '/Samples/samples.filt' 
-dbIndividuals = pd.read_csv(samplesFile,header = None,sep = '\t')
-individuals = dbIndividuals.loc[:,[0]]
-individuals.columns = ['subject_id']
-pop = 'Geuvadis'
-sampleInference = 'all'
-maf = 0.01
-hwe = 0.1
-vif = 1.5
-threads = 10
-catCovs = ['sex','lab']
-numCovs = None
-extraRE = None
-formulaFE = '~sex+lab'
-parametersOpt = {'maxIt':50}
+    # Build Additive Variance Matrix - required to estimate narrow sense heritability
+    buildAVM = buildAdditiveVarianceMatrix(samplesFile=samplesFile,pop = pop,maf = maf , hwe = hwe, vif = vif,
+                            threads=threads , pathPipeline=pathPipelinePrograms,
+                            pathTmp=pathTmp , pathGCTA=pathGCTA
+                            )
+    buildAVM.createTmpFolder()
+    # buildAVM.createBedFile()
+    buildAVM.createBedFileNPC()
+    buildAVM.calculateGCTA()
+    buildAVM.correctGRM()
 
-# Build Additive Variance Matrix - required to estimate narrow sense heritability
-buildAVM = buildAdditiveVarianceMatrix(samplesFile=samplesFile,pop = pop,maf = maf , hwe = hwe, vif = vif,
-                        threads=threads , pathPipeline=pathPipelinePrograms,
-                        pathTmp=pathTmp , pathGCTA=pathGCTA
-                        )
-buildAVM.createTmpFolder()
-# buildAVM.createBedFile()
-buildAVM.createBedFileNPC()
-buildAVM.calculateGCTA()
-buildAVM.correctGRM()
+    # Narrow sense heritability calculation
+    # Calculating heritability for all required genes, in a classical manner
+    calculateH2GCTA = heritabilityGCTA(individuals = individuals,db = db , covs = catCovs , genes = genes,oldParams=buildAVM)
+    calculateH2GCTA.calculateAll()
+    # Paramaters needed to estimate in a more generalized way 
+    additiveMatrixList = dict()
+    buildAVM.readGRM()
+    additiveMatrixList['Genes'] = buildAVM.GRM
+    calculateH2Alt = heritabilityAlt(individuals = individuals,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='ML',resultsFile=resultsFile)
+    calculateH2Alt.calculateAll('Genes')
+    calculateH2Alt.saveResults()
 
-# Narrow sense heritability calculation
-# Calculating heritability for all required genes, in a classical manner
-calculateH2GCTA = heritabilityGCTA(individuals = individuals,db = db , covs = catCovs , genes = genes,oldParams=buildAVM)
-calculateH2GCTA.calculateAll()
-# Paramaters needed to estimate in a more generalized way 
-additiveMatrixList = dict()
-buildAVM.readGRM()
-additiveMatrixList['Genes'] = buildAVM.GRM
-calculateH2Alt = heritabilityAlt(individuals = individuals,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='ML',resultsFile=resultsFile)
-calculateH2Alt.calculateAll('Genes')
-calculateH2Alt.saveResults()
+    # Static params Nested
+    pathPipelinePrograms = '/raid/genevol/users/lucas/heritability/01.Pipeline'
+    pathGCTA = '/raid/genevol/users/lucas/gcta'
+    pathTmp = '/scratch/genevol/users/lucas'
+    resultsFile = pathPipelinePrograms + '/Results/results.txt'
+    expression = 'tpm'
+    db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
+    genes = sorted(db.gene_name.unique())
+    dbPop = db.loc[:,['pop','subject_id']].copy().drop_duplicates()
+    # Mutable params
+    maf = 0.01
+    hwe = 0.1
+    vif = 1.5
 
-# Static params Nested
-pathPipelinePrograms = '/raid/genevol/users/lucas/heritability/01.Pipeline'
-pathGCTA = '/raid/genevol/users/lucas/gcta'
-pathTmp = '/scratch/genevol/users/lucas'
-resultsFile = pathPipelinePrograms + '/Results/results.txt'
-expression = 'tpm'
-db = pd.read_csv('/raid/genevol/heritability/hla_expression.tsv',sep = '\t')
-genes = sorted(db.gene_name.unique())
-dbPop = db.loc[:,['pop','subject_id']].copy().drop_duplicates()
-# Mutable params
-maf = 0.01
-hwe = 0.1
-vif = 1.5
-
-buildAVMNested = selectNested(dfPop = dbPop, varPop = 'pop', varSubject = 'subject_id',
-                                maf = maf, hwe = hwe , vif = vif, 
-                                pathTmp = pathTmp, pathPipeline = pathPipelinePrograms)
-buildAVMNested.createTmpFolders()
-buildAVMNested.createBedFileNPC()
-buildAVMNested.checkBeds()
+    buildAVMNested = selectNested(dfPop = dbPop, varPop = 'pop', varSubject = 'subject_id',
+                                    maf = maf, hwe = hwe , vif = vif, 
+                                    pathTmp = pathTmp, pathPipeline = pathPipelinePrograms)
+    buildAVMNested.createTmpFolders()
+    buildAVMNested.createBedFileNPC()
+    buildAVMNested.checkBeds()
 
