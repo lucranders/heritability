@@ -117,8 +117,8 @@ class buildAdditiveVarianceMatrix:
             self.nameMatrix_ = 'GCTA_' + nameMatrix
         else:
             self.nameMatrix_ = 'GCTA'
-        if self.samplesFile_ != None:
-            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + refChrs,'--keep',self.samplesFile_,'--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
+        if self.sample_ != None:
+            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + refChrs,'--keep',self.path_ + '/sample.txt','--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
         else:
             cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + refChrs,'--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
         subprocess.Popen(cmd)
