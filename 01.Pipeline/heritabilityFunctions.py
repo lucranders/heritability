@@ -32,9 +32,9 @@ def updateLog(path_,status_,file_):
     f.write(msg_ + '\n')
     f.close()
 class buildAdditiveVarianceMatrix:
-    def __init__(self,samplesFile,pop,maf,hwe,vif,threads,pathPipeline,pathTmp,pathGCTA):
+    def __init__(self,sample,pop,maf,hwe,vif,threads,pathPipeline,pathTmp,pathGCTA):
         self.pop_ = pop
-        self.samplesFile_ = samplesFile
+        self.sample_ = sample
         self.maf_ = maf
         self.hwe_ = hwe
         self.vif_ = vif
@@ -47,6 +47,11 @@ class buildAdditiveVarianceMatrix:
     def createTmpFolder(self):
         # Create temp folder
         subprocess.Popen(['mkdir',self.path_])
+        if self.sample_ != None:
+            individualsDf = pd.DataFrame(self.sample_)
+            individualsDf.columns = ['sample_id']
+            individualsDf.loc[:,'1'] = individualsDf.sample_id
+            individualsDf.to_csv(self.path_ + '/sample.txt', index = False, header= False, sep = ' ')
     # Create list of snps from given parameters (maf, hwe and vif) and .bed files
     def createBedFileNPC(self):
         query_ = "plink --vcf $input"
@@ -56,8 +61,8 @@ class buildAdditiveVarianceMatrix:
             query_ += " --maf " + str(self.maf_)
         if self.hwe_ != None:
             query_ += " --hwe " + str(self.hwe_)
-        if self.samplesFile_ != None:
-            query_ += " --keep " + self.samplesFile_
+        if self.sample_ != None:
+            query_ += " --keep " + self.path_ + '/sample.txt'
         query_ += ' --mind 0.05 --geno 0.05 --make-bed --out $bed'
         self.query_ = query_
         # Create .bed files - 22 chromossomes
