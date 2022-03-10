@@ -63,7 +63,7 @@ class buildAdditiveVarianceMatrix:
             query_ += " --hwe " + str(self.hwe_)
         if self.sample_ != None:
             query_ += " --keep " + self.path_ + '/sample.txt'
-        query_ += ' --mind 0.05 --geno 0.05 --make-bed --out $bed'
+        query_ += ' --mind 0.05 --geno 0.05 --vcf-half-call missing --make-bed --out $bed'
         self.query_ = query_
         # Create .bed files - 22 chromossomes
         cmd = ['qsub', '-v' ,'query_=' + self.query_ + ',tempPath=' + self.path_ , self.pathPipeline_ + '/01.DataPrepGeneralNPC.sh']
