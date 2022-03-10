@@ -47,13 +47,13 @@ class buildAdditiveVarianceMatrix:
     def createTmpFolder(self):
         # Create temp folder
         subprocess.Popen(['mkdir',self.path_])
+    # Create list of snps from given parameters (maf, hwe and vif) and .bed files
+    def createBedFileNPC(self):
         if self.sample_ != None:
             individualsDf = pd.DataFrame(self.sample_)
             individualsDf.columns = ['sample_id']
             individualsDf.loc[:,'1'] = individualsDf.sample_id
             individualsDf.to_csv(self.path_ + '/sample.txt', index = False, header= False, sep = ' ')
-    # Create list of snps from given parameters (maf, hwe and vif) and .bed files
-    def createBedFileNPC(self):
         query_ = "plink --vcf $input"
         if self.vif_ != None:
             query_ += " --indep 50 5 " + str(self.vif_)
