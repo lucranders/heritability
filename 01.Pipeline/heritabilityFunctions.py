@@ -41,7 +41,7 @@ def extractGCTAResults(path_):
             varianceSnps = strings_[1]
         if 'Vp' in line and 'V(G)' in line:
             herit = strings_[1]
-        return varianceSnps , totalVariance , herit
+    return varianceSnps , totalVariance , herit
 class buildAdditiveVarianceMatrix:
     def __init__(self,sample,pop,maf,hwe,vif,threads,pathPipeline,pathTmp,pathGCTA):
         self.pop_ = pop
