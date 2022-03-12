@@ -444,7 +444,7 @@ class heritabilityAlt:
             h2 = self.h2[0].copy()
             if compareGCTA == True:
                 gene_ = geneExpr_.replace('-','')
-                pathGenes_ = self.path_ + '/' + gene_ + '.log'
+                pathGenes_ = self.path_ + '/Results' + gene_ + '.log'
                 snpsGCTA, totalGCTA, h2GCTA = extractGCTAResults(pathGenes_)
             else:
                 snpsGCTA, totalGCTA, h2GCTA = None, None, None
