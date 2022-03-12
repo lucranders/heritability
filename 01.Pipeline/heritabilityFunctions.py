@@ -476,7 +476,7 @@ class heritabilityAlt:
         if check_ == 1:
             self.results.to_csv(self.saveRef_,index = False, header = True, sep = "|")
         else:
-            df_ = df_.append(self.results)
+            df_ = pd.concat([df_,self.results], axis = 0)
             df_.drop_duplicates(inplace = True)
             df_.to_csv(self.saveRef_,index = False, header = True, sep = "|")
 class selectNested:
