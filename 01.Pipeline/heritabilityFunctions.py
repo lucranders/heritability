@@ -188,15 +188,18 @@ class heritabilityGCTA:
         XPop_.to_csv(self.path_ + '/X_' + geneExpr_.replace('-','') +'.txt',sep = ' ',index = False, header = False)
         YPop_.to_csv(self.path_ + '/Y_' + geneExpr_.replace('-','') +'.txt',sep = ' ',index = False, header = False)
     # Estimates heritability through GCTA software for one gene expression
-    def heritabilityGCTA(self,geneExpr_):
+    def heritabilityGCTA(self,geneExpr_,suffix_ = None):
         gctaLoc = '/raid/genevol/users/lucas/gcta/gcta64'
         method = '--reml'
-        algotithm = '--reml-alg'
-        algotithmV = '0'
+        algorithm = '--reml-alg'
+        algorithmV = '0'
         maxit = '--reml-maxit'
         maxitV = '1000'
         grm = '--grm'
-        grmV = self.path_ + '/GCTA'
+        if suffix_ == None:
+            grmV = self.path_ + '/GCTA'
+        else:
+            grmV = self.path_ + '/GCTA' + suffix_
         pheno =  '--pheno'
         phenoV = self.path_ + '/Y_' + geneExpr_.replace('-','') + '.txt'
         covs = '--covar'
@@ -204,13 +207,13 @@ class heritabilityGCTA:
         fix = '--reml-est-fix'
         out = '--out'
         outV = self.path_ + '/Results' + geneExpr_.replace('-','')
-        cmd = [gctaLoc, method, algotithm, algotithmV, maxit, maxitV, grm, grmV, pheno, phenoV, covs, covsV, fix, out, outV]
+        cmd = [gctaLoc, method, algorithm, algorithmV, maxit, maxitV, grm, grmV, pheno, phenoV, covs, covsV, fix, out, outV]
         subprocess.Popen(cmd)
     # Estimates heritability through GCTA software for all gene expressions
-    def calculateAll(self):
+    def calculateAll(self,suffix_):
         for geneExpr_ in self.genes_:
             self.createFiles(geneExpr_)
-            self.heritabilityGCTA(geneExpr_)
+            self.heritabilityGCTA(geneExpr_,suffix_)
 class heritabilityAlt:
     def __init__(self,individuals,sampInf,db,formulaFE,expression,genes,oldParams,additiveMatrixList,extraRE,parametersOpt,method,resultsFile):
         self.pop_ = oldParams.pop_
