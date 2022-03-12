@@ -82,11 +82,18 @@ class buildAdditiveVarianceMatrix:
             else:
                 # Updates status (inside tmp folder)
                 updateLog(self.path_,1,"bedStatus.txt")
+    def createChrRef(self,listChrs = None,nameFile = 'chrs'):
         # Create references to calculate GCTA
-        for chr_ in range(1,23):
-            f = open(self.path_ + '/chrs.txt', "a")
-            f.write(self.path_+'/chr' + str(chr_) + '\n')
-            f.close()
+        if listChrs == None:
+            for chr_ in range(1,23):
+                f = open(self.path_ + '/' + nameFile +'.txt', "a")
+                f.write(self.path_+'/chr' + str(chr_) + '\n')
+                f.close()
+        else:
+            for chr_ in listChrs:
+                f = open(self.path_ + '/' + nameFile +'.txt', "a")
+                f.write(self.path_+'/chr' + str(chr_) + '\n')
+                f.close()
     # Create .bed files using a pre-processed list of snps as reference
     def createBedFile(self):
         # Create .bed files - 22 chromossomes
@@ -112,15 +119,17 @@ class buildAdditiveVarianceMatrix:
             f.write(self.path_+'/chr' + str(chr_) + '\n')
             f.close()
     # Calculate ZZ' for the given set of snps
-    def calculateGCTA(self,refChrs,nameMatrix):
+    def calculateGCTA(self,nameFile = None,nameMatrix = None):
+        if nameFile == None:
+            refChrs = 'chrs'
         if nameMatrix != None:
             self.nameMatrix_ = 'GCTA_' + nameMatrix
         else:
             self.nameMatrix_ = 'GCTA'
         if self.sample_ != None:
-            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + refChrs,'--keep',self.path_ + '/sample.txt','--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
+            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + '/' + refChrs + '.txt','--keep',self.path_ + '/sample.txt','--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
         else:
-            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + refChrs,'--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
+            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + '/' + refChrs + '.txt','--make-grm','--out',self.path_+self.nameMatrix_,'--thread-num',self.threads_]
         subprocess.Popen(cmd)
         # check whether GRM binaries already exists - means process is finished
         check_ = Path(self.path_ + self.nameMatrix_ + '.grm.bin')
@@ -147,7 +156,7 @@ class buildAdditiveVarianceMatrix:
     def readGRM(self):
         pandas2ri.activate()
         readRDS = robjects.r['readRDS']
-        self.GRM = readRDS(self.path_ + '/' + self.nameMatrix_ +'.rds')
+        self.GRM = readRDS(self.path_ + '/' + self.nameMatrix_ + '_correction.rds')
 class heritabilityGCTA:
     def __init__(self,individuals,db,covs,genes,oldParams):
         self.pop_ = oldParams.pop_
