@@ -83,6 +83,7 @@ blockDiagonalPDMatrix <- function(randomCor,...) {
 options(digits=6)
 
 prefix_ = paste0(path_,'/' ,nameMatrix_)
+prefixSave_ = paste0(path_,'/' ,nameMatrix_,'_correction')
 GRM = ReadGRMBin(prefix_)
 M <- matrix(0, dim(GRM[[3]])[1], dim(GRM[[3]])[1])
 M[upper.tri(M, diag = FALSE)] = GRM[[2]]
@@ -101,6 +102,6 @@ colnames(matrizCorrigida) = GRM[[3]][,1]
 # vectNew = matrizCorrigida[upper.tri(matrizCorrigida, diag = FALSE)]
 # diagNew = diag(matrizCorrigida)
 elements = matrizCorrigida[upper.tri(matrizCorrigida, diag = TRUE)]
-writeGRMBin(element_ = elements,prefix_)
-saveRDS(object = matrizCorrigida,file = paste0(prefix_,'.rds'))
+writeGRMBin(element_ = elements,prefixSave_)
+saveRDS(object = matrizCorrigida,file = paste0(prefixSave_,'.rds'))
 write.table('finished',paste0(path_,'/statusGRMCorrection.txt'))
