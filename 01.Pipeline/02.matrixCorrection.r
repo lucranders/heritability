@@ -103,5 +103,11 @@ colnames(matrizCorrigida) = GRM[[3]][,1]
 # diagNew = diag(matrizCorrigida)
 elements = matrizCorrigida[upper.tri(matrizCorrigida, diag = TRUE)]
 writeGRMBin(element_ = elements,prefixSave_)
+command = paste0('cp ',path_,'/',nameMatrix_,'.grm.bin ',path_,'/',nameMatrix_,'_correction.grm.bin')
+system(command)
+command = paste0('cp ',path_,'/',nameMatrix_,'.grm.N.bin ',path_,'/',nameMatrix_,'_correction.grm.N.bin')
+system(command)
+command = paste0('cp ',path_,'/',nameMatrix_,'.grm.id ',path_,'/',nameMatrix_,'_correction.grm.id')
+system(command)
 saveRDS(object = matrizCorrigida,file = paste0(prefixSave_,'.rds'))
 write.table('finished',paste0(path_,'/statusGRMCorrection.txt'))
