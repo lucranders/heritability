@@ -31,6 +31,17 @@ def updateLog(path_,status_,file_):
     f = open(path_ + '/' + file_, "a")
     f.write(msg_ + '\n')
     f.close()
+def extractGCTAResults(path_):
+    f_ = open(path_,'r')
+    for line in f_:
+        strings_ = line.split('\t')
+        if 'Vp' in line and 'V(G)' not in line:
+            totalVariance = strings_[1]
+        if 'Vp' not in line and 'V(G)' in line:
+            varianceSnps = strings_[1]
+        if 'Vp' in line and 'V(G)' in line:
+            herit = strings_[1]
+        return varianceSnps , totalVariance , herit
 class buildAdditiveVarianceMatrix:
     def __init__(self,sample,pop,maf,hwe,vif,threads,pathPipeline,pathTmp,pathGCTA):
         self.pop_ = pop
@@ -417,7 +428,7 @@ class heritabilityAlt:
         self.finalDesiredSigma2 = lastRun[column_]
         self.finalTotalSigma = totSum
     # Calculate heritability for all gene expressions
-    def calculateAll(self,column_):
+    def calculateAll(self,column_,compareGCTA):
         finalTuple = []
         for geneExpr_ in self.genes_:
             self.defineFEM_PV(geneExpr_)
@@ -431,6 +442,12 @@ class heritabilityAlt:
                 break
             self.calculateHerit(column_)
             h2 = self.h2[0].copy()
+            if compareGCTA == True:
+                gene_ = geneExpr_.replace('-','')
+                pathGenes_ = self.path_ + '/' + gene_ + '.log'
+                snpsGCTA, totalGCTA, h2GCTA = extractGCTAResults(pathGenes_)
+            else:
+                snpsGCTA, totalGCTA, h2GCTA = None, None, None
             finalDesiredSigma2 = self.finalDesiredSigma2[0].copy()
             finalTotalSigma = self.finalTotalSigma[0].copy()
             pop = self.pop_
@@ -444,10 +461,10 @@ class heritabilityAlt:
                     RE = x
                 else:
                     RE += "+" + x
-            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2,finalDesiredSigma2,finalTotalSigma,self.method_,self.formulaFE_,RE]
+            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2, h2GCTA,finalDesiredSigma2,snpsGCTA,finalTotalSigma,totalGCTA,self.method_,self.formulaFE_,RE]
             finalTuple.append(tuple_)
         finalDf = pd.DataFrame(finalTuple)
-        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
+        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','HeritEstGCTA','DesiredVarEst','DesiredVarEstGCTA','totalVarEst','totalVarEst','method','formulaF','randEffects']
         self.results = finalDf
     # Save results
     def saveResults(self):
