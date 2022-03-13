@@ -143,7 +143,7 @@ class buildAdditiveVarianceMatrix:
             cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + '/' + refChrs + '.txt','--make-grm','--out',self.path_+'/' + self.nameMatrix_,'--thread-num',self.threads_]
         subprocess.Popen(cmd)
         # check whether GRM binaries already exists - means process is finished
-        check_ = Path(self.path_ + self.nameMatrix_ + '.grm.bin')
+        check_ = Path(self.path_ + '/' + self.nameMatrix_ + '.grm.bin')
         cond = check_.is_file()
         while not cond:
             cond = check_.is_file()
