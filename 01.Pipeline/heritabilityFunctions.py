@@ -464,7 +464,7 @@ class heritabilityAlt:
             tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2, h2GCTA,finalDesiredSigma2,snpsGCTA,finalTotalSigma,totalGCTA,self.method_,self.formulaFE_,RE]
             finalTuple.append(tuple_)
         finalDf = pd.DataFrame(finalTuple)
-        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','HeritEstGCTA','DesiredVarEst','DesiredVarEstGCTA','totalVarEst','totalVarEst','method','formulaF','randEffects']
+        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','HeritEstGCTA','DesiredVarEst','DesiredVarEstGCTA','totalVarEst','totalVarEstGCTA','method','formulaF','randEffects']
         self.results = finalDf
     # Save results
     def saveResults(self):
