@@ -60,9 +60,11 @@ def parallel(maf,hwe,vif):
     additiveMatrixList = dict()
     buildAVM.readGRM()
     additiveMatrixList['Genes'] = buildAVM.GRM
-    calculateH2Alt = herit.heritabilityAlt(individuals = individualsDf,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='ML',resultsFile=resultsFile)
+    calculateH2Alt = herit.heritabilityAlt(individuals = individualsDf,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='REML',resultsFile=resultsFile)
     calculateH2Alt.calculateAll('Genes',compareGCTA=True)
     calculateH2Alt.saveResults()
+    calculateH2AltREML = herit.heritabilityAlt(individuals = individualsDf,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='ML',resultsFile=resultsFile)
+    calculateH2AltREML.calculateAll('Genes',compareGCTA=True)
 
 freeze_support()
 with Pool() as pool:
