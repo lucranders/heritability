@@ -225,6 +225,36 @@ class heritabilityGCTA:
         for geneExpr_ in self.genes_:
             self.createFiles(geneExpr_)
             self.heritabilityGCTA(geneExpr_,suffix_)
+    def resultsToDf(self,sampInf_,formulaFE_,formulaRE_ = 'Genes+Residuals'):
+        finalTuple = []
+        for geneExpr_ in self.genes_:
+            gene_ = geneExpr_.replace('-','')
+            pathGenes_ = self.path_ + '/Results' + gene_ + '.log'
+            snpsGCTA, totalGCTA, h2GCTA = extractGCTAResults(pathGenes_)
+            pop = self.pop_
+            maf = self.maf_
+            hwe = self.hwe_
+            vif = self.vif_
+            sampInf = sampInf_
+            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2GCTA,snpsGCTA,totalGCTA,'GCTA',formulaFE_,formulaRE_]
+            finalTuple.append(tuple_)
+        finalDf = pd.DataFrame(finalTuple)
+        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
+        self.results = finalDf
+    def saveResults(self,saveRef_):
+        check_ = 0
+        try:
+            df_ = pd.read_csv(saveRef_,sep = '|',header = 0)
+        except:
+            check_ = 1
+        if check_ == 1:
+            self.results.to_csv(saveRef_,index = False, header = True, sep = "|")
+        else:
+            df_ = pd.concat([df_,self.results], axis = 0)
+            df_.drop_duplicates(inplace = True)
+            df_.to_csv(saveRef_,index = False, header = True, sep = "|")
+
+
 class heritabilityAlt:
     def __init__(self,individuals,sampInf,db,formulaFE,expression,genes,oldParams,additiveMatrixList,extraRE,parametersOpt,method,resultsFile):
         self.pop_ = oldParams.pop_
@@ -428,7 +458,7 @@ class heritabilityAlt:
         self.finalDesiredSigma2 = lastRun[column_]
         self.finalTotalSigma = totSum
     # Calculate heritability for all gene expressions
-    def calculateAll(self,column_,compareGCTA):
+    def calculateAll(self,column_):
         finalTuple = []
         for geneExpr_ in self.genes_:
             self.defineFEM_PV(geneExpr_)
@@ -442,12 +472,6 @@ class heritabilityAlt:
                 break
             self.calculateHerit(column_)
             h2 = self.h2[0].copy()
-            if compareGCTA == True:
-                gene_ = geneExpr_.replace('-','')
-                pathGenes_ = self.path_ + '/Results' + gene_ + '.log'
-                snpsGCTA, totalGCTA, h2GCTA = extractGCTAResults(pathGenes_)
-            else:
-                snpsGCTA, totalGCTA, h2GCTA = None, None, None
             finalDesiredSigma2 = self.finalDesiredSigma2[0].copy()
             finalTotalSigma = self.finalTotalSigma[0].copy()
             pop = self.pop_
@@ -461,10 +485,10 @@ class heritabilityAlt:
                     RE = x
                 else:
                     RE += "+" + x
-            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2, h2GCTA,finalDesiredSigma2,snpsGCTA,finalTotalSigma,totalGCTA,self.method_,self.formulaFE_,RE]
+            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2,finalDesiredSigma2,finalTotalSigma,self.method_,self.formulaFE_,RE]
             finalTuple.append(tuple_)
         finalDf = pd.DataFrame(finalTuple)
-        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','HeritEstGCTA','DesiredVarEst','DesiredVarEstGCTA','totalVarEst','totalVarEstGCTA','method','formulaF','randEffects']
+        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
         self.results = finalDf
     # Save results
     def saveResults(self):
