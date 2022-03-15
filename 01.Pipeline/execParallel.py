@@ -38,7 +38,7 @@ catCovs = None
 numCovs = None
 extraRE = None
 formulaFE = '~sex+lab'
-parametersOpt = {'maxIt':50,'conv':1e-4}
+parametersOpt = {'maxIt':100,'conv':1e-4}
 
 def parallel(maf,hwe,vif):
     # Build Additive Variance Matrix - required to estimate narrow sense heritability
@@ -60,11 +60,14 @@ def parallel(maf,hwe,vif):
     additiveMatrixList = dict()
     buildAVM.readGRM()
     additiveMatrixList['Genes'] = buildAVM.GRM
-    calculateH2Alt = herit.heritabilityAlt(individuals = individualsDf,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='REML',resultsFile=resultsFile)
+    method = 'ML'
+    calculateH2Alt = herit.heritabilityAlt(individuals = individualsDf,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method=method,resultsFile=resultsFile)
     calculateH2Alt.calculateAll('Genes',compareGCTA=True)
     calculateH2Alt.saveResults()
-    calculateH2AltREML = herit.heritabilityAlt(individuals = individualsDf,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method='ML',resultsFile=resultsFile)
+    method = 'REML'
+    calculateH2AltREML = herit.heritabilityAlt(individuals = individualsDf,sampInf=sampleInference,db = db,formulaFE=formulaFE,expression = expression , genes = genes,oldParams=buildAVM,additiveMatrixList=additiveMatrixList,extraRE=extraRE,parametersOpt=parametersOpt,method=method,resultsFile=resultsFile)
     calculateH2AltREML.calculateAll('Genes',compareGCTA=True)
+    calculateH2AltREML.saveResults()
 
 freeze_support()
 with Pool() as pool:
