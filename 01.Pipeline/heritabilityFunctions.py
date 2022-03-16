@@ -448,6 +448,40 @@ class heritabilityAlt:
         self.sigma2 = thetas
         self.logLikelihood = logLik
         self.betas = betas
+    def estimateSimpleHeritR(self,pathPipeline,geneExpr_,matrixName_,method_,fileSave_):
+        cmd = ['Rscript',pathPipeline + 'calculateSimpleHeritR.r',self.path_,geneExpr_,matrixName_,method_,fileSave_]
+        subprocess.Popen(cmd)
+    def calculateAllR(self,matrixName_,method_,fileSave_):
+        for geneExpr_ in self.genes_:
+            self.estimateSimpleHeritR(geneExpr_ = geneExpr_,matrixName_ = matrixName_,method_=method_,fileSave_=fileSave_)
+    def resultsToDf(self,fileSave_,sampInf_,formulaFE_,formulaRE_ = 'Genes+Residuals'):
+        finalTuple = []
+        for geneExpr_ in self.genes_:
+            gene_ = geneExpr_.replace('-','')
+            pathGenes_ = self.path_ + '/' + fileSave_ + '_' + gene_ + '.txt'
+            snpsR, totalR, h2R = extractGCTAResults(pathGenes_)
+            pop = self.pop_
+            maf = self.maf_
+            hwe = self.hwe_
+            vif = self.vif_
+            sampInf = sampInf_
+            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2R,snpsR,totalR,'REstimate',formulaFE_,formulaRE_]
+            finalTuple.append(tuple_)
+        finalDf = pd.DataFrame(finalTuple)
+        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
+        self.results = finalDf
+    def saveResults(self,saveRef_):
+        check_ = 0
+        try:
+            df_ = pd.read_csv(saveRef_,sep = '|',header = 0)
+        except:
+            check_ = 1
+        if check_ == 1:
+            self.results.to_csv(saveRef_,index = False, header = True, sep = "|")
+        else:
+            df_ = pd.concat([df_,self.results], axis = 0)
+            df_.drop_duplicates(inplace = True)
+            df_.to_csv(saveRef_,index = False, header = True, sep = "|")
     # Calculate heritability for one gene expression
     def calculateHerit(self,column_):
         totSum = 0
