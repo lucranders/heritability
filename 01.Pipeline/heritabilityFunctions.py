@@ -454,7 +454,7 @@ class heritabilityAlt:
     def calculateAllR(self,matrixName_,method_,fileSave_):
         for geneExpr_ in self.genes_:
             self.estimateSimpleHeritR(geneExpr_ = geneExpr_,matrixName_ = matrixName_,method_=method_,fileSave_=fileSave_)
-    def resultsToDf(self,fileSave_,sampInf_,formulaFE_,formulaRE_ = 'Genes+Residuals'):
+    def resultsToDf(self,fileSave_,sampInf_,method_,formulaFE_,formulaRE_ = 'Genes+Residuals'):
         finalTuple = []
         for geneExpr_ in self.genes_:
             gene_ = geneExpr_.replace('-','')
@@ -465,7 +465,7 @@ class heritabilityAlt:
             hwe = self.hwe_
             vif = self.vif_
             sampInf = sampInf_
-            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2R,snpsR,totalR,'REstimate',formulaFE_,formulaRE_]
+            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2R,snpsR,totalR,'REstimate'+method_,formulaFE_,formulaRE_]
             finalTuple.append(tuple_)
         finalDf = pd.DataFrame(finalTuple)
         finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
