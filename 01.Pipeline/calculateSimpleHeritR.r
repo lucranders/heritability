@@ -25,7 +25,7 @@ ReadGRMBin=function(prefix, AllN=F, size=4){
 }
 # Functions to estimate heritability
 # By maximum likelihood - Multiple random variables can be considered
-ML = function(listParams_){
+ML_ = function(listParams_){
   
   X = listParams_[['X']]
   y = listParams_[['y']]
