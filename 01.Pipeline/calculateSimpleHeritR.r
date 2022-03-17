@@ -610,8 +610,8 @@ heritability = sigmas2[['Genes']]/sigma2Tot
 
 finalSaveFile = paste0(pathTmp_,'/',fileSave_,'_',gsub('-','',gene_),'.txt')
 heritFinal = heritability[[length(heritability)]]
-write.table(paste0("V(G)/Vp ",heritFinal),finalSaveFile,append = T, row.names = F, quote = F, sep = '\t')
+write.table(paste("V(G)/Vp ",heritFinal , sep = '\t'),finalSaveFile,append = T, row.names = F, col.names = F, quote = F)
 sigma2GeneFinal = sigmas2[['Genes']][[length(heritability)]]
-write.table(paste0("V(G)  ",sigma2GeneFinal),finalSaveFile,append = T, row.names = F, quote = F, sep = '\t')
+write.table(paste("V(G)  ",sigma2GeneFinal , sep = '\t'),finalSaveFile,append = T, row.names = F, col.names = F, quote = F)
 sigma2TotFinal = sigma2Tot[[length(heritability)]]
-write.table(paste0("Vp  ",sigma2TotFinal),finalSaveFile,append = T, row.names = F, quote = F, sep = '\t')
+write.table(paste("Vp  ",sigma2TotFinal , sep = '\t'),finalSaveFile,append = T, row.names = F, col.names = F, quote = F)
