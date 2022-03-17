@@ -450,7 +450,8 @@ class heritabilityAlt:
         self.betas = betas
     def estimateSimpleHeritR(self,pathPipeline,geneExpr_,matrixName_,method_,fileSave_):
         cmd = ['Rscript',pathPipeline + '/calculateSimpleHeritR.r',self.path_,geneExpr_,matrixName_,method_,fileSave_]
-        subprocess.Popen(cmd)
+        process = subprocess.Popen(cmd)
+        process.wait()
     def calculateAllR(self,pathPipeline,matrixName_,method_,fileSave_):
         for geneExpr_ in self.genes_:
             self.estimateSimpleHeritR(pathPipeline = pathPipeline ,geneExpr_ = geneExpr_,matrixName_ = matrixName_,method_=method_,fileSave_=fileSave_)
