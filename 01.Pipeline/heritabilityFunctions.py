@@ -449,7 +449,7 @@ class heritabilityAlt:
         self.logLikelihood = logLik
         self.betas = betas
     def estimateSimpleHeritR(self,pathPipeline,geneExpr_,matrixName_,method_,fileSave_):
-        cmd = ['Rscript',pathPipeline + 'calculateSimpleHeritR.r',self.path_,geneExpr_,matrixName_,method_,fileSave_]
+        cmd = ['Rscript',pathPipeline + '/calculateSimpleHeritR.r',self.path_,geneExpr_,matrixName_,method_,fileSave_]
         subprocess.Popen(cmd)
     def calculateAllR(self,matrixName_,method_,fileSave_):
         for geneExpr_ in self.genes_:
