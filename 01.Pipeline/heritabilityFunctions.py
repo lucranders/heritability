@@ -451,9 +451,9 @@ class heritabilityAlt:
     def estimateSimpleHeritR(self,pathPipeline,geneExpr_,matrixName_,method_,fileSave_):
         cmd = ['Rscript',pathPipeline + '/calculateSimpleHeritR.r',self.path_,geneExpr_,matrixName_,method_,fileSave_]
         subprocess.Popen(cmd)
-    def calculateAllR(self,matrixName_,method_,fileSave_):
+    def calculateAllR(self,pathPipeline,matrixName_,method_,fileSave_):
         for geneExpr_ in self.genes_:
-            self.estimateSimpleHeritR(geneExpr_ = geneExpr_,matrixName_ = matrixName_,method_=method_,fileSave_=fileSave_)
+            self.estimateSimpleHeritR(pathPipeline = pathPipeline ,geneExpr_ = geneExpr_,matrixName_ = matrixName_,method_=method_,fileSave_=fileSave_)
     def resultsToDf(self,fileSave_,sampInf_,method_,formulaFE_,formulaRE_ = 'Genes+Residuals'):
         finalTuple = []
         for geneExpr_ in self.genes_:
