@@ -599,7 +599,7 @@ listParams_[['maxIt']] = 100
 # listParams_[['samp_']] = notLD(listParams_[['X']],9297791,0.01)
 
 df_ = bestStart(model_ = method_,starts_ = c(sd(listParams_[['y']]),sd(listParams_[['y']])/2,var(listParams_[['y']]),var(listParams_[['y']])/2),cl_ = 4,listParams_ = listParams_,'Genes')
-mod_ = returnBestStart(df_ = df_,model_ = model_,listParams_ = listParams_)
+mod_ = returnBestStart(df_ = df_,model_ = method_,listParams_ = listParams_)
 
 sigmas2 = mod_[['sigmas2']]
 sigma2Tot = 0
