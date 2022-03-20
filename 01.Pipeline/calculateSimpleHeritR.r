@@ -25,7 +25,7 @@ ReadGRMBin=function(prefix, AllN=F, size=4){
 }
 # Functions to estimate heritability
 # By maximum likelihood - Multiple random variables can be considered
-ML = function(listParams_){
+ML_ = function(listParams_){
   
   X = listParams_[['X']]
   y = listParams_[['y']]
@@ -81,7 +81,20 @@ ML = function(listParams_){
       }
     }
     
-    invHessian = solve(Hessian)
+    invHessian = try(solve(Hessian) , silent = TRUE)
+    stop_ = ifelse(class(invHessian) == "try-error", TRUE, FALSE)
+    # If length(stop_) > 1, then invHessian is ok (class = matrix;array)
+    # else, if length(stop_) == 1, then invHessian went wrong (class = try-error)
+    if(length(stop_) == 1){
+        print("ERROR - can't calculate inverse")
+        return_ = list()
+        return_[['sigmas2']] = NULL
+        # return_[['logLikelihood']] = logLik
+        return_[['logLikelihood']] = NULL
+        return_[['betas']] = NULL
+        return(return_)
+
+    }
     
     thetaNew = sigmas2Init - invHessian %*% s
 
@@ -535,16 +548,24 @@ bestStart = function(model_,starts_,cl_,listParams_,nameInterest_){
   run_ <- foreach(sigma_ = starts_,.combine = 'rbind') %dopar% {
     listParams_[['sigmas2Init']] = rep(sigma_,(length(listParams_[['givenMatrixes']]) + 1) )
     exec_ = func_(listParams_)
-    
-    loglik = exec_[['logLikelihood']]
-    sigmas2 = exec_[['sigmas2']]
-    sigmaInterest = sigmas2[[nameInterest_]][[length(sigmas2[[nameInterest_]])]]
-    sigma2Tot = 0
-    for(name_ in names(sigmas2)){
-      sigma2Tot = sigma2Tot + sigmas2[[name_]]
+    if (length(exec_) > 0){
+          loglik = exec_[['logLikelihood']]
+          sigmas2 = exec_[['sigmas2']]
+          sigmaInterest = sigmas2[[nameInterest_]][[length(sigmas2[[nameInterest_]])]]
+          sigma2Tot = 0
+          for(name_ in names(sigmas2)){
+            sigma2Tot = sigma2Tot + sigmas2[[name_]]
+          }
+          sigma2TotFinal = sigma2Tot[[length(sigmas2[[nameInterest_]])]]
+          data.frame(start = sigma_,likelihood = loglik,heritability = sigmaInterest/sigma2TotFinal , sigma2A = sigmaInterest , sigma2Tot = sigma2TotFinal)
+    } else{
+          loglik = 0
+          sigmas2 = 0
+          sigmaInterest = 0
+          sigma2Tot = 0
+          sigma2TotFinal = 1
+          data.frame(start = sigma_,likelihood = loglik,heritability = -99 , sigma2A = sigmaInterest , sigma2Tot = sigma2TotFinal)
     }
-    sigma2TotFinal = sigma2Tot[[length(sigmas2[[nameInterest_]])]]
-    data.frame(start = sigma_,likelihood = loglik,heritability = sigmaInterest/sigma2TotFinal , sigma2A = sigmaInterest , sigma2Tot = sigma2TotFinal)
     
   }
   
@@ -601,12 +622,18 @@ listParams_[['maxIt']] = 100
 df_ = bestStart(model_ = method_,starts_ = c(sd(listParams_[['y']]),sd(listParams_[['y']])/2,var(listParams_[['y']]),var(listParams_[['y']])/2),cl_ = 4,listParams_ = listParams_,'Genes')
 mod_ = returnBestStart(df_ = df_,model_ = method_,listParams_ = listParams_)
 
-sigmas2 = mod_[['sigmas2']]
-sigma2Tot = 0
-for(name_ in names(sigmas2)){
-  sigma2Tot = sigma2Tot + sigmas2[[name_]]
+if(length(mod_) > 0){
+  sigmas2 = mod_[['sigmas2']]
+  sigma2Tot = 0
+  for(name_ in names(sigmas2)){
+    sigma2Tot = sigma2Tot + sigmas2[[name_]]
+  }
+  heritability = sigmas2[['Genes']]/sigma2Tot
+} else{
+  sigmas2 = 0
+  sigma2Tot = 0
+  heritability = -99
 }
-heritability = sigmas2[['Genes']]/sigma2Tot
 
 finalSaveFile = paste0(pathTmp_,'/',fileSave_,'_',gsub('-','',gene_),'.txt')
 heritFinal = heritability[[length(heritability)]]
