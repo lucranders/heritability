@@ -30,23 +30,29 @@ ML_ = function(listParams_){
   X = listParams_[['X']]
   y = listParams_[['y']]
   givenMatrixes = listParams_[['givenMatrixes']]
-  sigmas2Init = listParams_[['sigmas2Init']]
   conv = listParams_[['conv']]
   maxIt = listParams_[['maxIt']]
   
   dimMatrixes = nrow(givenMatrixes[[1]])
   givenMatrixes[['Residual']] = diag(1,dimMatrixes)
   numberMatrixes = length(givenMatrixes)
-  
+
+  if ( length(listParams_[['sigmas2Init']]) == 1 ){
+    aux_ = list()
+    for(name_ in names(givenMatrixes)){
+      aux_[name_] = listParams_[['sigmas2Init']]
+    }
+    listParams_[['sigmas2Init']] = aux_
+  }
+  sigmas2Init = unlist(listParams_[['sigmas2Init']])
   betas = list()
   logLik = c()
   vars2 = list()
-  namesComponents = names(givenMatrixes)
   
   V = matrix(0 , nrow = dimMatrixes , ncol = dimMatrixes)
-  for(i in 1:numberMatrixes){
+  for(name_ in names(givenMatrixes)){
     
-    V = V + (givenMatrixes[[i]] * sigmas2Init[i])
+    V = V + (givenMatrixes[name_][[1]] * sigmas2Init[name_][[1]])    
   }
   vInverse = solve(V)
   beta_ = solve((t(X) %*% vInverse %*% X)) %*% t(X) %*% vInverse %*% y
@@ -62,24 +68,28 @@ ML_ = function(listParams_){
   while(k < maxIt){
     
     s = c()
-    for(i in 1:numberMatrixes){
-      
+    for(name_ in names(givenMatrixes)){      
       # Score vector element
-      x = sum(diag( vInverse %*% givenMatrixes[[i]] ) ) - t(difMean) %*% vInverse %*% givenMatrixes[[i]] %*% vInverse %*% difMean  
-      s = c(s, -0.5*x)
+      x = sum(diag( vInverse %*% givenMatrixes[name_][[1]] ) ) - t(difMean) %*% vInverse %*% givenMatrixes[name_][[1]] %*% vInverse %*% difMean  
+      s = c(s,-0.5*x)
       
     }
+    names(s) = names(givenMatrixes)
     
-    
-    Hessian = matrix(0, nrow = numberMatrixes, ncol = numberMatrixes)
-    for(i in 1:numberMatrixes){
-      for(j in 1:numberMatrixes){
-        
-        x = sum(diag( vInverse %*% givenMatrixes[[i]] %*% vInverse %*% givenMatrixes[[j]] ) )
-        Hessian[i,j] = -.5*x
-        
+    Hessian = matrix(0,ncol = numberMatrixes,nrow = numberMatrixes)
+    cont_ = 1
+    for(nameCol_ in names(givenMatrixes)){
+      aux_ = c()
+      for(nameRow_ in names(givenMatrixes)){
+        x = sum(diag( vInverse %*% givenMatrixes[nameRow_][[1]] %*% vInverse %*% givenMatrixes[nameCol_][[1]] ) )
+        aux_ = c(aux_, -.5*x)
       }
+      Hessian[,cont_] = aux_
+      cont_ = cont_ + 1
     }
+    colnames(Hessian) = names(givenMatrixes)
+    rownames(Hessian) = names(givenMatrixes)
+
     
     invHessian = try(solve(Hessian) , silent = TRUE)
     stop_ = ifelse(class(invHessian) == "try-error", TRUE, FALSE)
@@ -95,20 +105,19 @@ ML_ = function(listParams_){
         return(return_)
 
     }
-    
-    thetaNew = sigmas2Init - invHessian %*% s
 
     V = matrix(0 , nrow = dimMatrixes , ncol = dimMatrixes)    
-    for(i in 1:numberMatrixes){
-      sigmas2Init[i] = thetaNew[i]
-      vars2[[namesComponents[i]]] = c(vars2[[namesComponents[i]]],thetaNew[i])
-      V = V + (givenMatrixes[[i]] * thetaNew[i])
+    for(name_ in names(givenMatrixes)){
+      thetaNew = sigmas2Init[name_] - (t(invHessian[name_,]) %*% s )
+      sigmas2Init[name_] = thetaNew
+      vars2[[name_]] = c(vars2[[name_]][[1]],thetaNew)
+      V = V + (givenMatrixes[name_][[1]] * thetaNew[1])
     }
 
     
     vInverse = solve(V)
     beta_ = solve((t(X) %*% vInverse %*% X)) %*% t(X) %*% vInverse %*% y
-    betas[[i]] = beta_
+    betas[[k]] = beta_
     difMean = y- (X%*%beta_)
     
     likelihood_ = determinant(V)$modulus[[1]] +  t(difMean) %*% vInverse %*% difMean
@@ -117,7 +126,9 @@ ML_ = function(listParams_){
     logLik = c(logLik , likelihood_)
     
     k = k+1
-    if( abs(logLik[k]-logLik[k-1]) < conv){
+    dif_ = abs(logLik[k]-logLik[k-1])
+    print(paste(k,dif_))
+    if( dif_ < conv){
       break
     }
     
@@ -134,29 +145,34 @@ ML_ = function(listParams_){
 
 # By classical REML - described in the literature
 REML = function(listParams_){
-  
-  
+    
   X = listParams_[['X']]
   y = listParams_[['y']]
   givenMatrixes = listParams_[['givenMatrixes']]
-  sigmas2Init = listParams_[['sigmas2Init']]
   conv = listParams_[['conv']]
   maxIt = listParams_[['maxIt']]
   
   dimMatrixes = nrow(givenMatrixes[[1]])
   givenMatrixes[['Residual']] = diag(1,dimMatrixes)
   numberMatrixes = length(givenMatrixes)
-  
+
+  if ( length(listParams_[['sigmas2Init']]) == 1 ){
+    aux_ = list()
+    for(name_ in names(givenMatrixes)){
+      aux_[name_] = listParams_[['sigmas2Init']]
+    }
+    listParams_[['sigmas2Init']] = aux_
+  }
+  sigmas2Init = unlist(listParams_[['sigmas2Init']])
   betas = list()
   logLik = c()
   vars2 = list()
-  namesComponents = names(givenMatrixes)
   
   V = matrix(0 , nrow = dimMatrixes , ncol = dimMatrixes)
-  for(i in 1:numberMatrixes){
+  for(name_ in names(givenMatrixes)){
     
-    V = V + (givenMatrixes[[i]] * sigmas2Init[i])
-
+    V = V + (givenMatrixes[name_][[1]] * sigmas2Init[name_])    
+  
   }
   
   vInverse = solve(V)
@@ -176,31 +192,52 @@ REML = function(listParams_){
   while(k < maxIt){
 
     s = c()
-    for(i in 1:numberMatrixes){
+    for(name_ in names(givenMatrixes)){
       
       # Score vector element
-      x = sum(diag( P %*% givenMatrixes[[i]] ) ) - t(difMean) %*% vInverse %*% givenMatrixes[[i]] %*% vInverse %*% difMean  
+      x = sum(diag( P %*% givenMatrixes[name_][[1]] ) ) - t(difMean) %*% vInverse %*% givenMatrixes[name_][[1]] %*% vInverse %*% difMean  
       s = c(s, -0.5*x)
       
     }
+    names(s) = names(givenMatrixes)
     
-    Hessian = matrix(0, nrow = numberMatrixes, ncol = numberMatrixes)
-    for(i in 1:numberMatrixes){
-      for(j in 1:numberMatrixes){
+    Hessian = matrix(0,ncol = numberMatrixes,nrow = numberMatrixes)
+    cont_ = 1
+    for(nameCol_ in names(givenMatrixes)){
+      aux_ = c()
+      for(nameRow_ in names(givenMatrixes)){
         
-        x = sum(diag( P %*% givenMatrixes[[i]] %*% P %*% givenMatrixes[[j]] ) )
-        Hessian[i,j] = -.5*x
+        x = sum(diag( P %*% givenMatrixes[nameRow_][[1]] %*% P %*% givenMatrixes[nameCol_][[1]] ) )
+        aux_ = c(aux_,-.5*x)
         
       }
+      Hessian[,cont_] = aux_
+      cont_ = cont_ + 1
     }
-    
-    invHessian = solve(Hessian)
-    thetaNew = sigmas2Init - invHessian %*% s
-    V = matrix(0 , nrow = dimMatrixes , ncol = dimMatrixes)
-    for(i in 1:numberMatrixes){
-      sigmas2Init[i] = thetaNew[i]
-      vars2[[namesComponents[i]]] = c(vars2[[namesComponents[i]]],thetaNew[i])
-      V = V + (givenMatrixes[[i]] * thetaNew[i])
+    colnames(Hessian) = names(givenMatrixes)
+    rownames(Hessian) = names(givenMatrixes)
+
+    invHessian = try(solve(Hessian) , silent = TRUE)
+    stop_ = ifelse(class(invHessian) == "try-error", TRUE, FALSE)
+    # If length(stop_) > 1, then invHessian is ok (class = matrix;array)
+    # else, if length(stop_) == 1, then invHessian went wrong (class = try-error)
+    if(length(stop_) == 1){
+        print("ERROR - can't calculate inverse")
+        return_ = list()
+        return_[['sigmas2']] = NULL
+        # return_[['logLikelihood']] = logLik
+        return_[['logLikelihood']] = NULL
+        return_[['betas']] = NULL
+        return(return_)
+
+    }
+
+    V = matrix(0 , nrow = dimMatrixes , ncol = dimMatrixes)    
+    for(name_ in names(givenMatrixes)){
+      thetaNew = sigmas2Init[name_] - (t(invHessian[name_,]) %*% s )
+      sigmas2Init[name_] = thetaNew
+      vars2[[name_]] = c(vars2[[name_]][[1]],thetaNew)
+      V = V + (givenMatrixes[name_][[1]] * thetaNew[1])
     }
         
     vInverse = solve(V)
@@ -217,7 +254,9 @@ REML = function(listParams_){
     logLik = c(logLik , likelihood_)
     
     k = k+1
-    if( abs(logLik[k]-logLik[k-1]) < conv){
+    dif_ = abs(logLik[k]-logLik[k-1])
+    print(paste(k,dif_))
+    if( dif_ < conv){
       break
     }
 
