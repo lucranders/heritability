@@ -1,0 +1,12 @@
+# Reference Paths
+plink: 'C:/Users/55119/Documents/plink-1.07-dos/plink'
+gcta: 'C:/Users/55119/Documents/gcta_1.93.2beta/gcta'
+pathVcfFiles: 'data/01_raw/'
+pathTempFiles: 'C:/Users/55119/Documents/scratch'
+# Sample parameters
+sampParams: {'pop':['YRI'], 'sex':null, 'lab':null}
+# Model specification (fixed effects)
+formula: '~pop + lab'
+# Parameters for snp selection
+snpsParams: {'maf': 0.01,'hwe': 1e-4 ,'vif': 1.11}
+
