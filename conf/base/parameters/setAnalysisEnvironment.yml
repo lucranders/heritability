@@ -3,3 +3,8 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://kedro.readthedocs.io/en/0.17.6/04_kedro_project_setup/02_configuration.html#parameters
+
+# Parameters for snp selection
+snpsParams: {'maf': 0.01,'hwe': 1e-4 ,'vif': 1.11}
+# Sample parameters
+sampParams: {'pop':['YRI'], 'sex':null, 'lab':null}

@@ -3,9 +3,10 @@ from typing import Dict
 
 from kedro.pipeline import Pipeline
 
-from heritability.pipelines import data_engineering as de
-from heritability.pipelines import data_science as ds
 from heritability.pipelines import setAnalysisEnvironment as sae
+from heritability.pipelines import calculateZZt as cZZt
+from heritability.pipelines import calculateZZtV2 as cZZtV2
+from heritability.pipelines import estimateH2Simple as eH2S
 
 
 def register_pipelines() -> Dict[str, Pipeline]:
@@ -15,14 +16,15 @@ def register_pipelines() -> Dict[str, Pipeline]:
         A mapping from a pipeline name to a ``Pipeline`` object.
 
     """
-    data_engineering_pipeline = de.create_pipeline()
-    data_science_pipeline = ds.create_pipeline()
     setAnalysisEnvironmentPipeline = sae.create_pipeline()
+    calculateZZt = cZZt.create_pipeline()
+    calculateZZtV2 = cZZtV2.create_pipeline()
+    estimateH2Simple = eH2S.create_pipeline()
 
     return {
-        # "de": data_engineering_pipeline,
-        # "ds": data_science_pipeline,
         "sae": setAnalysisEnvironmentPipeline,
-        # "__default__": setAnalysisEnvironmentPipeline + data_engineering_pipeline + data_science_pipeline,
-        "__default__": setAnalysisEnvironmentPipeline
+        "cZZt":calculateZZt,
+        "cZZtV2":calculateZZtV2,
+        "eH2S":estimateH2Simple,
+        "__default__": setAnalysisEnvironmentPipeline + calculateZZt + calculateZZtV2 + estimateH2Simple
     }
