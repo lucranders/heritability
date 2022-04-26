@@ -2,6 +2,6 @@
 plink: 'C:/Users/55119/Documents/plink-1.07-dos/plink'
 gcta: 'C:/Users/55119/Documents/gcta_1.93.2beta/gcta'
 pathVcfFiles: 'data/01_raw/'
-pathTempFiles: 'C:/Users/55119/Documents/scratch'
+pathTemp: 'C:/Users/55119/Documents/scratch'
 # Model specification (fixed effects)
 formula: '~pop + lab'

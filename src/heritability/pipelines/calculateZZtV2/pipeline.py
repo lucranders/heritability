@@ -10,26 +10,26 @@ def create_pipeline(**kwargs):
     return Pipeline([
         node(
             calculateGCTA,
-            ["params:nameFilePt1",'params:listChrsPt1','params:nameMatrixPt1',"params:tempFolderPath","params:gcta","params:numThreads","bedFiles"],
-            outputs='calculatedZZtWout6',
-            name="calculateZZtWout6",
+            ["params:nameFilePt1",'params:listChrsPt1','params:nameMatrixPt1',"params:tempFolderPath","params:gcta","params:numThreads","bed_Files"],
+            outputs='calculated_ZZt_without_chromosome_6',
+            name="calculate_ZZt_without_chromosome_6",
         ),
         node(
             calculateGCTA,
-            ["params:nameFilePt2",'params:listChrsPt2','params:nameMatrixPt2',"params:tempFolderPath","params:gcta","params:numThreads","bedFiles"],
-            outputs='calculatedZZtChr6',
-            name="calculateZZtChr6",
+            ["params:nameFilePt2",'params:listChrsPt2','params:nameMatrixPt2',"params:tempFolderPath","params:gcta","params:numThreads","bed_Files"],
+            outputs='calculated_ZZt_only_chromosome_6',
+            name="calculate_ZZt_only_chromosome_6",
         ),
         node(
             correctGRM,
-            ["params:tempFolderPath",'params:nameMatrixPt1',"calculatedZZtWout6"],
-            outputs='correctedZZtWout6',
-            name="ZZtWout6Correction",
+            ["params:tempFolderPath",'params:nameMatrixPt1',"calculated_ZZt_without_chromosome_6"],
+            outputs='corrected_ZZt_without_chromosome_6',
+            name="ZZt_without_chromosome_6_corrected",
         ),
         node(
             correctGRM,
-            ["params:tempFolderPath",'params:nameMatrixPt2',"calculatedZZtChr6"],
-            outputs='correctedZZtChr6',
-            name="ZZtChr6Correction",
+            ["params:tempFolderPath",'params:nameMatrixPt2',"calculated_ZZt_only_chromosome_6"],
+            outputs='corrected_ZZt_only_chromosome_6',
+            name="ZZt_only_chromosome_6_corrected",
         ),
     ])

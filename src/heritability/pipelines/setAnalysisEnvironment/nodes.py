@@ -14,7 +14,7 @@ def createTempFolder(snpsParams: dict, pathTemp: str):
     proc_.wait()
     return pathTempFiles
 
-def selectSample(data: pd.DataFrame, sampParams: dict, pathTempFiles:str) -> Dict[str, Any]:
+def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, pathTempFiles:str) -> Dict[str, Any]:
     """Node for selecting the desired sample to work with.
     The parameters are taken from conf/project/parameters.yml.
     The data and the parameters will be loaded and provided to this function
@@ -26,15 +26,33 @@ def selectSample(data: pd.DataFrame, sampParams: dict, pathTempFiles:str) -> Dic
         data = data.loc[data['sex'].isin(sampParams['sex'])]
     if sampParams['lab'] != None:
         data = data.loc[data['lab'].isin(sampParams['lab'])]
-    # Merge with genotypes samples
-    # 
-    # 
-    # 
-    # Temporary
     # Merged data - intersection between genotyped and phenotyped individuals
-    dfMerge = data.copy()
+    dfMerge = genoData.merge(data, how = 'inner')
     # Saving sample on temp folder
-    dfSample = dfMerge.loc[:,['subject_id']].drop_duplicates()
+    if sampParams['outliers'] != None:
+        from scipy.linalg import inv
+        import numpy as np
+        from scipy.stats import chi2
+        cut_ = 1 - sampParams['outliers']
+        gene_names = data.gene_name.unique()
+        horizontalDf = data.pivot(index=['subject_id','sex','lab','pop'], columns=['gene_name'], values='tpm').reset_index()
+        centeredValues = horizontalDf[gene_names] - horizontalDf[gene_names].mean()
+        centeredValues.index = horizontalDf.subject_id
+        covMatrix_ = np.cov(horizontalDf[gene_names].values.T)
+        invCovMatrix_ = inv(covMatrix_)
+        invCovMatrix_ = pd.DataFrame(invCovMatrix_)
+        invCovMatrix_.index = gene_names
+        invCovMatrix_.columns = gene_names
+        mahalanobisMatrix = centeredValues @ invCovMatrix_ @ centeredValues.T
+        mahalanobisFinal = np.diag(mahalanobisMatrix)
+        mahalanobisFinal = pd.DataFrame(mahalanobisFinal)
+        mahalanobisFinal.loc[:,'subject_id'] = horizontalDf.subject_id
+        mahalanobisFinal.rename(columns = {0:'MahalanobisD'},inplace = True)
+        mahalanobisFinal.loc[:,'Percentile'] = mahalanobisFinal.MahalanobisD.apply(lambda x: chi2.cdf(x,(len(gene_names)-1)))
+        mahalanobisFinal.loc[:,'cut'] = mahalanobisFinal.Percentile.apply(lambda x: 1 if x >= cut_ else 0)
+        dfSample = mahalanobisFinal.loc[mahalanobisFinal.cut == 0 ,['subject_id']].drop_duplicates()
+    else:
+        dfSample = dfMerge.loc[:,['subject_id']].drop_duplicates()
     dfSample.loc[:,'1'] = dfSample.subject_id
     dfSample.to_csv(pathTempFiles + '/sample.txt', index = False, header= False, sep = ' ')
     return dfMerge

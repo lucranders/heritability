@@ -7,19 +7,19 @@ def create_pipeline(**kwargs):
             createTempFolder,
             ['params:snpsParams', 'params:pathTemp'],
             outputs='params:pathTempFiles',
-            name="createTemporaryFolder",
+            name="create_temporary_folder_for_further_analysis",
         ),
         node(
             selectSample,
-            ["phenotypeData" , "params:sampParams","params:pathTempFiles"],
-            outputs="selectedSample",
-            name="sampleSelection",
+            ["phenotypeData" , "genotypedData" , "params:sampParams","params:pathTempFiles"],
+            outputs="selected_Sample",
+            name="sample_selection",
         ),
         node(
             createBedFiles,
-            ["params:plink","params:tempFolderPath","params:pathVcfFiles","params:snpsParams","selectedSample"],
-            outputs="bedFiles",
-            name="filterSnps",
+            ["params:plink","params:tempFolderPath","params:pathVcfFiles","params:snpsParams","selected_Sample"],
+            outputs="bed_Files",
+            name="filter_desired_snps_based_on_parameters",
         ),
         ]
     )

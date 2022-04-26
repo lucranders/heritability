@@ -10,14 +10,14 @@ def create_pipeline(**kwargs):
     return Pipeline([
         node(
             calculateGCTA,
-            ["params:nameFile",'params:listChrs','params:nameMatrix',"params:tempFolderPath","params:gcta","params:numThreads","bedFiles"],
-            outputs='calculatedZZt',
-            name="calculateZZt",
+            ["params:nameFile",'params:listChrs','params:nameMatrix',"params:tempFolderPath","params:gcta","params:numThreads","bed_Files"],
+            outputs='calculated_ZZt',
+            name="calculate_ZZt",
         ),
         node(
             correctGRM,
-            ["params:tempFolderPath",'params:nameMatrix',"calculatedZZt"],
-            outputs='correctedZZt',
-            name="ZZtCorrection",
+            ["params:tempFolderPath",'params:nameMatrix',"calculated_ZZt"],
+            outputs='corrected_ZZt',
+            name="ZZt_Correction",
         ),
     ])
