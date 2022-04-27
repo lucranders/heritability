@@ -19,8 +19,6 @@ genotypedData:
     header: 0
 # Filtered sample
 selected_Sample:
-  type: pandas.CSVDataSet
-  filepath: params:pathTempFiles
-  load_args:
-    sep: "\t"
-    header: 0
+  type: MemoryDataSet
+corrected_ZZt:
+  type: MemoryDataSet

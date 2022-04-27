@@ -17,7 +17,7 @@ def create_pipeline(**kwargs):
         ),
         node(
             createBedFiles,
-            ["params:plink","params:tempFolderPath","params:pathVcfFiles","params:snpsParams","selected_Sample"],
+            ["params:plink","params:pathTempFiles","params:pathVcfFiles","params:snpsParams","selected_Sample"],
             outputs="bed_Files",
             name="filter_desired_snps_based_on_parameters",
         ),

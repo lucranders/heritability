@@ -6,12 +6,15 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import pandas as pd
+import logging
 
+logging.info('Current working directory:' + os. getcwd())
 def createTempFolder(snpsParams: dict, pathTemp: str):
     # Create temporary folder
     pathTempFiles = pathTemp + '/TempBed_maf_' + str(snpsParams['maf']) + "_hwe_" + str(snpsParams['hwe']) + "_vif_" + str(snpsParams['vif'])
     proc_ = subprocess.Popen(['mkdir',pathTempFiles])
     proc_.wait()
+    logging.info('Created temporary folder')
     return pathTempFiles
 
 def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, pathTempFiles:str) -> Dict[str, Any]:
@@ -28,6 +31,8 @@ def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, 
         data = data.loc[data['lab'].isin(sampParams['lab'])]
     # Merged data - intersection between genotyped and phenotyped individuals
     dfMerge = genoData.merge(data, how = 'inner')
+    sizeOriginalDf = dfMerge.drop_duplicates(['subject_id']).shape[0]
+    logging.info('The original sample size is: ' + str(sizeOriginalDf))
     # Saving sample on temp folder
     if sampParams['outliers'] != None:
         from scipy.linalg import inv
@@ -50,17 +55,20 @@ def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, 
         mahalanobisFinal.rename(columns = {0:'MahalanobisD'},inplace = True)
         mahalanobisFinal.loc[:,'Percentile'] = mahalanobisFinal.MahalanobisD.apply(lambda x: chi2.cdf(x,(len(gene_names)-1)))
         mahalanobisFinal.loc[:,'cut'] = mahalanobisFinal.Percentile.apply(lambda x: 1 if x >= cut_ else 0)
-        dfSample = mahalanobisFinal.loc[mahalanobisFinal.cut == 0 ,['subject_id']].drop_duplicates()
+        dfSample = mahalanobisFinal.loc[mahalanobisFinal.cut == 0 ,['subject_id']].copy().drop_duplicates()
     else:
-        dfSample = dfMerge.loc[:,['subject_id']].drop_duplicates()
+        dfSample = dfMerge.loc[:,['subject_id']].copy().drop_duplicates()
+    sizeFinalDf = dfSample.shape[0]
+    logging.info('The new sample size is: ' + str(sizeFinalDf))
     dfSample.loc[:,'1'] = dfSample.subject_id
     dfSample.to_csv(pathTempFiles + '/sample.txt', index = False, header= False, sep = ' ')
-    return dfMerge
-def checkLogSizes(path_):
+    final_ = {'selectedSample':dfSample.loc[:,['subject_id']] , 'sizeOriginalDf':sizeOriginalDf , 'sizeFinalDf':sizeFinalDf}
+    return 
+def checkLogSizes(path_,name_,ext_):
     listSizes = []
     for chr_ in range(1,23):
         try:
-            size = os.path.getsize(path_ + '/chr' + str(chr_) + '.log')
+            size = os.path.getsize(path_ + '/' + name_ + str(chr_) + ext_)
         except:
             size = 0
     
@@ -75,33 +83,74 @@ def updateLog(path_,status_,file_):
     f = open(path_ + '/' + file_, "a")
     f.write(msg_ + '\n')
     f.close()
-def monitoringSnpSelectionBedFiles(pathTempFiles):
+def monitoringProcess(pathTempFiles,name_,ext_,statusFile_):
     # Check if all 22 .bed files are created
-    sizes = checkLogSizes(pathTempFiles)
+    sizes = checkLogSizes(pathTempFiles,name_,ext_)
     cond = sum(sizes) < 22
     # If not, waits until so
     while cond:
-        sizes = checkLogSizes(pathTempFiles)
+        sizes = checkLogSizes(pathTempFiles,name_,ext_)
         cond = sum(sizes) < 22
         if cond:
             # Updates status (inside tmp folder)
-            updateLog(pathTempFiles,0,"bedStatus.txt")
+            updateLog(pathTempFiles,0,statusFile_ + ".txt")
             time.sleep(10)
         else:
             # Updates status (inside tmp folder)
-            updateLog(pathTempFiles,1,"bedStatus.txt")
-def createBedFiles(pathPlink:str , pathTempFiles: str , pathVcf: str , snpsParams: dict, selectedSample: pd.DataFrame) -> None:
-    query_ = pathPlink + " --vcf $input"
+            updateLog(pathTempFiles,1,statusFile_ + ".txt")
+def createBedFiles(pathPlink:str , pathTempFiles: str , pathVcf: str , snpsParams: dict, selectedSample: dict) -> None:
+    query_1 = pathPlink + " --vcf $input"
     if snpsParams['vif'] != None:
-        query_ += " --indep 50 5 " + str(snpsParams['vif'])
+        query_1 += " --indep 50 5 " + str(snpsParams['vif'])
     if snpsParams['maf'] != None:
-        query_ += " --maf " + str(snpsParams['maf'])
+        query_1 += " --maf " + str(snpsParams['maf'])
     if snpsParams['hwe'] != None:
-        query_ += " --hwe " + str(snpsParams['hwe'])
+        query_1 += " --hwe " + str(snpsParams['hwe'])
     # query_ += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --make-bed --out 
-    query_ += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --make-bed --out $bed' 
+    query_1 += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --out $filtered --noweb' 
     # Create .bed files - 22 chromossomes
-    cmd = ['qsub', '-v' ,'query_=' + query_ + ',tempPath=' + pathTempFiles + ',pathVcf=' + pathVcf , 'filterSnps.sh']
-    subprocess.Popen(cmd)
-    monitoringSnpSelectionBedFiles(pathTempFiles)
+    sbatchFile_1 = f'''#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --partition=short
+#SBATCH --array=1-22
+#SBATCH --time=480
+#SBATCH --mem=16gb
+#SBATCH --job-name=filterSnps
+#SBATCH --nodelist=darwin
+#SBATCH --output=/scratch/genevol/users/lucas/out/filterSnps.txt
+
+input={pathVcf}/ALL.chr"$SLURM_ARRAY_TASK_ID"_GRCh38.genotypes.20170504.vcf.gz
+filtered={pathTempFiles}/list_filt_snps_chr"$SLURM_ARRAY_TASK_ID"
+eval {query_1}
+    '''
+    with open(pathTempFiles + '/filterSnps.sbatch', 'w') as f:
+        f.write(sbatchFile_1)
+        f.write('\n')
+    cmd = ['sbatch', pathTempFiles + '/filterSnps.sbatch']
+    # subprocess.Popen(cmd)
+    # monitoringProcess(pathTempFiles,'list_filt_snps_chr','.prune.in','filteredSnpsStatus')
+    query_2 = pathPlink + " --vcf $input --vcf-half-call missing --extract $filtered --make-bed --out $bed --noweb"
+    sbatchFile_2 = f'''#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --partition=short
+#SBATCH --array=1-22
+#SBATCH --time=480
+#SBATCH --mem=16gb
+#SBATCH --job-name=bedMaker
+#SBATCH --nodelist=darwin
+#SBATCH --output=/scratch/genevol/users/lucas/out/bedMaker.txt
+
+input={pathVcf}/ALL.chr"$SLURM_ARRAY_TASK_ID"_GRCh38.genotypes.20170504.vcf.gz
+filtered={pathTempFiles}/list_filt_snps_chr"$SLURM_ARRAY_TASK_ID".prune.in
+bed={pathTempFiles}/chr"$SLURM_ARRAY_TASK_ID"
+eval {query_2}
+    '''
+    with open(pathTempFiles + '/bedMaker.sbatch', 'w') as f:
+        f.write(sbatchFile_2)
+        f.write('\n')
+    cmd = ['sbatch', pathTempFiles + '/bedMaker.sbatch']
+    # subprocess.Popen(cmd)   
+    monitoringProcess(pathTempFiles,'chr','.bed','bedStatus')
     return 1

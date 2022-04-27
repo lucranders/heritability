@@ -1,7 +1,7 @@
 # Reference Paths
-plink: 'C:/Users/55119/Documents/plink-1.07-dos/plink'
-gcta: 'C:/Users/55119/Documents/gcta_1.93.2beta/gcta'
-pathVcfFiles: 'data/01_raw/'
-pathTemp: 'C:/Users/55119/Documents/scratch'
+plink: '/scratch/genevol/users/lucas/plink1_9/plink'
+gcta: '/scratch/genevol/users/lucas/gcta/gcta64'
+pathVcfFiles: '/scratch/genevol/vcf_1000G/phase3_20130502_grch38positions'
+pathTemp: '/raid/genevol/users/lucas'
 # Model specification (fixed effects)
-formula: '~pop + lab'
+formula: {'fixed': '~pop + lab', 'random': null}

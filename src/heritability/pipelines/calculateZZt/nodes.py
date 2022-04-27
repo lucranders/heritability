@@ -7,8 +7,8 @@ from pathlib import Path
 import time
 from datetime import datetime
 import numpy as np
-# import rpy2.robjects as robjects
-# from rpy2.robjects import pandas2ri
+import rpy2.robjects as robjects
+from rpy2.robjects import pandas2ri
 import os
 
 def updateLog(path_,status_,file_):
@@ -33,16 +33,21 @@ def createChrRef(pathAnalysis,listChrs = None,nameFile = 'chrs'):
             f.close()
 
 # Calculate ZZ' for the given set of snps
-def calculateGCTA(nameFile: str, listChrs:list, nameMatrix:str, pathAnalysis:str, pathGCTA:str,numThreads:int, bedFiles:int):
-    createChrRef(pathAnalysis=pathAnalysis,listChrs=listChrs,namesFile=nameFile)
+def calculateGCTA(nameFile: str, listChrs:list, nameMatrix:str, pathAnalysis:str, pathGCTA:str,numThreads:int):
+    print(pathAnalysis,listChrs,nameFile)
+    createChrRef(pathAnalysis=pathAnalysis,listChrs=listChrs,nameFile=nameFile)
+    print('ok')
     if nameMatrix != None:
         nameMatrix = 'GCTA_' + nameMatrix
     else:
         nameMatrix = 'GCTA'
-    cmd = [pathGCTA, '--mbfile' ,pathAnalysis + '/' + nameFile + '.txt','--keep',pathAnalysis + '/sample.txt','--make-grm','--out',pathAnalysis+'/' + nameMatrix,'--thread-num',numThreads]
+    cmd = [pathGCTA, '--mbfile' ,pathAnalysis + '/' + nameFile + '.txt','--keep',pathAnalysis + '/sample.txt','--make-grm','--out',pathAnalysis+'/' + nameMatrix,'--thread-num',str(numThreads)]
+    print(cmd)
     subprocess.Popen(cmd)
     # check whether GRM binaries already exists - means process is finished
+    print(pathAnalysis + '/' + nameMatrix + '.grm.bin')
     check_ = Path(pathAnalysis + '/' + nameMatrix + '.grm.bin')
+    print(check_)
     cond = check_.is_file()
     while not cond:
         cond = check_.is_file()
@@ -54,8 +59,13 @@ def calculateGCTA(nameFile: str, listChrs:list, nameMatrix:str, pathAnalysis:str
             # Updates status (inside tmp folder)
             updateLog(pathAnalysis,1,'GRM' + nameMatrix + 'Status.txt')
     return 1
-def correctGRM(pathAnalysis: str, nameMatrix: str, zzt: int):
-    call_ = subprocess.Popen(['Rscript',pathAnalysis + '/02.matrixCorrection.r',pathAnalysis,nameMatrix])
+def correctGRM(pathAnalysis: str, nameMatrix: str):
+    if nameMatrix != None:
+        nameMatrix = 'GCTA_' + nameMatrix
+    else:
+        nameMatrix = 'GCTA'
+    print(pathAnalysis,nameMatrix)
+    call_ = subprocess.Popen(['Rscript','src/heritability/pipelines/calculateZZt/matrixCorrection.r',pathAnalysis,nameMatrix])
     call_.wait()
     # Reads and stores as a variable the calculated matrix
     pandas2ri.activate()
