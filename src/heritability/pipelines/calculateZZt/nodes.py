@@ -10,6 +10,7 @@ import numpy as np
 import rpy2.robjects as robjects
 from rpy2.robjects import pandas2ri
 import os
+from kedro.config import ConfigLoader
 
 def updateLog(path_,status_,file_):
     if status_ == 0:
@@ -33,7 +34,11 @@ def createChrRef(pathAnalysis,listChrs = None,nameFile = 'chrs'):
             f.close()
 
 # Calculate ZZ' for the given set of snps
-def calculateGCTA(nameFile: str, listChrs:list, nameMatrix:str, pathAnalysis:str, pathGCTA:str,numThreads:int):
+def calculateGCTA(nameFile: str, listChrs:list, nameMatrix:str, pathAnalysis:str,numThreads:int, check_bed_files_exists:int):
+    conf_paths = ["conf/local"]
+    conf_loader = ConfigLoader(conf_paths)
+    parameters = conf_loader.get("paths*", "paths*/**")
+    pathGCTA = parameters['gcta'] 
     print(pathAnalysis,listChrs,nameFile)
     createChrRef(pathAnalysis=pathAnalysis,listChrs=listChrs,nameFile=nameFile)
     print('ok')
@@ -60,6 +65,7 @@ def calculateGCTA(nameFile: str, listChrs:list, nameMatrix:str, pathAnalysis:str
             updateLog(pathAnalysis,1,'GRM' + nameMatrix + 'Status.txt')
     return 1
 def correctGRM(pathAnalysis: str, nameMatrix: str):
+    # , check_GCTA_calculated:int
     if nameMatrix != None:
         nameMatrix = 'GCTA_' + nameMatrix
     else:

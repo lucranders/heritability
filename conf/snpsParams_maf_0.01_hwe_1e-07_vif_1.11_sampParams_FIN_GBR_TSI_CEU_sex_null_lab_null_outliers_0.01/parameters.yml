@@ -1,0 +1,6 @@
+# Parameters for snp selection
+snpsParams: {'maf': 0.01, 'hwe': 1e-07,'vif': 1.11}
+# Sample parameters
+sampParams: {'pop': ['FIN', 'GBR', 'TSI', 'CEU'], 'sex': null,'lab': null, 'outliers': 0.01}
+# Chosen model
+formula: {'fixed': '~pop + lab', 'random': 'null'}

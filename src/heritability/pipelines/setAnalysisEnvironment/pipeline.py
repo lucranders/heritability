@@ -5,7 +5,7 @@ def create_pipeline(**kwargs):
     return Pipeline(
         [node(
             createTempFolder,
-            ['params:snpsParams', 'params:pathTemp'],
+            ['params:snpsParams'],
             outputs='params:pathTempFiles',
             name="create_temporary_folder_for_further_analysis",
         ),
@@ -17,7 +17,7 @@ def create_pipeline(**kwargs):
         ),
         node(
             createBedFiles,
-            ["params:plink","params:pathTempFiles","params:pathVcfFiles","params:snpsParams","selected_Sample"],
+            ["params:pathTempFiles","params:snpsParams","selected_Sample"],
             outputs="bed_Files",
             name="filter_desired_snps_based_on_parameters",
         ),

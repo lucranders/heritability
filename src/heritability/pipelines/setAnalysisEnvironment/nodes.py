@@ -7,10 +7,15 @@ import pandas as pd
 import numpy as np
 import pandas as pd
 import logging
+from kedro.config import ConfigLoader
 
 logging.info('Current working directory:' + os. getcwd())
-def createTempFolder(snpsParams: dict, pathTemp: str):
+def createTempFolder(snpsParams: dict):
     # Create temporary folder
+    conf_paths = ["conf/local"]
+    conf_loader = ConfigLoader(conf_paths)
+    parameters = conf_loader.get("paths*", "paths*/**")
+    pathTemp = parameters['pathTemp'] 
     pathTempFiles = pathTemp + '/TempBed_maf_' + str(snpsParams['maf']) + "_hwe_" + str(snpsParams['hwe']) + "_vif_" + str(snpsParams['vif'])
     proc_ = subprocess.Popen(['mkdir',pathTempFiles])
     proc_.wait()
@@ -53,7 +58,7 @@ def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, 
         mahalanobisFinal = pd.DataFrame(mahalanobisFinal)
         mahalanobisFinal.loc[:,'subject_id'] = horizontalDf.subject_id
         mahalanobisFinal.rename(columns = {0:'MahalanobisD'},inplace = True)
-        mahalanobisFinal.loc[:,'Percentile'] = mahalanobisFinal.MahalanobisD.apply(lambda x: chi2.cdf(x,(len(gene_names)-1)))
+        mahalanobisFinal.loc[:,'Percentile'] = mahalanobisFinal.MahalanobisD.apply(lambda x: chi2.cdf(x,(len(gene_names))))
         mahalanobisFinal.loc[:,'cut'] = mahalanobisFinal.Percentile.apply(lambda x: 1 if x >= cut_ else 0)
         dfSample = mahalanobisFinal.loc[mahalanobisFinal.cut == 0 ,['subject_id']].copy().drop_duplicates()
     else:
@@ -62,8 +67,8 @@ def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, 
     logging.info('The new sample size is: ' + str(sizeFinalDf))
     dfSample.loc[:,'1'] = dfSample.subject_id
     dfSample.to_csv(pathTempFiles + '/sample.txt', index = False, header= False, sep = ' ')
-    final_ = {'selectedSample':dfSample.loc[:,['subject_id']] , 'sizeOriginalDf':sizeOriginalDf , 'sizeFinalDf':sizeFinalDf}
-    return 
+    final_ = {'selectedSample':dfSample.loc[:,['subject_id']] , 'sizeOriginalDf':sizeOriginalDf , 'sizeFinalDf':sizeFinalDf , 'originalDf': dfMerge}
+    return final_
 def checkLogSizes(path_,name_,ext_):
     listSizes = []
     for chr_ in range(1,23):
@@ -98,7 +103,12 @@ def monitoringProcess(pathTempFiles,name_,ext_,statusFile_):
         else:
             # Updates status (inside tmp folder)
             updateLog(pathTempFiles,1,statusFile_ + ".txt")
-def createBedFiles(pathPlink:str , pathTempFiles: str , pathVcf: str , snpsParams: dict, selectedSample: dict) -> None:
+def createBedFiles(pathTempFiles: str , snpsParams: dict, selectedSample: dict) -> None:
+    conf_paths = ["conf/local"]
+    conf_loader = ConfigLoader(conf_paths)
+    parameters = conf_loader.get("paths*", "paths*/**")
+    pathPlink = parameters['plink']
+    pathVcf = parameters['pathVcfFiles']
     query_1 = pathPlink + " --vcf $input"
     if snpsParams['vif'] != None:
         query_1 += " --indep 50 5 " + str(snpsParams['vif'])

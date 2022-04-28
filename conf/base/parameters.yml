@@ -1,7 +1,7 @@
-# Reference Paths
-plink: '/scratch/genevol/users/lucas/plink1_9/plink'
-gcta: '/scratch/genevol/users/lucas/gcta/gcta64'
-pathVcfFiles: '/scratch/genevol/vcf_1000G/phase3_20130502_grch38positions'
-pathTemp: '/raid/genevol/users/lucas'
 # Model specification (fixed effects)
 formula: {'fixed': '~pop + lab', 'random': null}
+# Parameters for snp selection
+snpsParams: {'maf': 0.01,'hwe': 1e-4 ,'vif': 1.11}
+# Sample parameters
+sampParams: {'pop':['FIN','GBR','TSI','CEU'], 'sex':null, 'lab':null, 'outliers': 0.01}
+

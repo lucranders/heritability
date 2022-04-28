@@ -21,132 +21,7 @@ def extractGCTAResults(path_):
         if 'Vp' in line and 'V(G)' in line:
             herit = strings_[1]
     return float(varianceSnps) , float(totalVariance) , float(herit)
-class buildAdditiveVarianceMatrix:
-    def __init__(self,sample,pop,maf,hwe,vif,threads,pathPipeline,pathTmp,pathGCTA):
-        self.pop_ = pop
-        self.sample_ = sample
-        self.maf_ = maf
-        self.hwe_ = hwe
-        self.vif_ = vif
-        self.threads_ = str(threads)
-        self.pathPipeline_ = pathPipeline
-        self.pathTmp_ = pathTmp
-        self.pathGCTA_ = pathGCTA
-        self.path_ = pathTmp + '/TempBed_pop_' + pop + "_maf_" + str(maf) + "_hwe_" + str(hwe) + "_vif_" + str(vif)
-    # Create temporary folders
-    def createTmpFolder(self):
-        # Create temp folder
-        subprocess.Popen(['mkdir',self.path_])
-    # Create list of snps from given parameters (maf, hwe and vif) and .bed files
-    def createBedFileNPC(self):
-        if self.sample_ != None:
-            individualsDf = pd.DataFrame(self.sample_)
-            individualsDf.columns = ['sample_id']
-            individualsDf.loc[:,'1'] = individualsDf.sample_id
-            individualsDf.to_csv(self.path_ + '/sample.txt', index = False, header= False, sep = ' ')
-        query_ = "plink --vcf $input"
-        if self.vif_ != None:
-            query_ += " --indep 50 5 " + str(self.vif_)
-        if self.maf_ != None:
-            query_ += " --maf " + str(self.maf_)
-        if self.hwe_ != None:
-            query_ += " --hwe " + str(self.hwe_)
-        if self.sample_ != None:
-            query_ += " --keep " + self.path_ + '/sample.txt'
-        query_ += ' --mind 0.05 --geno 0.05 --vcf-half-call missing --make-bed --out $bed'
-        self.query_ = query_
-        # Create .bed files - 22 chromossomes
-        cmd = ['qsub', '-v' ,'query_=' + self.query_ + ',tempPath=' + self.path_ , self.pathPipeline_ + '/01.DataPrepGeneralNPC.sh']
-        subprocess.Popen(cmd)
-        # Check if all 22 .bed files are created
-        sizes = checkLogSizes(self.path_)
-        cond = sum(sizes) < 22
-        # If not, waits until so
-        while cond:
-            sizes = checkLogSizes(self.path_)
-            cond = sum(sizes) < 22
-            if cond:
-                # Updates status (inside tmp folder)
-                updateLog(self.path_,0,"bedStatus.txt")
-                time.sleep(10)
-            else:
-                # Updates status (inside tmp folder)
-                updateLog(self.path_,1,"bedStatus.txt")
-    def createChrRef(self,listChrs = None,nameFile = 'chrs'):
-        # Create references to calculate GCTA
-        if listChrs == None:
-            for chr_ in range(1,23):
-                f = open(self.path_ + '/' + nameFile +'.txt', "a")
-                f.write(self.path_+'/chr' + str(chr_) + '\n')
-                f.close()
-        else:
-            for chr_ in listChrs:
-                f = open(self.path_ + '/' + nameFile +'.txt', "a")
-                f.write(self.path_+'/chr' + str(chr_) + '\n')
-                f.close()
-    # Create .bed files using a pre-processed list of snps as reference
-    def createBedFile(self):
-        # Create .bed files - 22 chromossomes
-        cmd = ['qsub', '-v' ,'pop=' + self.pop_ + ',maf_=' + str(self.maf_) +',hwe_=' + str(self.hwe_) + ',vif_=' + str(self.vif_) + ',sampleFile_=' + str(self.sampleFile_) , self.pathPipeline_ + '/01.DataPrepGeneral.sh']
-        subprocess.Popen(cmd)
-        # Check if all 22 .bed files are created
-        sizes = checkLogSizes(self.path_)
-        cond = sum(sizes) < 22
-        # If not, waits until so
-        while cond:
-            sizes = checkLogSizes(self.path_)
-            cond = sum(sizes) < 22
-            if cond:
-                # Updates status (inside tmp folder)
-                updateLog(self.path_,0,"bedStatus.txt")
-                time.sleep(10)
-            else:
-                # Updates status (inside tmp folder)
-                updateLog(self.path_,1,"bedStatus.txt")
-        # Create references to calculate GCTA
-        for chr_ in range(1,23):
-            f = open(self.path_ + '/chrs.txt', "a")
-            f.write(self.path_+'/chr' + str(chr_) + '\n')
-            f.close()
-    # Calculate ZZ' for the given set of snps
-    def calculateGCTA(self,nameFile = None,nameMatrix = None):
-        if nameFile == None:
-            refChrs = 'chrs'
-        if nameMatrix != None:
-            self.nameMatrix_ = 'GCTA_' + nameMatrix
-        else:
-            self.nameMatrix_ = 'GCTA'
-        if self.sample_ != None:
-            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + '/' + refChrs + '.txt','--keep',self.path_ + '/sample.txt','--make-grm','--out',self.path_+'/' + self.nameMatrix_,'--thread-num',self.threads_]
-        else:
-            cmd = [self.pathGCTA_ + '/gcta64', '--mbfile' ,self.path_ + '/' + refChrs + '.txt','--make-grm','--out',self.path_+'/' + self.nameMatrix_,'--thread-num',self.threads_]
-        subprocess.Popen(cmd)
-        # check whether GRM binaries already exists - means process is finished
-        check_ = Path(self.path_ + '/' + self.nameMatrix_ + '.grm.bin')
-        cond = check_.is_file()
-        while not cond:
-            cond = check_.is_file()
-            if not cond:
-                # Updates status (inside tmp folder)
-                updateLog(self.path_,0,'GRM' + self.nameMatrix_ + 'Status.txt')
-                time.sleep(10)
-            else:
-                # Updates status (inside tmp folder)
-                updateLog(self.path_,1,'GRM' + self.nameMatrix_ + 'Status.txt')
-    # Corrects matrix ZZ' if it not positive definite
-    def correctGRM(self):
-        subprocess.Popen(['Rscript',self.pathPipeline_ + '/02.matrixCorrection.r',self.path_,self.nameMatrix_])
-        check_ = Path(self.path_ + '/statusGRMCorrection.txt')
-        cond = check_.is_file()
-        while not cond:
-            cond = check_.is_file()
-            time.sleep(1)
-        subprocess.Popen(['rm',self.path_ + '/statusGRMCorrection.txt'])
-    # Reads and stores as a variable the calculated matrix
-    def readGRM(self):
-        pandas2ri.activate()
-        readRDS = robjects.r['readRDS']
-        self.GRM = readRDS(self.path_ + '/' + self.nameMatrix_ + '_correction.rds')
+
 class heritabilityGCTA:
     def __init__(self,individuals,db,covs,genes,oldParams):
         self.pop_ = oldParams.pop_
@@ -235,33 +110,31 @@ class heritabilityGCTA:
 
 
 class heritabilityAlt:
-    def __init__(self,individuals,sampInf,db,formulaFE,expression,genes,oldParams,additiveMatrixList,extraRE,parametersOpt,method,resultsFile):
-        self.pop_ = oldParams.pop_
-        self.maf_ = oldParams.maf_
-        self.hwe_ = oldParams.hwe_
-        self.vif_ = oldParams.vif_
-        self.sampInf_ = sampInf
-        self.formulaFE_ = formulaFE
-        self.expression_ = expression
-        self.genes_ = genes
-        self.pathPipeline_ = oldParams.pathPipeline_
-        self.pathTmp_ = oldParams.pathTmp_
-        self.pathGCTA_ = oldParams.pathGCTA_
-        self.path_ = self.pathTmp_ + '/TempBed_pop_' + self.pop_ + "_maf_" + str(self.maf_) + "_hwe_" + str(self.hwe_) + "_vif_" + str(self.vif_)
-        self.db_ = db
-        self.individuals_ = individuals
-        self.additiveMatrixDictionary_ = additiveMatrixList
-        self.extraRE_ = extraRE
-        self.parametersOpt_ = parametersOpt
-        self.method_ = method
-        self.saveRef_ = resultsFile
+    def __init__(self,args):
+        self.pop_ = args['pop_']
+        self.maf_ = args['maf_']
+        self.hwe_ = args['hwe_']
+        self.vif_ = args['vif_']
+        self.outLiers_ = args['outLiers_']
+        self.sizeOriginalDf = args['sizeOriginalDf']
+        self.sizeFinalDf = args['sizeFinalDf']
+        self.formulaFE_ = args['formulaFE_']
+        self.genes_ = args['genes']
+        self.path_ = args['tempFolder']
+        self.db_ = args['db']
+        self.individuals_ = args['individuals']
+        self.additiveMatrixDictionary_ = args['additiveMatrixDictionary']
+        self.extraRE_ = args['extraRE']
+        self.parametersOpt_ = args['parametersOpt']
+        self.method_ = args['method']
+        self.saveRef_ = args['saveRef_']
     # Define Fixed Effects Matrix and Phenotype Vector
     def defineFEM_PV(self,geneExpr_):
         dbToMerge = self.individuals_.copy()
         filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
         givenDb = dbToMerge.merge(filterGene)
         XPop_ = patsy.dmatrix( self.formulaFE_ ,data = givenDb)
-        YPop_ = givenDb.loc[:,self.expression_].copy()
+        YPop_ = givenDb.loc[:,geneExpr_].copy()
         self.xMatrix = XPop_
         self.yVector = YPop_.values
     # Define Random Effects Matrix (Covariances)
@@ -463,47 +336,69 @@ class heritabilityAlt:
             df_.drop_duplicates(inplace = True)
             df_.to_csv(saveRef_,index = False, header = True, sep = "|")
     # Calculate heritability for one gene expression
-    def calculateHerit(self,column_):
+    def getSigmas(self):
         totSum = 0
         lastRun = self.sigma2[len(self.sigma2)-1]
         for cov_ in list(lastRun):
             totSum += lastRun[cov_]
-        self.h2 = lastRun[column_] / totSum
-        self.finalDesiredSigma2 = lastRun[column_]
+        self.finalDesiredSigma2 = lastRun
         self.finalTotalSigma = totSum
     # Calculate heritability for all gene expressions
     def calculateAll(self,column_):
         finalTuple = []
         for geneExpr_ in self.genes_:
+            print(geneExpr_)
             self.defineFEM_PV(geneExpr_)
             self.defineREM(geneExpr_)
             if self.method_ == 'REML':
-                self.estimateAddVarREML()
+                try:
+                    self.estimateAddVarREML()
+                    a = 1
+                except:
+                    a = 0
             elif self.method_ == 'ML':
-                self.estimateAddVarML()
+                try:
+                    self.estimateAddVarML()
+                    a = 1
+                except:
+                    a = 0
             else:
                 print("Invalid option")
                 break
-            self.calculateHerit(column_)
-            h2 = self.h2[0].copy()
-            finalDesiredSigma2 = self.finalDesiredSigma2[0].copy()
-            finalTotalSigma = self.finalTotalSigma[0].copy()
-            pop = self.pop_
-            maf = self.maf_
-            hwe = self.hwe_
-            vif = self.vif_
-            sampInf = self.sampInf_
-            namesRE = list(self.randomCovs)
-            for num_,x in enumerate(namesRE):
-                if num_ == 0:
-                    RE = x
-                else:
-                    RE += "+" + x
-            tuple_ = [geneExpr_,pop , maf , hwe , vif , sampInf,h2,finalDesiredSigma2,finalTotalSigma,self.method_,self.formulaFE_,RE]
-            finalTuple.append(tuple_)
-        finalDf = pd.DataFrame(finalTuple)
-        finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
-        self.results = finalDf
+            if a == 1:
+                print('Success! Variances for ' + geneExpr_ + ' estimated')
+                pop = self.pop_
+                maf = self.maf_
+                hwe = self.hwe_
+                vif = self.vif_
+                outliers = self.outLiers_
+                sizeOriginalDf = self.sizeOriginalDf
+                sizeFinalDf = self.sizeFinalDf
+                namesRE = list(self.randomCovs)
+                for num_,x in enumerate(namesRE):
+                    if num_ == 0:
+                        RE = x
+                    else:
+                        RE += "+" + x
+                tuple_ = [geneExpr_,pop , maf , hwe , vif , outliers , sizeOriginalDf , sizeFinalDf ,self.method_,self.formulaFE_,RE]
+                for sigmas in self.parametersOpt_:
+                    tuple_.append(self.parametersOpt_[sigmas])
+                self.getSigmas()
+                finalDesiredSigma2 = self.finalDesiredSigma2[0].copy()
+                finalTotalSigma = self.finalTotalSigma[0].copy()
+                for cov_ in list(self.finalDesiredSigma2):
+                    tuple_.append(self.finalDesiredSigma2[cov_][0].copy())
+                finalTuple.append(tuple_)
+                finalDf = pd.DataFrame(finalTuple)
+                cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers','sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
+                for sigmas in self.parametersOpt_:
+                    cols_.append(sigmas+'_init')
+                for cov_ in list(self.finalDesiredSigma2):
+                    cols_.append(cov_+'_final')
+                finalDf.columns = cols_
+                self.results = finalDf
+            else:
+                print('Fail! Variances for ' + geneExpr_ + ' not estimated')
     # Save results
     def saveResults(self):
         check_ = 0
