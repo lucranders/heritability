@@ -3,4 +3,4 @@
 #
 # Documentation for this file format can be found in "Parameters"
 # Link: https://kedro.readthedocs.io/en/0.17.6/04_kedro_project_setup/02_configuration.html#parameters
-GeneExpressions: ['HLA-A','HLA-B']
+GeneExpressions: ['HLA-A', 'HLA-B', 'HLA-C', 'HLA-DPA1', 'HLA-DPB1', 'HLA-DQA1', 'HLA-DQB1', 'HLA-DRA', 'HLA-DRB1']

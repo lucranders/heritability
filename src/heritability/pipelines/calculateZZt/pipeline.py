@@ -16,8 +16,7 @@ def create_pipeline(**kwargs):
         ),
         node(
             correctGRM,
-            ["params:pathTempFiles",'params:nameMatrix'],
-            # ,"calculated_ZZt"
+            ["params:pathTempFiles",'params:nameMatrix',"calculated_ZZt"],
             outputs='corrected_ZZt',
             name="ZZt_Correction",
         ),

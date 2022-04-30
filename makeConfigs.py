@@ -21,8 +21,7 @@ vifs = [1.11]
 hwes = [1e-7]
 sexs = ['null']
 labs = ['null']
-# outliers = [0.01 , 0.001 , 'null']
-outliers = [0.01]
+outliers = [0.01 , 0.001 , 'null']
 formulas = [{'fixed': '~pop + lab', 'random': 'null'}]
 
 

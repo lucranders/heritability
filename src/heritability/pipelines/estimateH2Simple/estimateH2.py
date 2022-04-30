@@ -9,6 +9,7 @@ import rpy2.robjects as robjects
 from rpy2.robjects import pandas2ri
 import patsy
 from multiprocessing import Pool
+import logging
 
 def extractGCTAResults(path_):
     f_ = open(path_,'r')
@@ -134,7 +135,7 @@ class heritabilityAlt:
         filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
         givenDb = dbToMerge.merge(filterGene)
         XPop_ = patsy.dmatrix( self.formulaFE_ ,data = givenDb)
-        YPop_ = givenDb.loc[:,geneExpr_].copy()
+        YPop_ = givenDb.loc[:,['gene_name']].copy()
         self.xMatrix = XPop_
         self.yVector = YPop_.values
     # Define Random Effects Matrix (Covariances)
@@ -323,18 +324,6 @@ class heritabilityAlt:
         finalDf = pd.DataFrame(finalTuple)
         finalDf.columns = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'sampleInference','HeritEst','DesiredVarEst','totalVarEst','method','formulaF','randEffects']
         self.results = finalDf
-    def saveResults(self,saveRef_):
-        check_ = 0
-        try:
-            df_ = pd.read_csv(saveRef_,sep = '|',header = 0)
-        except:
-            check_ = 1
-        if check_ == 1:
-            self.results.to_csv(saveRef_,index = False, header = True, sep = "|")
-        else:
-            df_ = pd.concat([df_,self.results], axis = 0)
-            df_.drop_duplicates(inplace = True)
-            df_.to_csv(saveRef_,index = False, header = True, sep = "|")
     # Calculate heritability for one gene expression
     def getSigmas(self):
         totSum = 0
@@ -401,17 +390,27 @@ class heritabilityAlt:
                 print('Fail! Variances for ' + geneExpr_ + ' not estimated')
     # Save results
     def saveResults(self):
-        check_ = 0
+        check0_ = 0
         try:
-            df_ = pd.read_csv(self.saveRef_,sep = '|',header = 0)
+            t_ = self.results
         except:
-            check_ = 1
-        if check_ == 1:
-            self.results.to_csv(self.saveRef_,index = False, header = True, sep = "|")
+            check0_ = 1
+        if check0_ == 0:
+            check_ = 0
+            try:
+                df_ = pd.read_csv(self.saveRef_,sep = '|',header = 0)
+            except:
+                check_ = 1
+            if check_ == 1:
+                logging.info('A new file is created to store results: ' + self.saveRef_)
+                self.results.to_csv(self.saveRef_,index = False, header = True, sep = "|")
+            else:
+                logging.info('The results will be appended to: ' + self.saveRef_)
+                df_ = pd.concat([df_,self.results], axis = 0)
+                df_.drop_duplicates(inplace = True)
+                df_.to_csv(self.saveRef_,index = False, header = True, sep = "|")
         else:
-            df_ = pd.concat([df_,self.results], axis = 0)
-            df_.drop_duplicates(inplace = True)
-            df_.to_csv(self.saveRef_,index = False, header = True, sep = "|")
+            logging.error('No calculations were done!')
 class selectNested:
     def __init__(self, dfPop, varPop, varSubject, maf, hwe, vif, pathTmp, pathPipeline):
         self.dfPop_ = dfPop

@@ -5,7 +5,7 @@ def create_pipeline(**kwargs):
     return Pipeline(
         [node(
             createTempFolder,
-            ['params:snpsParams'],
+            ['params:snpsParams','params:sampParams'],
             outputs='params:pathTempFiles',
             name="create_temporary_folder_for_further_analysis",
         ),

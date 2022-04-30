@@ -9,14 +9,27 @@ import pandas as pd
 import logging
 from kedro.config import ConfigLoader
 
+def retStr(var_):
+    if var_ != None:
+        varStr_ = ''
+        for element in var_:
+            varStr_ += element + '_'
+    else:
+        varStr_ = str(var_)
+    return varStr_
+
 logging.info('Current working directory:' + os. getcwd())
-def createTempFolder(snpsParams: dict):
+def createTempFolder(snpsParams: dict, sampParams: dict):
     # Create temporary folder
     conf_paths = ["conf/local"]
     conf_loader = ConfigLoader(conf_paths)
     parameters = conf_loader.get("paths*", "paths*/**")
-    pathTemp = parameters['pathTemp'] 
-    pathTempFiles = pathTemp + '/TempBed_maf_' + str(snpsParams['maf']) + "_hwe_" + str(snpsParams['hwe']) + "_vif_" + str(snpsParams['vif'])
+    pathTemp = parameters['pathTemp']
+    popStr_ = retStr(sampParams['pop'])
+    sexStr_ = retStr(sampParams['sex'])
+    labStr_ = retStr(sampParams['lab'])
+    outliers_ = str(sampParams['outliers'])
+    pathTempFiles = pathTemp + '/Temp_snpsParams_maf_' + str(snpsParams['maf']) + "_hwe_" + str(snpsParams['hwe']) + "_vif_" + str(snpsParams['vif']) + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_
     proc_ = subprocess.Popen(['mkdir',pathTempFiles])
     proc_.wait()
     logging.info('Created temporary folder')
@@ -109,6 +122,7 @@ def createBedFiles(pathTempFiles: str , snpsParams: dict, selectedSample: dict) 
     parameters = conf_loader.get("paths*", "paths*/**")
     pathPlink = parameters['plink']
     pathVcf = parameters['pathVcfFiles']
+    fileReportBedMaker = parameters['fileReportBedMaker']
     query_1 = pathPlink + " --vcf $input"
     if snpsParams['vif'] != None:
         query_1 += " --indep 50 5 " + str(snpsParams['vif'])
@@ -128,7 +142,7 @@ def createBedFiles(pathTempFiles: str , snpsParams: dict, selectedSample: dict) 
 #SBATCH --mem=16gb
 #SBATCH --job-name=filterSnps
 #SBATCH --nodelist=darwin
-#SBATCH --output=/scratch/genevol/users/lucas/out/filterSnps.txt
+#SBATCH --output={fileReportBedMaker}
 
 input={pathVcf}/ALL.chr"$SLURM_ARRAY_TASK_ID"_GRCh38.genotypes.20170504.vcf.gz
 filtered={pathTempFiles}/list_filt_snps_chr"$SLURM_ARRAY_TASK_ID"
@@ -138,8 +152,8 @@ eval {query_1}
         f.write(sbatchFile_1)
         f.write('\n')
     cmd = ['sbatch', pathTempFiles + '/filterSnps.sbatch']
-    # subprocess.Popen(cmd)
-    # monitoringProcess(pathTempFiles,'list_filt_snps_chr','.prune.in','filteredSnpsStatus')
+    subprocess.Popen(cmd)
+    monitoringProcess(pathTempFiles,'list_filt_snps_chr','.prune.in','filteredSnpsStatus')
     query_2 = pathPlink + " --vcf $input --vcf-half-call missing --extract $filtered --make-bed --out $bed --noweb"
     sbatchFile_2 = f'''#!/bin/bash
 #SBATCH --nodes=1
@@ -161,6 +175,6 @@ eval {query_2}
         f.write(sbatchFile_2)
         f.write('\n')
     cmd = ['sbatch', pathTempFiles + '/bedMaker.sbatch']
-    # subprocess.Popen(cmd)   
+    subprocess.Popen(cmd)   
     monitoringProcess(pathTempFiles,'chr','.bed','bedStatus')
     return 1

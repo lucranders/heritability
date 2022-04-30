@@ -64,8 +64,7 @@ def calculateGCTA(nameFile: str, listChrs:list, nameMatrix:str, pathAnalysis:str
             # Updates status (inside tmp folder)
             updateLog(pathAnalysis,1,'GRM' + nameMatrix + 'Status.txt')
     return 1
-def correctGRM(pathAnalysis: str, nameMatrix: str):
-    # , check_GCTA_calculated:int
+def correctGRM(pathAnalysis: str, nameMatrix: str, check_GCTA_calculated:int):
     if nameMatrix != None:
         nameMatrix = 'GCTA_' + nameMatrix
     else:
