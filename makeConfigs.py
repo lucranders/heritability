@@ -1,6 +1,8 @@
 import subprocess
 import itertools
 import os
+from kedro.config import ConfigLoader
+import time
 
 def retStr(var_):
     if var_ != 'null':
@@ -10,8 +12,30 @@ def retStr(var_):
     else:
         varStr_ = var_
     return varStr_
-
-
+def checkLogSizes(path_,name_,ext_):
+    listSizes = []
+    for chr_ in range(1,23):
+        try:
+            size = os.path.getsize(path_ + '/' + name_ + str(chr_) + ext_)
+        except:
+            size = 0
+    
+        listSizes.append(size > 0)
+    return listSizes
+def wait(pathTempFiles,name_,ext_):
+    sizes = checkLogSizes(pathTempFiles,name_,ext_)
+    cond = sum(sizes) < 22
+    # If not, waits until so
+    while cond:
+        sizes = checkLogSizes(pathTempFiles,name_,ext_)
+        cond = sum(sizes) < 22
+        if cond:
+            # keep waiting to launch next request
+            time.sleep(10)
+            print("Waiting")
+        else:
+            print("Done!")
+            
 # mafs = [0.01, 0.05]
 mafs = [0.01]
 # pops = [['FIN','GBR','TSI','CEU'],'null']
@@ -54,4 +78,9 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
     print(query_)
     print(os.getcwd())
     subprocess.Popen(query_)
-
+    conf_paths = ["conf/local"]
+    conf_loader = ConfigLoader(conf_paths)
+    parameters = conf_loader.get("paths*", "paths*/**")
+    pathTemp = parameters['pathTemp']
+    pathTempFiles = pathTemp + '/Temp_snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_
+    wait(pathTempFiles,'chr','.bed')
