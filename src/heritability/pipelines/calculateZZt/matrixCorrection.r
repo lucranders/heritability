@@ -1,5 +1,8 @@
 path_ =  commandArgs(TRUE)[1]
 nameMatrix_ = commandArgs(TRUE)[2]
+print(nameMatrix_)
+print(path_)
+
 # Read estimated GRM elements
 ReadGRMBin=function(prefix, AllN=F, size=4){
   sum_i=function(i){
@@ -54,7 +57,7 @@ fixNonPositiveDefiniteMatrix <- function(origMat) {
 
         # try chol again
         cholStatus <- try(u <- chol(newMat), silent = TRUE)
-        cholError <- ifelse(class(cholStatus) == "try-error", TRUE, FALSE)
+        cholError <- ifelse(length(class(cholStatus)) == 1, ifelse( class(cholStatus) == "try-error", TRUE, FALSE) , FALSE)
     }
     newMat
 }
@@ -83,6 +86,7 @@ blockDiagonalPDMatrix <- function(randomCor,...) {
 options(digits=6)
 
 prefix_ = paste0(path_,'/' ,nameMatrix_)
+print(prefix_)
 prefixSave_ = paste0(path_,'/' ,nameMatrix_,'_correction')
 GRM = ReadGRMBin(prefix_)
 M <- matrix(0, dim(GRM[[3]])[1], dim(GRM[[3]])[1])

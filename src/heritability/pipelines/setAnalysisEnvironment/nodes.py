@@ -57,8 +57,8 @@ def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, 
         import numpy as np
         from scipy.stats import chi2
         cut_ = 1 - sampParams['outliers']
-        gene_names = data.gene_name.unique()
-        horizontalDf = data.pivot(index=['subject_id','sex','lab','pop'], columns=['gene_name'], values='tpm').reset_index()
+        gene_names = dfMerge.gene_name.unique()
+        horizontalDf = dfMerge.pivot(index=['subject_id','sex','lab','pop'], columns=['gene_name'], values='tpm').reset_index()
         centeredValues = horizontalDf[gene_names] - horizontalDf[gene_names].mean()
         centeredValues.index = horizontalDf.subject_id
         covMatrix_ = np.cov(horizontalDf[gene_names].values.T)
@@ -133,48 +133,29 @@ def createBedFiles(pathTempFiles: str , snpsParams: dict, selectedSample: dict) 
     # query_ += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --make-bed --out 
     query_1 += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --out $filtered --noweb' 
     # Create .bed files - 22 chromossomes
-    sbatchFile_1 = f'''#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH --partition=short
-#SBATCH --array=1-22
-#SBATCH --time=480
-#SBATCH --mem=16gb
-#SBATCH --job-name=filterSnps
-#SBATCH --nodelist=darwin
-#SBATCH --output={fileReportBedMaker}
-
-input={pathVcf}/ALL.chr"$SLURM_ARRAY_TASK_ID"_GRCh38.genotypes.20170504.vcf.gz
-filtered={pathTempFiles}/list_filt_snps_chr"$SLURM_ARRAY_TASK_ID"
+    for chr_ in range(1,23):
+        sbatchFile_1 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
+filtered={pathTempFiles}/list_filt_snps_chr{chr_}
 eval {query_1}
-    '''
-    with open(pathTempFiles + '/filterSnps.sbatch', 'w') as f:
-        f.write(sbatchFile_1)
-        f.write('\n')
-    cmd = ['sbatch', pathTempFiles + '/filterSnps.sbatch']
-    subprocess.Popen(cmd)
+        '''
+        with open(pathTempFiles + '/filterSnps' + str(chr_) + '.sh', 'w') as f:
+            f.write(sbatchFile_1)
+            f.write('\n')
+        cmd = ['sh', pathTempFiles + '/filterSnps' + str(chr_) + '.sh']
+        subprocess.Popen(cmd)
     monitoringProcess(pathTempFiles,'list_filt_snps_chr','.prune.in','filteredSnpsStatus')
     query_2 = pathPlink + " --vcf $input --vcf-half-call missing --extract $filtered --make-bed --out $bed --noweb"
-    sbatchFile_2 = f'''#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH --partition=short
-#SBATCH --array=1-22
-#SBATCH --time=480
-#SBATCH --mem=16gb
-#SBATCH --job-name=bedMaker
-#SBATCH --nodelist=darwin
-#SBATCH --output=/scratch/genevol/users/lucas/out/bedMaker.txt
-
-input={pathVcf}/ALL.chr"$SLURM_ARRAY_TASK_ID"_GRCh38.genotypes.20170504.vcf.gz
-filtered={pathTempFiles}/list_filt_snps_chr"$SLURM_ARRAY_TASK_ID".prune.in
-bed={pathTempFiles}/chr"$SLURM_ARRAY_TASK_ID"
+    for chr_ in range(1,23):
+        sbatchFile_2 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
+filtered={pathTempFiles}/list_filt_snps_chr{chr_}.prune.in
+bed={pathTempFiles}/chr{chr_}
 eval {query_2}
-    '''
-    with open(pathTempFiles + '/bedMaker.sbatch', 'w') as f:
-        f.write(sbatchFile_2)
-        f.write('\n')
-    cmd = ['sbatch', pathTempFiles + '/bedMaker.sbatch']
-    subprocess.Popen(cmd)   
+        '''
+        print(sbatchFile_2)
+        with open(pathTempFiles + '/bedMaker' + str(chr_) + '.sh', 'w') as f:
+            f.write(sbatchFile_2)
+            f.write('\n')
+        cmd = ['sh', pathTempFiles + '/bedMaker' + str(chr_) + '.sh']
+        subprocess.Popen(cmd)   
     monitoringProcess(pathTempFiles,'chr','.bed','bedStatus')
     return 1

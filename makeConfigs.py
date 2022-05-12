@@ -36,17 +36,17 @@ def wait(pathTempFiles,name_,ext_):
         else:
             print("Done!")
             
-# mafs = [0.01, 0.05]
-mafs = [0.01]
-# pops = [['FIN','GBR','TSI','CEU'],'null']
-pops = [['FIN','GBR','TSI','CEU']]
+mafs = [0.01, 0.05]
+# mafs = [0.01]
+pops = [['FIN','GBR','TSI','CEU'],'null']
+# pops = [['FIN','GBR','TSI','CEU']]
 vifs = [1.11]
-# hwes = [1e-4,1e-7]
-hwes = [1e-7]
+hwes = [1e-4,1e-7]
+# hwes = [1e-7]
 sexs = ['null']
 labs = ['null']
 outliers = [0.01 , 0.001 , 'null']
-formulas = [{'fixed': '~pop + lab', 'random': 'null'}]
+formulas = [{'fixed': '~pop + lab', 'random': None}]
 
 
 
@@ -73,7 +73,7 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
         f.write('# Sample parameters\n')
         f.write("sampParams: {'pop': " + str(pop_) + ", 'sex': " + str(sex_) + ",'lab': " + str(lab_) + ", 'outliers': " + outliers_ + '}\n')
         f.write('# Chosen model\n')
-        f.write('formula: ' + str(formula_) + '\n')
+        f.write('formula: ' + str(formula_).replace('None','Null') + '\n')
     query_ = ['kedro', 'run' ,'--env=snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_]
     print(query_)
     print(os.getcwd())

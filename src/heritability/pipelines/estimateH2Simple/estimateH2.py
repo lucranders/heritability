@@ -8,6 +8,7 @@ import numpy as np
 import rpy2.robjects as robjects
 from rpy2.robjects import pandas2ri
 import patsy
+import pickle
 from multiprocessing import Pool
 import logging
 
@@ -134,10 +135,12 @@ class heritabilityAlt:
         dbToMerge = self.individuals_.copy()
         filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
         givenDb = dbToMerge.merge(filterGene)
-        XPop_ = patsy.dmatrix( self.formulaFE_ ,data = givenDb)
-        YPop_ = givenDb.loc[:,['gene_name']].copy()
+        XPop_ = patsy.dmatrix( self.formulaFE_ ,data = givenDb , return_type = 'dataframe')
+        YPop_ = givenDb.loc[:,['tpm']].copy()
         self.xMatrix = XPop_
         self.yVector = YPop_.values
+        XPop_.to_csv(self.path_ + '/X.txt', sep = '|', index = False, header = False)
+        YPop_.to_csv(self.path_ + '/y.txt', sep = '|', index = False, header = False)
     # Define Random Effects Matrix (Covariances)
     def defineREM(self,geneExpr_):
         self.randomCovs = self.additiveMatrixDictionary_
@@ -154,9 +157,9 @@ class heritabilityAlt:
         # Diagonal matrix, representing residuals
         self.randomCovs['Residuals'] = np.diag(np.full(self.additiveMatrixDictionary_[list(self.additiveMatrixDictionary_)[0]].shape[0],1))
     # Estimate parameters from additive model through Maximum Likelihood
-    def estimateAddVarML(self):
+    def estimateAddVarML(self):   
         # main definitions to start algorithm
-        X = self.xMatrix.copy()
+        X = self.xMatrix.values.copy()
         y = self.yVector.copy()
         givenMatrixes = self.randomCovs.copy()
         dimSquareMatrixes = givenMatrixes[list(givenMatrixes)[0]].shape[0]
@@ -187,8 +190,8 @@ class heritabilityAlt:
         beta_ = np.linalg.inv(np.transpose(X) @ vInverse @ X) @ np.transpose(X) @ vInverse @ y
         difMean = y - (X @ beta_)
         likelihood_ = np.linalg.slogdet(V)[1] + (np.transpose(difMean) @ vInverse @ difMean)
-        logLik[0] = -.5*likelihood_.copy()
-        betas[0] = beta_.copy()
+        logLik[0] = -.5*likelihood_[0,0].copy()
+        betas[0] = beta_[:,0].copy()
         thetas = dict()
         thetas[0] = sigmas2Init.copy()
         k = 1
@@ -198,27 +201,29 @@ class heritabilityAlt:
             for numRow,cov1 in enumerate(nameComponents):
                 # score vector element
                 sElement = np.trace(vInverse @ givenMatrixes[cov1]) - (np.transpose(difMean) @ vInverse @ givenMatrixes[cov1] @ vInverse @ difMean)
-                s.append(-.5*sElement.copy())
+                s.append(-.5*sElement[0,0].copy())
                 del(sElement)
                 for numCol,cov2 in enumerate(nameComponents):
                     hElement = np.trace(vInverse @ givenMatrixes[cov1] @ vInverse @ givenMatrixes[cov2])
-                    Hessian[numRow,numCol] = -.5*hElement.copy()
+                    Hessian[numRow,numCol] = .5*hElement.copy()
                     del(hElement)
+            print(Hessian)
             invHessian = np.linalg.inv(Hessian)
             V = np.zeros([dimSquareMatrixes,dimSquareMatrixes])
             thetas_ = dict()
             for numRow,var_ in enumerate(nameComponents):
-                thetaNew = sigmas2Init[var_].copy() - (invHessian[numRow,:] @ np.c_[s])
+                thetaNew = sigmas2Init[var_] + (invHessian[numRow,:] @ np.c_[s])
+                print(var_ + ': ' + str(thetaNew))
                 thetas_[var_] = thetaNew.copy()
                 V = V + (givenMatrixes[var_] * thetas_[var_])
             sigmas2Init = thetas_.copy()
             thetas[k] = thetas_.copy()
             vInverse = np.linalg.inv(V)
             beta_ = np.linalg.inv(np.transpose(X) @ vInverse @ X) @ np.transpose(X) @ vInverse @ y
-            betas[k] = beta_.copy()
+            betas[k] = beta_[:,0].copy()
             difMean = y - (X @ beta_)
             likelihood_ = np.linalg.slogdet(V)[1] + (np.transpose(difMean) @ vInverse @ difMean)
-            logLik[k] = -.5*likelihood_.copy()
+            logLik[k] = -.5*likelihood_[0,0].copy()
             print(logLik[k])
             if np.absolute(logLik[k] - logLik[k-1]) < conv:
                 break
@@ -229,7 +234,7 @@ class heritabilityAlt:
     # Estimate parameters from additive model through Restricted/Residual Maximum Likelihood (REML)
     def estimateAddVarREML(self):
         # main definitions to start algorithm
-        X = self.xMatrix.copy()
+        X = self.xMatrix.values.copy()
         y = self.yVector.copy()
         givenMatrixes = self.randomCovs.copy()
         dimSquareMatrixes = givenMatrixes[list(givenMatrixes)[0]].shape[0]
@@ -261,8 +266,8 @@ class heritabilityAlt:
         difMean = y - (X @ beta_)
         P = vInverse - ( vInverse @ X @ np.linalg.inv( np.transpose(X) @ vInverse @ X)  @ np.transpose(X) @ vInverse )
         likelihood_ = np.linalg.slogdet(V)[1] + np.linalg.slogdet( np.transpose(X) @ vInverse @ X )[1] + (np.transpose(difMean) @ vInverse @ difMean)
-        logLik[0] = -.5*likelihood_.copy()
-        betas[0] = beta_.copy()
+        logLik[0] = -.5*likelihood_[0,0].copy()
+        betas[0] = beta_[:,0].copy()
         thetas = dict()
         thetas[0] = sigmas2Init.copy()
         k = 1
@@ -272,7 +277,7 @@ class heritabilityAlt:
             for numRow,cov1 in enumerate(nameComponents):
                 # score vector element
                 sElement = np.trace(P @ givenMatrixes[cov1]) - np.transpose(difMean) @ vInverse @ givenMatrixes[cov1] @ vInverse @ difMean
-                s.append(-.5*sElement.copy())
+                s.append(-.5*sElement[0,0].copy())
                 del(sElement)
                 for numCol,cov2 in enumerate(nameComponents):
                     hElement = np.trace(P @ givenMatrixes[cov1] @ P @ givenMatrixes[cov2])
@@ -282,7 +287,7 @@ class heritabilityAlt:
             V = np.zeros([dimSquareMatrixes,dimSquareMatrixes])
             thetas_ = dict()
             for numRow,var_ in enumerate(nameComponents):
-                thetaNew = sigmas2Init[var_].copy() - (invHessian[numRow,:] @ np.c_[s])
+                thetaNew = sigmas2Init[var_] - (invHessian[numRow,:] @ np.c_[s])
                 thetas_[var_] = thetaNew.copy()
                 V = V + (givenMatrixes[var_] * thetas_[var_])
             vInverse = np.linalg.inv(V)
@@ -290,10 +295,10 @@ class heritabilityAlt:
             sigmas2Init = thetas_.copy()
             thetas[k] = thetas_.copy()
             beta_ = np.linalg.inv(np.transpose(X) @ vInverse @ X) @ np.transpose(X) @ vInverse @ y
-            betas[k] = beta_.copy()
+            betas[k] = beta_[:,0].copy()
             difMean = y - (X @ beta_)
             likelihood_ = np.linalg.slogdet(V)[1] + np.linalg.slogdet( np.transpose(X) @ vInverse @ X )[1] + (np.transpose(difMean) @ vInverse @ difMean)
-            logLik[k] = -.5*likelihood_.copy()
+            logLik[k] = -.5*likelihood_[0,0].copy()
             print(logLik[k])
             if np.absolute(logLik[k] - logLik[k-1]) < conv:
                 break
@@ -301,13 +306,15 @@ class heritabilityAlt:
         self.sigma2 = thetas
         self.logLikelihood = logLik
         self.betas = betas
-    def estimateSimpleHeritR(self,pathPipeline,geneExpr_,matrixName_,method_,fileSave_):
-        cmd = ['Rscript',pathPipeline + '/calculateSimpleHeritR.r',self.path_,geneExpr_,matrixName_,method_,fileSave_]
+    def estimateSimpleHeritR(self,geneExpr_,matrixName_,method_,saveFile_):
+        print(os.getcwd())
+        cmd = ['Rscript','src/heritability/pipelines/estimateH2Simple/calculateSimpleHeritR.r',self.path_,geneExpr_,matrixName_,method_,saveFile_]
         process = subprocess.Popen(cmd)
         process.wait()
-    def calculateAllR(self,pathPipeline,matrixName_,method_,fileSave_):
+    def calculateAllR(self,method_,matrixName_,saveFile_):
         for geneExpr_ in self.genes_:
-            self.estimateSimpleHeritR(pathPipeline = pathPipeline ,geneExpr_ = geneExpr_,matrixName_ = matrixName_,method_=method_,fileSave_=fileSave_)
+            self.defineFEM_PV(geneExpr_)
+            self.estimateSimpleHeritR(geneExpr_ = geneExpr_,matrixName_ = matrixName_,method_=method_,saveFile_=saveFile_)
     def resultsToDf(self,fileSave_,sampInf_,method_,formulaFE_,formulaRE_ = 'Genes+Residuals'):
         finalTuple = []
         for geneExpr_ in self.genes_:
@@ -370,22 +377,30 @@ class heritabilityAlt:
                     else:
                         RE += "+" + x
                 tuple_ = [geneExpr_,pop , maf , hwe , vif , outliers , sizeOriginalDf , sizeFinalDf ,self.method_,self.formulaFE_,RE]
-                for sigmas in self.parametersOpt_:
-                    tuple_.append(self.parametersOpt_[sigmas])
+                for sigmas in self.parametersOpt_['sigmasInit']:
+                    tuple_.append(self.parametersOpt_['sigmasInit'][sigmas])
                 self.getSigmas()
-                finalDesiredSigma2 = self.finalDesiredSigma2[0].copy()
-                finalTotalSigma = self.finalTotalSigma[0].copy()
+                finalDesiredSigma2 = self.finalDesiredSigma2.copy()
+                print(finalDesiredSigma2)
+                check_ = 0
                 for cov_ in list(self.finalDesiredSigma2):
-                    tuple_.append(self.finalDesiredSigma2[cov_][0].copy())
-                finalTuple.append(tuple_)
-                finalDf = pd.DataFrame(finalTuple)
-                cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers','sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
-                for sigmas in self.parametersOpt_:
-                    cols_.append(sigmas+'_init')
-                for cov_ in list(self.finalDesiredSigma2):
-                    cols_.append(cov_+'_final')
-                finalDf.columns = cols_
-                self.results = finalDf
+                    if self.finalDesiredSigma2[cov_][0] < 0:
+                        check_ += 1
+                if check_ == 0:
+                    finalTotalSigma = self.finalTotalSigma.copy()
+                    for cov_ in list(self.finalDesiredSigma2):
+                        tuple_.append(self.finalDesiredSigma2[cov_][0].copy())
+                    finalTuple.append(tuple_)
+                    finalDf = pd.DataFrame(finalTuple)
+                    cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers','sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
+                    for sigmas in self.parametersOpt_['sigmasInit']:
+                        cols_.append(sigmas+'_init')
+                    for cov_ in list(self.finalDesiredSigma2):
+                        cols_.append(cov_+'_final')
+                    finalDf.columns = cols_
+                    self.results = finalDf
+                else:
+                    print('invalid estimates -> out of bounds')
             else:
                 print('Fail! Variances for ' + geneExpr_ + ' not estimated')
     # Save results
