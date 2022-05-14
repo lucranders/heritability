@@ -132,30 +132,37 @@ def createBedFiles(pathTempFiles: str , snpsParams: dict, selectedSample: dict) 
         query_1 += " --hwe " + str(snpsParams['hwe'])
     # query_ += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --make-bed --out 
     query_1 += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --out $filtered --noweb' 
-    # Create .bed files - 22 chromossomes
-    for chr_ in range(1,23):
-        sbatchFile_1 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
-filtered={pathTempFiles}/list_filt_snps_chr{chr_}
-eval {query_1}
-        '''
-        with open(pathTempFiles + '/filterSnps' + str(chr_) + '.sh', 'w') as f:
-            f.write(sbatchFile_1)
-            f.write('\n')
-        cmd = ['sh', pathTempFiles + '/filterSnps' + str(chr_) + '.sh']
-        subprocess.Popen(cmd)
-    monitoringProcess(pathTempFiles,'list_filt_snps_chr','.prune.in','filteredSnpsStatus')
-    query_2 = pathPlink + " --vcf $input --vcf-half-call missing --extract $filtered --make-bed --out $bed --noweb"
-    for chr_ in range(1,23):
-        sbatchFile_2 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
-filtered={pathTempFiles}/list_filt_snps_chr{chr_}.prune.in
-bed={pathTempFiles}/chr{chr_}
-eval {query_2}
-        '''
-        print(sbatchFile_2)
-        with open(pathTempFiles + '/bedMaker' + str(chr_) + '.sh', 'w') as f:
-            f.write(sbatchFile_2)
-            f.write('\n')
-        cmd = ['sh', pathTempFiles + '/bedMaker' + str(chr_) + '.sh']
-        subprocess.Popen(cmd)   
-    monitoringProcess(pathTempFiles,'chr','.bed','bedStatus')
+    # check if files were already created
+    checkCreatedFiles_ = checkLogSizes(pathTempFiles,'list_filt_snps_chr','.prune.in')
+    cond = sum(checkCreatedFiles_) < 22
+    if cond:
+        # Create .bed files - 22 chromossomes
+        for chr_ in range(1,23):
+            sbatchFile_1 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
+    filtered={pathTempFiles}/list_filt_snps_chr{chr_}
+    eval {query_1}
+            '''
+            with open(pathTempFiles + '/filterSnps' + str(chr_) + '.sh', 'w') as f:
+                f.write(sbatchFile_1)
+                f.write('\n')
+            cmd = ['sh', pathTempFiles + '/filterSnps' + str(chr_) + '.sh']
+            subprocess.Popen(cmd)
+        monitoringProcess(pathTempFiles,'list_filt_snps_chr','.prune.in','filteredSnpsStatus')
+    checkCreatedFiles2_ = checkLogSizes(pathTempFiles,'chr','.bed')
+    cond2 = sum(checkCreatedFiles2_) < 22
+    if cond2:
+        query_2 = pathPlink + " --vcf $input --vcf-half-call missing --extract $filtered --make-bed --out $bed --noweb"
+        for chr_ in range(1,23):
+            sbatchFile_2 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
+    filtered={pathTempFiles}/list_filt_snps_chr{chr_}.prune.in
+    bed={pathTempFiles}/chr{chr_}
+    eval {query_2}
+            '''
+            print(sbatchFile_2)
+            with open(pathTempFiles + '/bedMaker' + str(chr_) + '.sh', 'w') as f:
+                f.write(sbatchFile_2)
+                f.write('\n')
+            cmd = ['sh', pathTempFiles + '/bedMaker' + str(chr_) + '.sh']
+            subprocess.Popen(cmd)   
+        monitoringProcess(pathTempFiles,'chr','.bed','bedStatus')
     return 1

@@ -5,6 +5,7 @@ generated using Kedro 0.17.6
 import pandas as pd
 from . import estimateH2 as herit
 from kedro.config import ConfigLoader
+from os.path import exists
 
 def assembleParams(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list , pathTemp:str,  sampSelection: dict):
     args_ = dict()
@@ -16,11 +17,14 @@ def assembleParams(snpsParams: dict , sampParams: dict , formula: dict, GeneExpr
     args_['maf_'] = snpsParams['maf']
     args_['hwe_'] = snpsParams['hwe']
     pop_ = ''
-    for i,x in enumerate( sampParams['pop'] ):
-        if i < ( len(sampParams['pop']) - 1 ):
-            pop_ += x + '_'
-        else:
-            pop_ += x
+    if sampParams['pop'] != None:
+        for i,x in enumerate( sampParams['pop'] ):
+            if i < ( len(sampParams['pop']) - 1 ):
+                pop_ += x + '_'
+            else:
+                pop_ += x
+    else:
+        pop_ = 'All'
     args_['pop_'] = pop_
     args_['outLiers_'] = sampParams['outliers']
     args_['sizeOriginalDf'] = sampSelection['sizeOriginalDf']
@@ -34,28 +38,34 @@ def assembleParams(snpsParams: dict , sampParams: dict , formula: dict, GeneExpr
     args_['saveRef_'] = saveFile
     return  args_
 
-def estimateSigmas2REMLSimple(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list , pathTemp:str,  sampSelection: dict , genesMatrix: dict):
+def estimateSigmas2REMLSimple(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list , pathTemp:str,  sampSelection: dict , genesMatrix: dict , saveControl: str):
     generalParams_ = assembleParams(snpsParams , sampParams , formula, GeneExpressions , pathTemp,  sampSelection)
     # print(generalParams_)
     generalParams_['additiveMatrixDictionary'] = {'Genes': genesMatrix}
     # print(generalParams_['additiveMatrixDictionary'])
     generalParams_['method'] = 'REML'
     generalParams_['parametersOpt'] = {'maxIt':100,'conv':1e-4}
-    for sigmaResid in range(10000 , 100000 , 10000):
-        for sigmaGenes in range(10000 , 100000 , 10000):
-            sigmasInit = {'Residuals': sigmaResid , 'Genes': sigmaGenes}
-            generalParams_['parametersOpt']['sigmasInit'] = sigmasInit
-            estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)
-            estimateH2_REMLSimple.calculateAll('Genes')
-            estimateH2_REMLSimple.saveResults()
+    if not exists(saveControl + '/done_'):
+        for sigmaResid in range(10000 , 100001 , 10000):
+            for sigmaGenes in range(10000 , 100001 , 10000):
+                sigmasInit = {'Residuals': sigmaResid , 'Genes': sigmaGenes}
+                generalParams_['parametersOpt']['sigmasInit'] = sigmasInit
+                estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)
+                estimateH2_REMLSimple.calculateAll('Genes')
+                estimateH2_REMLSimple.saveResults()
+        f = open(saveControl + '/done_','w')
+        f.write('done!')
+        f.close()
+    else:
+        print('calculations already done! To rerun, erase "done" file!')
     return 1
 def estimateSigmas2MLSimple(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list , pathTemp:str,  sampSelection: dict , genesMatrix: dict):
     generalParams_ = assembleParams(snpsParams , sampParams , formula, GeneExpressions , pathTemp,  sampSelection)
     generalParams_['additiveMatrixDictionary'] = {'Genes': genesMatrix}
     generalParams_['method'] = 'ML'
     generalParams_['parametersOpt'] = {'maxIt':100,'conv':1e-4}
-    for sigmaResid in range(10000 , 100000 , 10000):
-        for sigmaGenes in range(10000 , 100000 , 10000):
+    for sigmaResid in range(10000 , 100001 , 10000):
+        for sigmaGenes in range(10000 , 100001 , 10000):
             sigmasInit = {'Residuals': sigmaResid , 'Genes': sigmaGenes}
             generalParams_['parametersOpt']['sigmasInit'] = sigmasInit
             estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)
@@ -69,8 +79,8 @@ def estimateSigmas2MLSimpleR(snpsParams: dict , sampParams: dict , formula: dict
     # print(generalParams_['additiveMatrixDictionary'])
     generalParams_['method'] = 'ML'
     generalParams_['parametersOpt'] = {'maxIt':100,'conv':1e-4}
-    for sigmaResid in range(10000 , 100000 , 10000):
-        for sigmaGenes in range(10000 , 100000 , 10000):
+    for sigmaResid in range(10000 , 100001 , 10000):
+        for sigmaGenes in range(10000 , 100001 , 10000):
             sigmasInit = {'Residuals': sigmaResid , 'Genes': sigmaGenes}
             generalParams_['parametersOpt']['sigmasInit'] = sigmasInit
             estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)

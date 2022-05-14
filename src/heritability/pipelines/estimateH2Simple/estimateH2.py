@@ -44,7 +44,7 @@ class heritabilityGCTA:
         X_ = basicCols.copy()
         Y_ = basicCols.copy()
         Y_.append('tpm')
-        print(self.db_.head(3))
+        # print(self.db_.head(3))
         for cov_ in self.covs_:
             X_.append(cov_)
         dbToMerge = self.individuals_.copy()
@@ -149,7 +149,7 @@ class heritabilityAlt:
             filterGene = self.db_.loc[self.db_.gene_name == geneExpr_].copy()
             givenDb = dbToMerge.merge(filterGene)
             for var_ in self.extraRE_:
-                print(var_)
+                # print(var_)
                 oneHotEncoding = pd.get_dummies(givenDb.loc[:, var_]).values
                 covMat = np.matmul( oneHotEncoding , np.transpose(oneHotEncoding) )
                 self.randomCovs[var_] = covMat.copy()
@@ -207,13 +207,13 @@ class heritabilityAlt:
                     hElement = np.trace(vInverse @ givenMatrixes[cov1] @ vInverse @ givenMatrixes[cov2])
                     Hessian[numRow,numCol] = .5*hElement.copy()
                     del(hElement)
-            print(Hessian)
+            # print(Hessian)
             invHessian = np.linalg.inv(Hessian)
             V = np.zeros([dimSquareMatrixes,dimSquareMatrixes])
             thetas_ = dict()
             for numRow,var_ in enumerate(nameComponents):
                 thetaNew = sigmas2Init[var_] + (invHessian[numRow,:] @ np.c_[s])
-                print(var_ + ': ' + str(thetaNew))
+                # print(var_ + ': ' + str(thetaNew))
                 thetas_[var_] = thetaNew.copy()
                 V = V + (givenMatrixes[var_] * thetas_[var_])
             sigmas2Init = thetas_.copy()
@@ -224,7 +224,7 @@ class heritabilityAlt:
             difMean = y - (X @ beta_)
             likelihood_ = np.linalg.slogdet(V)[1] + (np.transpose(difMean) @ vInverse @ difMean)
             logLik[k] = -.5*likelihood_[0,0].copy()
-            print(logLik[k])
+            # print(logLik[k])
             if np.absolute(logLik[k] - logLik[k-1]) < conv:
                 break
             k = k+1
@@ -299,7 +299,7 @@ class heritabilityAlt:
             difMean = y - (X @ beta_)
             likelihood_ = np.linalg.slogdet(V)[1] + np.linalg.slogdet( np.transpose(X) @ vInverse @ X )[1] + (np.transpose(difMean) @ vInverse @ difMean)
             logLik[k] = -.5*likelihood_[0,0].copy()
-            print(logLik[k])
+            # print(logLik[k])
             if np.absolute(logLik[k] - logLik[k-1]) < conv:
                 break
             k = k+1
@@ -343,7 +343,7 @@ class heritabilityAlt:
     def calculateAll(self,column_):
         finalTuple = []
         for geneExpr_ in self.genes_:
-            print(geneExpr_)
+            # print(geneExpr_)
             self.defineFEM_PV(geneExpr_)
             self.defineREM(geneExpr_)
             if self.method_ == 'REML':
@@ -381,7 +381,7 @@ class heritabilityAlt:
                     tuple_.append(self.parametersOpt_['sigmasInit'][sigmas])
                 self.getSigmas()
                 finalDesiredSigma2 = self.finalDesiredSigma2.copy()
-                print(finalDesiredSigma2)
+                # print(finalDesiredSigma2)
                 check_ = 0
                 for cov_ in list(self.finalDesiredSigma2):
                     if self.finalDesiredSigma2[cov_][0] < 0:

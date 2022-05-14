@@ -3,6 +3,7 @@ import itertools
 import os
 from kedro.config import ConfigLoader
 import time
+from os.path import exists
 
 def retStr(var_):
     if var_ != 'null':
@@ -65,8 +66,11 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
     sexStr_ = retStr(sex_)
     labStr_ = retStr(lab_)
     path_ =  'conf/snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_
-    proc_ = subprocess.Popen(['mkdir',path_])
-    proc_.wait()
+    if not exists(path_):
+        proc_ = subprocess.Popen(['mkdir',path_])
+        proc_.wait()
+    else:
+        print('env already created!\n' + path_)
     with open(path_+'/parameters.yml','w') as f:
         f.write('# Parameters for snp selection\n')
         f.write("snpsParams: {'maf': " + maf_ + ", 'hwe': " + hwe_ + ",'vif': " + vif_ + '}\n')
@@ -74,13 +78,22 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
         f.write("sampParams: {'pop': " + str(pop_) + ", 'sex': " + str(sex_) + ",'lab': " + str(lab_) + ", 'outliers': " + outliers_ + '}\n')
         f.write('# Chosen model\n')
         f.write('formula: ' + str(formula_).replace('None','Null') + '\n')
-    query_ = ['kedro', 'run' ,'--env=snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_]
-    print(query_)
-    print(os.getcwd())
-    subprocess.Popen(query_)
-    conf_paths = ["conf/local"]
-    conf_loader = ConfigLoader(conf_paths)
-    parameters = conf_loader.get("paths*", "paths*/**")
-    pathTemp = parameters['pathTemp']
-    pathTempFiles = pathTemp + '/Temp_snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_
-    wait(pathTempFiles,'chr','.bed')
+        f.write('# path to save control\n')
+        f.write('saveControl: ' + '"conf/snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_ + '"')
+    if not exists(path_ + '/done_'):
+        query_ = ['kedro', 'run' ,'--env=snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_]
+        print(query_)
+        print(os.getcwd())
+        subprocess.Popen(query_)
+        while not exists(path_ + '/done_'):
+            time.sleep(10)
+            print('waiting: ' + path_ + '/done_')
+    else:
+        print('calculations already done!')
+        
+    # conf_paths = ["conf/local"]
+    # conf_loader = ConfigLoader(conf_paths)
+    # parameters = conf_loader.get("paths*", "paths*/**")
+    # pathTemp = parameters['pathTemp']
+    # pathTempFiles = pathTemp + '/Temp_snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_
+    # wait(pathTempFiles,'chr','.bed')
