@@ -131,7 +131,7 @@ def createBedFiles(pathTempFiles: str , snpsParams: dict, selectedSample: dict) 
     if snpsParams['hwe'] != None:
         query_1 += " --hwe " + str(snpsParams['hwe'])
     # query_ += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --make-bed --out 
-    query_1 += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --out $filtered --noweb' 
+    query_1 += " --keep " + pathTempFiles + '/sample.txt' + ' --mind 0.05 --geno 0.05 --vcf-half-call missing --out $filtered' 
     # check if files were already created
     checkCreatedFiles_ = checkLogSizes(pathTempFiles,'list_filt_snps_chr','.prune.in')
     cond = sum(checkCreatedFiles_) < 22
@@ -151,7 +151,7 @@ def createBedFiles(pathTempFiles: str , snpsParams: dict, selectedSample: dict) 
     checkCreatedFiles2_ = checkLogSizes(pathTempFiles,'chr','.bed')
     cond2 = sum(checkCreatedFiles2_) < 22
     if cond2:
-        query_2 = pathPlink + " --vcf $input --vcf-half-call missing --extract $filtered --make-bed --out $bed --noweb"
+        query_2 = pathPlink + " --vcf $input --vcf-half-call missing --extract $filtered --keep " + pathTempFiles + "/sample.txt --make-bed --out $bed"
         for chr_ in range(1,23):
             sbatchFile_2 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
     filtered={pathTempFiles}/list_filt_snps_chr{chr_}.prune.in
