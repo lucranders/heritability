@@ -46,13 +46,15 @@ def estimateSigmas2REMLSimple(snpsParams: dict , sampParams: dict , formula: dic
     generalParams_['method'] = 'REML'
     generalParams_['parametersOpt'] = {'maxIt':100,'conv':1e-4}
     if not exists(saveControl + '/done_'):
-        for sigmaResid in range(10000 , 100001 , 10000):
-            for sigmaGenes in range(10000 , 100001 , 10000):
-                sigmasInit = {'Residuals': sigmaResid , 'Genes': sigmaGenes}
-                generalParams_['parametersOpt']['sigmasInit'] = sigmasInit
-                estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)
-                estimateH2_REMLSimple.calculateAll('Genes')
-                estimateH2_REMLSimple.saveResults()
+        for transf_ in ['None', 'log2', 'log10', 'ln']:
+            for sigmaResid in range(10000 , 100001 , 10000):
+                for sigmaGenes in range(10000 , 100001 , 10000):
+                    generalParams_['transf_'] = transf_
+                    sigmasInit = {'Residuals': sigmaResid , 'Genes': sigmaGenes}
+                    generalParams_['parametersOpt']['sigmasInit'] = sigmasInit
+                    estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)
+                    estimateH2_REMLSimple.calculateAll('Genes')
+                    estimateH2_REMLSimple.saveResults()
         f = open(saveControl + '/done_','w')
         f.write('done!')
         f.close()

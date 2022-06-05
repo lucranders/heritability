@@ -117,6 +117,7 @@ class heritabilityAlt:
         self.maf_ = args['maf_']
         self.hwe_ = args['hwe_']
         self.vif_ = args['vif_']
+        self.transf_ = args['transf_']
         self.outLiers_ = args['outLiers_']
         self.sizeOriginalDf = args['sizeOriginalDf']
         self.sizeFinalDf = args['sizeFinalDf']
@@ -137,10 +138,18 @@ class heritabilityAlt:
         givenDb = dbToMerge.merge(filterGene)
         XPop_ = patsy.dmatrix( self.formulaFE_ ,data = givenDb , return_type = 'dataframe')
         YPop_ = givenDb.loc[:,['tpm']].copy()
+        if self.transf_ == 'log2':
+            YPop_.loc[:,'transf_'] = np.log2(YPop_.tpm)
+        elif self.transf_ == 'log10':
+            YPop_.loc[:,'transf_'] = np.log10(YPop_.tpm)
+        elif self.transf_ == 'ln':
+            YPop_.loc[:,'transf_'] = np.log(YPop_.tpm)
+        else:
+            YPop_.loc[:,'transf_'] = YPop_.tpm
         self.xMatrix = XPop_
-        self.yVector = YPop_.values
+        self.yVector = YPop_.transf_.values
         XPop_.to_csv(self.path_ + '/X.txt', sep = '|', index = False, header = False)
-        YPop_.to_csv(self.path_ + '/y.txt', sep = '|', index = False, header = False)
+        YPop_.loc[:,['transf_']].to_csv(self.path_ + '/y.txt', sep = '|', index = False, header = False)
     # Define Random Effects Matrix (Covariances)
     def defineREM(self,geneExpr_):
         self.randomCovs = self.additiveMatrixDictionary_
@@ -266,8 +275,8 @@ class heritabilityAlt:
         difMean = y - (X @ beta_)
         P = vInverse - ( vInverse @ X @ np.linalg.inv( np.transpose(X) @ vInverse @ X)  @ np.transpose(X) @ vInverse )
         likelihood_ = np.linalg.slogdet(V)[1] + np.linalg.slogdet( np.transpose(X) @ vInverse @ X )[1] + (np.transpose(difMean) @ vInverse @ difMean)
-        logLik[0] = -.5*likelihood_[0,0].copy()
-        betas[0] = beta_[:,0].copy()
+        logLik[0] = -.5*likelihood_.copy()
+        betas[0] = beta_.copy()
         thetas = dict()
         thetas[0] = sigmas2Init.copy()
         k = 1
@@ -277,7 +286,7 @@ class heritabilityAlt:
             for numRow,cov1 in enumerate(nameComponents):
                 # score vector element
                 sElement = np.trace(P @ givenMatrixes[cov1]) - np.transpose(difMean) @ vInverse @ givenMatrixes[cov1] @ vInverse @ difMean
-                s.append(-.5*sElement[0,0].copy())
+                s.append(-.5*sElement.copy())
                 del(sElement)
                 for numCol,cov2 in enumerate(nameComponents):
                     hElement = np.trace(P @ givenMatrixes[cov1] @ P @ givenMatrixes[cov2])
@@ -295,10 +304,10 @@ class heritabilityAlt:
             sigmas2Init = thetas_.copy()
             thetas[k] = thetas_.copy()
             beta_ = np.linalg.inv(np.transpose(X) @ vInverse @ X) @ np.transpose(X) @ vInverse @ y
-            betas[k] = beta_[:,0].copy()
+            betas[k] = beta_.copy()
             difMean = y - (X @ beta_)
             likelihood_ = np.linalg.slogdet(V)[1] + np.linalg.slogdet( np.transpose(X) @ vInverse @ X )[1] + (np.transpose(difMean) @ vInverse @ difMean)
-            logLik[k] = -.5*likelihood_[0,0].copy()
+            logLik[k] = -.5*likelihood_.copy()
             # print(logLik[k])
             if np.absolute(logLik[k] - logLik[k-1]) < conv:
                 break
@@ -371,12 +380,13 @@ class heritabilityAlt:
                 sizeOriginalDf = self.sizeOriginalDf
                 sizeFinalDf = self.sizeFinalDf
                 namesRE = list(self.randomCovs)
+                transform = self.transf_
                 for num_,x in enumerate(namesRE):
                     if num_ == 0:
                         RE = x
                     else:
                         RE += "+" + x
-                tuple_ = [geneExpr_,pop , maf , hwe , vif , outliers , sizeOriginalDf , sizeFinalDf ,self.method_,self.formulaFE_,RE]
+                tuple_ = [geneExpr_,pop , maf , hwe , vif , outliers , transform, sizeOriginalDf , sizeFinalDf ,self.method_,self.formulaFE_,RE]
                 for sigmas in self.parametersOpt_['sigmasInit']:
                     tuple_.append(self.parametersOpt_['sigmasInit'][sigmas])
                 self.getSigmas()
@@ -392,7 +402,7 @@ class heritabilityAlt:
                         tuple_.append(self.finalDesiredSigma2[cov_][0].copy())
                     finalTuple.append(tuple_)
                     finalDf = pd.DataFrame(finalTuple)
-                    cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers','sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
+                    cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers', 'Transformation', 'sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
                     for sigmas in self.parametersOpt_['sigmasInit']:
                         cols_.append(sigmas+'_init')
                     for cov_ in list(self.finalDesiredSigma2):
