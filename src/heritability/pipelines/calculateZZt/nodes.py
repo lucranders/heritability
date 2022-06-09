@@ -35,54 +35,55 @@ def createChrRef(pathAnalysis,listChrs = None,nameFile = 'chrs'):
             f.close()
 
 # Calculate ZZ' for the given set of snps
-def calculateGCTA(nameFile: str, listChrs:list, nameMatrix:str, pathAnalysis:str,numThreads:int, check_bed_files_exists:int):
-    # print(pathAnalysis+'/GCTA_' + nameMatrix + '.grm.bin -> ANALISANDO!')
-    if nameMatrix != None:
-        nameMatrix = 'GCTA_' + nameMatrix
-    else:
-        nameMatrix = 'GCTA'
-    if not exists(pathAnalysis+'/' + nameMatrix + '.grm.bin'):
-        conf_paths = ["conf/local"]
-        conf_loader = ConfigLoader(conf_paths)
-        parameters = conf_loader.get("paths*", "paths*/**")
-        pathGCTA = parameters['gcta'] 
-        # print(pathAnalysis,listChrs,nameFile)
-        createChrRef(pathAnalysis=pathAnalysis,listChrs=listChrs,nameFile=nameFile)
-        # print('ok')
-        cmd = [pathGCTA, '--mbfile' ,pathAnalysis + '/' + nameFile + '.txt','--keep',pathAnalysis + '/sample.txt','--make-grm','--out',pathAnalysis+'/' + nameMatrix,'--thread-num',str(numThreads)]
-        # print(cmd)
-        subprocess.Popen(cmd)
-        # check whether GRM binaries already exists - means process is finished
-        # print(pathAnalysis + '/' + nameMatrix + '.grm.bin')
-        check_ = Path(pathAnalysis + '/' + nameMatrix + '.grm.bin')
-        # print(check_)
-        cond = check_.is_file()
-        while not cond:
+def calculateGCTA(matrixes:dict,selectedSample: dict ,numThreads:int, check_bed_files_exists:int):
+    pathAnalysis = selectedSample['pathAnalysis']
+    print(pathAnalysis)
+    for nameMatrixIt_ in matrixes:
+        nameMatrix = 'GCTA_' + nameMatrixIt_
+        if not exists(pathAnalysis+'/' + nameMatrix + '.grm.bin'):
+            conf_paths = ["conf/local"]
+            conf_loader = ConfigLoader(conf_paths)
+            parameters = conf_loader.get("paths*", "paths*/**")
+            pathGCTA = parameters['gcta']
+            listChrs = matrixes[nameMatrixIt_]
+            nameFile = 'chromosomes' + nameMatrixIt_
+            # print(pathAnalysis,listChrs,nameFile)
+            createChrRef(pathAnalysis=pathAnalysis,listChrs=listChrs,nameFile=nameFile)
+            # print('ok')
+            cmd = [pathGCTA, '--mbfile' ,pathAnalysis + '/' + nameFile + '.txt','--keep',pathAnalysis + '/sample.txt','--make-grm','--out',pathAnalysis+'/' + nameMatrix,'--thread-num',str(numThreads)]
+            # print(cmd)
+            subprocess.Popen(cmd)
+            # check whether GRM binaries already exists - means process is finished
+            # print(pathAnalysis + '/' + nameMatrix + '.grm.bin')
+            check_ = Path(pathAnalysis + '/' + nameMatrix + '.grm.bin')
+            # print(check_)
             cond = check_.is_file()
-            if not cond:
-                # Updates status (inside tmp folder)
-                updateLog(pathAnalysis,0,'GRM' + nameMatrix + 'Status.txt')
-                time.sleep(10)
-            else:
-                # Updates status (inside tmp folder)
-                updateLog(pathAnalysis,1,'GRM' + nameMatrix + 'Status.txt')
-    else:
-        print("ZZt already calculated!")
+            while not cond:
+                cond = check_.is_file()
+                if not cond:
+                    # Updates status (inside tmp folder)
+                    updateLog(pathAnalysis,0,'GRM' + nameMatrix + 'Status.txt')
+                    time.sleep(10)
+                else:
+                    # Updates status (inside tmp folder)
+                    updateLog(pathAnalysis,1,'GRM' + nameMatrix + 'Status.txt')
+        else:
+            print("ZZt already calculated!")
     return 1
-def correctGRM(pathAnalysis: str, nameMatrix: str, check_GCTA_calculated:int):
-    if nameMatrix != None:
-        nameMatrix = 'GCTA_' + nameMatrix
-    else:
-        nameMatrix = 'GCTA'
-    # print(pathAnalysis,nameMatrix)
+def correctGRM(selectedSample: dict, matrixes: dict, check_GCTA_calculated:int):
+    pathAnalysis = selectedSample['pathAnalysis']
+    dictGenes = dict()
+    for nameMatrixIt_ in matrixes:
+        nameMatrix = 'GCTA_' + nameMatrixIt_
         # Reads and stores as a variable the calculated matrix
-    pandas2ri.activate()
-    readRDS = robjects.r['readRDS']
-    if not exists(pathAnalysis + '/' + nameMatrix + '_correction.rds'):
-        call_ = subprocess.Popen(['Rscript','src/heritability/pipelines/calculateZZt/matrixCorrection.r',pathAnalysis,nameMatrix])
-        call_.wait()
-        correctedGCTA = readRDS(pathAnalysis + '/' + nameMatrix + '_correction.rds')
-    else:
-        print('ZZt already corrected!')
-        correctedGCTA = readRDS(pathAnalysis + '/' + nameMatrix + '_correction.rds')
-    return correctedGCTA
+        pandas2ri.activate()
+        readRDS = robjects.r['readRDS']
+        if not exists(pathAnalysis + '/' + nameMatrix + '_correction.rds'):
+            call_ = subprocess.Popen(['Rscript','src/heritability/pipelines/calculateZZt/matrixCorrection.r',pathAnalysis,nameMatrix])
+            call_.wait()
+            correctedGCTA = readRDS(pathAnalysis + '/' + nameMatrix + '_correction.rds')
+        else:
+            print('ZZt already corrected!')
+            correctedGCTA = readRDS(pathAnalysis + '/' + nameMatrix + '_correction.rds')
+        dictGenes[nameMatrixIt_] = correctedGCTA
+    return dictGenes

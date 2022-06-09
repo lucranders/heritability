@@ -256,6 +256,7 @@ class heritabilityAlt:
             sigmas2Init = dict()
             for var_ in nameComponents: 
                 sigmas2Init[var_] = y.var()/numberMatrixes
+            self.parametersOpt_['sigmasInit'] = sigmas2Init
         if 'conv' in list(self.parametersOpt_):
             conv = self.parametersOpt_['conv']
         else:
@@ -313,7 +314,10 @@ class heritabilityAlt:
                 break
             k = k+1
         self.sigma2 = thetas
-        self.logLikelihood = logLik
+        n = X.shape[0]
+        p = np.linalg.matrix_rank(X)
+        adjust = -((n-p)/2)*np.log(2*np.pi)
+        self.logLikelihood = adjust + logLik[k]
         self.betas = betas
     def estimateSimpleHeritR(self,geneExpr_,matrixName_,method_,saveFile_):
         print(os.getcwd())
@@ -381,12 +385,13 @@ class heritabilityAlt:
                 sizeFinalDf = self.sizeFinalDf
                 namesRE = list(self.randomCovs)
                 transform = self.transf_
+                logLikelihood = self.logLikelihood
                 for num_,x in enumerate(namesRE):
                     if num_ == 0:
                         RE = x
                     else:
                         RE += "+" + x
-                tuple_ = [geneExpr_,pop , maf , hwe , vif , outliers , transform, sizeOriginalDf , sizeFinalDf ,self.method_,self.formulaFE_,RE]
+                tuple_ = [geneExpr_,pop , maf , hwe , vif , outliers , transform, logLikelihood, sizeOriginalDf , sizeFinalDf ,self.method_,self.formulaFE_,RE]
                 for sigmas in self.parametersOpt_['sigmasInit']:
                     tuple_.append(self.parametersOpt_['sigmasInit'][sigmas])
                 self.getSigmas()
@@ -402,7 +407,7 @@ class heritabilityAlt:
                         tuple_.append(self.finalDesiredSigma2[cov_][0].copy())
                     finalTuple.append(tuple_)
                     finalDf = pd.DataFrame(finalTuple)
-                    cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers', 'Transformation', 'sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
+                    cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers', 'Transformation', 'logLikelihood', 'sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
                     for sigmas in self.parametersOpt_['sigmasInit']:
                         cols_.append(sigmas+'_init')
                     for cov_ in list(self.finalDesiredSigma2):

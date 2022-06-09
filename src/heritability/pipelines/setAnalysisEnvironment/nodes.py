@@ -35,12 +35,13 @@ def createTempFolder(snpsParams: dict, sampParams: dict):
     logging.info('Created temporary folder')
     return pathTempFiles
 
-def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, pathTempFiles:str) -> Dict[str, Any]:
+def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, snpsParams:dict) -> Dict[str, Any]:
     """Node for selecting the desired sample to work with.
     The parameters are taken from conf/project/parameters.yml.
     The data and the parameters will be loaded and provided to this function
     automatically when the pipeline is executed and it is time to run this node.
     """
+    pathTempFiles = createTempFolder(snpsParams, sampParams)
     if sampParams['pop'] != None:
         data = data.loc[data['pop'].isin(sampParams['pop'])]
     if sampParams['sex'] != None:
@@ -80,7 +81,7 @@ def selectSample(data: pd.DataFrame , genoData: pd.DataFrame, sampParams: dict, 
     logging.info('The new sample size is: ' + str(sizeFinalDf))
     dfSample.loc[:,'1'] = dfSample.subject_id
     dfSample.to_csv(pathTempFiles + '/sample.txt', index = False, header= False, sep = ' ')
-    final_ = {'selectedSample':dfSample.loc[:,['subject_id']] , 'sizeOriginalDf':sizeOriginalDf , 'sizeFinalDf':sizeFinalDf , 'originalDf': dfMerge}
+    final_ = {'selectedSample':dfSample.loc[:,['subject_id']] , 'sizeOriginalDf':sizeOriginalDf , 'sizeFinalDf':sizeFinalDf , 'originalDf': dfMerge, 'pathAnalysis': pathTempFiles}
     return final_
 def checkLogSizes(path_,name_,ext_):
     listSizes = []
@@ -116,7 +117,8 @@ def monitoringProcess(pathTempFiles,name_,ext_,statusFile_):
         else:
             # Updates status (inside tmp folder)
             updateLog(pathTempFiles,1,statusFile_ + ".txt")
-def createBedFiles(pathTempFiles: str , snpsParams: dict, selectedSample: dict) -> None:
+def createBedFiles(snpsParams: dict, selectedSample: dict) -> None:
+    pathTempFiles = selectedSample['pathAnalysis']
     conf_paths = ["conf/local"]
     conf_loader = ConfigLoader(conf_paths)
     parameters = conf_loader.get("paths*", "paths*/**")

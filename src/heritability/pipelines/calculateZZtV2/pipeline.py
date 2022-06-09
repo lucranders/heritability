@@ -10,30 +10,26 @@ def create_pipeline(**kwargs):
     return Pipeline([
         node(
             calculateGCTA,
-            ["params:nameFilePt1",'params:listChrsPt1','params:nameMatrixPt1',"params:pathTempFiles","params:gcta","params:numThreads"],
-            # ,"bed_Files"
-            outputs='calculated_ZZt_without_chromosome_6',
-            name="calculate_ZZt_without_chromosome_6",
+            ['params:listChrsPartitioned2',"selected_Sample","params:numThreads","bed_Files"],
+            outputs='calculated_ZZt_partitioned_2_components',
+            name="calculate_ZZt_partitioned_2_components",
+        ),
+        node(
+            correctGRM,
+            ["selected_Sample",'params:listChrsPartitioned2',"calculated_ZZt_partitioned_2_components"],
+            outputs='corrected_ZZt_partitioned_2_components',
+            name="ZZt_partitioned_2_components",
         ),
         node(
             calculateGCTA,
-            ["params:nameFilePt2",'params:listChrsPt2','params:nameMatrixPt2',"params:pathTempFiles","params:gcta","params:numThreads"],
-            # ,"bed_Files"
-            outputs='calculated_ZZt_only_chromosome_6',
-            name="calculate_ZZt_only_chromosome_6",
+            ['params:listChrsPartitioned22',"selected_Sample","params:numThreads","bed_Files"],
+            outputs='calculated_ZZt_partitioned_22_components',
+            name="calculate_ZZt_partitioned_22_components",
         ),
         node(
             correctGRM,
-            ["params:pathTempFiles",'params:nameMatrixPt1'],
-            # ,"calculated_ZZt_without_chromosome_6"
-            outputs='corrected_ZZt_without_chromosome_6',
-            name="ZZt_without_chromosome_6_corrected",
-        ),
-        node(
-            correctGRM,
-            ["params:pathTempFiles",'params:nameMatrixPt2'],
-            # ,"calculated_ZZt_only_chromosome_6"
-            outputs='corrected_ZZt_only_chromosome_6',
-            name="ZZt_only_chromosome_6_corrected",
+            ["selected_Sample",'params:listChrsPartitioned22',"calculated_ZZt_partitioned_22_components"],
+            outputs='corrected_ZZt_partitioned_22_components',
+            name="ZZt_partitioned_22_components",
         ),
     ])
