@@ -3,40 +3,53 @@ This is a boilerplate pipeline 'estimateH2Simple'
 generated using Kedro 0.17.6
 """
 
-from kedro.pipeline import Pipeline, node
+from kedro.pipeline import pipeline, node,Pipeline
 from .nodes import assembleParams , estimateSigmas2REMLSimple, estimateSigmas2REMLSimpleSingleStart,execAllSimple
 
 def create_pipeline(**kwargs):
-    return Pipeline([
-        # node(
-        #     estimateSigmas2REMLSimple,
-        #     ['params:snpsParams' , 'params:sampParams' , 'params:formula', 'params:GeneExpressions',  'selected_Sample' ,'corrected_ZZt' , 'params:saveControl'],
-        #     outputs='saved_sigma2_estimates_reml',
-        #     name="calculates_sigma2_given_different_initial_values_reml",
-        # ),
-        node(
-            estimateSigmas2REMLSimpleSingleStart,
-            ['params:snpsParams' , 'params:sampParams' , 'params:formula', 'params:GeneExpressions',  'selected_Sample' ,'corrected_ZZt'],
-            outputs='saved_sigma2_estimates_reml',
-            name="calculates_1_gene_components_reml",
-        ),
-        node(
-            estimateSigmas2REMLSimpleSingleStart,
-            ['params:snpsParams' , 'params:sampParams' , 'params:formula', 'params:GeneExpressions',  'selected_Sample' ,'corrected_ZZt_partitioned_2_components'],
-            outputs='saved_sigma2_estimates_reml_2_components',
-            name="calculates_2_gene_components_reml",
-        ),
-        node(
-            estimateSigmas2REMLSimpleSingleStart,
-            ['params:snpsParams' , 'params:sampParams' , 'params:formula', 'params:GeneExpressions',  'selected_Sample' ,'corrected_ZZt_partitioned_22_components'],
-            outputs='saved_sigma2_estimates_reml_22_components',
-            name="calculates_22_gene_components_reml",
-        ),
-        node(
-            execAllSimple,
-            ['saved_sigma2_estimates_reml','saved_sigma2_estimates_reml_2_components','saved_sigma2_estimates_reml_22_components','params:saveControl'],
-            outputs='all_estimates_from_additive_models',
-            name="calculates_all_estimates_from_additive_models",
-        ),
+    templateHeritReml = Pipeline([
+    node(
+            func=estimateSigmas2REMLSimpleSingleStart,
+            inputs=['params:snpsParams' , 'params:sampParams' , 'params:formula', 'params:GeneExpressions',  'selected_Sample' ,'params:alphas','corrected_product_k_c_alpha','params:overrideSetsChrs'],
+            outputs="heritability_estimates_for_different_alphas",
+            name="calculate_heritability_estimates_for_different_alphas",
+            tags=['Heritability','Estimation']
+    ),
     ])
+    setName1_ = 'FullSet'
+    fullSetChromosomes = pipeline(
+        pipe=templateHeritReml,
+        inputs={'selected_Sample':'selected_Sample','corrected_product_k_c_alpha':"herit_" + setName1_+'.corrected_product_k_c_alpha'},
+        parameters={"params:overrideSetsChrs": "params:listChrsFull"},
+        namespace="herit_" + setName1_
+    )
+    setName2_ = 'TwoSets'
+    twoSetsChromosomes = pipeline(
+        pipe=templateHeritReml,
+        inputs={'selected_Sample':'selected_Sample','corrected_product_k_c_alpha':"herit_" + setName2_+'.corrected_product_k_c_alpha'},
+        parameters={"params:overrideSetsChrs": "params:listChrsFull"},
+        namespace="herit_" + setName2_
+    )
+    setName3_ = 'TwentyTwoSets'
+    twentyTwoSetsChromosomes = pipeline(
+        pipe=templateHeritReml,
+        inputs={'selected_Sample':'selected_Sample','corrected_product_k_c_alpha':"herit_" + setName3_+'.corrected_product_k_c_alpha'},
+        parameters={"params:overrideSetsChrs": "params:listChrsFull"},
+        namespace="herit_" + setName3_
+    )
+    endPipe = Pipeline([
+    node(
+            func=execAllSimple,
+            inputs=["herit_" + setName1_ + '.heritability_estimates_for_different_alphas',"herit_" + setName2_ + '.heritability_estimates_for_different_alphas',"herit_" + setName3_ + '.heritability_estimates_for_different_alphas','params:saveControl'],
+            outputs="saved_Files",
+            name="saves_all_files",
+            tags=['Heritability','Estimation'],
+            namespace='save_file'
+    ),
+    ])
+    entirepipeline = fullSetChromosomes + twoSetsChromosomes + twentyTwoSetsChromosomes + endPipe
+    return entirepipeline
+
+
+
 

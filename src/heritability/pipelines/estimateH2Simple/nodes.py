@@ -6,15 +6,17 @@ import pandas as pd
 from . import estimateH2 as herit
 from kedro.config import ConfigLoader
 from os.path import exists
+import pickle
 
-def assembleParams(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list , selectedSample:dict, genesMatrixes: dict):
+def assembleParams(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list , selectedSample:dict, alphasExplored: dict, matrixes:dict):
     pathTemp = selectedSample['pathAnalysis']
     args_ = dict()
     conf_paths = ["conf/local"]
     conf_loader = ConfigLoader(conf_paths)
     parameters = conf_loader.get("paths*", "paths*/**")
+    # There are different file layouts for each analysis (1, 2 or 22 sets of chromosomes)
     paramUse = {1:'pathSaveFilesSimple',2:'pathSaveFilesSimplePartitioned2Components',22:'pathSaveFilesSimplePartitioned22Components'}
-    saveFile = parameters[paramUse[len(genesMatrixes)]] 
+    saveFile = parameters[paramUse[len(matrixes)]] 
     print(saveFile)
     args_['vif_'] = snpsParams['vif']
     args_['maf_'] = snpsParams['maf']
@@ -38,8 +40,8 @@ def assembleParams(snpsParams: dict , sampParams: dict , formula: dict, GeneExpr
     args_['db'] = selectedSample['originalDf']
     args_['individuals'] = selectedSample['selectedSample']
     args_['extraRE'] = formula['random']
-    args_['additiveMatrixDictionary'] = genesMatrixes
     args_['saveRef_'] = saveFile
+    args_['alphas'] = alphasExplored['alphas']
     return  args_
 
 def estimateSigmas2REMLSimple(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list ,  selectedSample: dict , genesMatrixes: dict , saveControl: str):
@@ -61,15 +63,25 @@ def estimateSigmas2REMLSimple(snpsParams: dict , sampParams: dict , formula: dic
         print('calculations already done! To rerun, erase "done" file!')
     return 1
 
-def estimateSigmas2REMLSimpleSingleStart(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list ,  selectedSample: dict , genesMatrixes: dict):
-    generalParams_ = assembleParams(snpsParams , sampParams , formula, GeneExpressions, selectedSample, genesMatrixes)
+def estimateSigmas2REMLSimpleSingleStart(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list ,  selectedSample: dict , alphasExplored: dict, correctedMatrixes:dict, matrixes:dict):
+    generalParams_ = assembleParams(snpsParams , sampParams , formula, GeneExpressions, selectedSample, alphasExplored, matrixes)
     generalParams_['method'] = 'REML'
     generalParams_['parametersOpt'] = {'maxIt':100,'conv':1e-4}
-    for transf_ in ['None', 'log2']:
-        generalParams_['transf_'] = transf_
-        estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)
-        estimateH2_REMLSimple.calculateAll('Genes')
-        estimateH2_REMLSimple.saveResults()
+    pathAnalysis = selectedSample['pathAnalysis']
+    for alpha_ in alphasExplored["alphas"]:
+        dictGenes = {}
+        for nameMatrixIt_ in matrixes:
+            nameMatrix = 'K_C_' + str(alpha_) + '_' + nameMatrixIt_
+            with open(pathAnalysis+'/' + nameMatrix + '.pkl','rb') as rf_:
+                desiredMatrix = pickle.load(rf_)
+            dictGenes[nameMatrixIt_] = desiredMatrix
+        generalParams_['additiveMatrixDictionary'] = dictGenes
+        generalParams_['alpha'] = alpha_
+        for transf_ in ['None', 'log2']:
+            generalParams_['transf_'] = transf_
+            estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)
+            estimateH2_REMLSimple.calculateAll('Genes')
+            estimateH2_REMLSimple.saveResults()
     return 1
 
 def execAllSimple(flgs1,flgs2,flgs3, saveControl: str):

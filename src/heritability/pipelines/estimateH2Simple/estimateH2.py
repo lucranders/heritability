@@ -131,6 +131,7 @@ class heritabilityAlt:
         self.parametersOpt_ = args['parametersOpt']
         self.method_ = args['method']
         self.saveRef_ = args['saveRef_']
+        self.apha_ = args['alpha']
     # Define Fixed Effects Matrix and Phenotype Vector
     def defineFEM_PV(self,geneExpr_):
         dbToMerge = self.individuals_.copy()
@@ -385,13 +386,14 @@ class heritabilityAlt:
                 sizeFinalDf = self.sizeFinalDf
                 namesRE = list(self.randomCovs)
                 transform = self.transf_
+                alpha = self.apha_
                 logLikelihood = self.logLikelihood
                 for num_,x in enumerate(namesRE):
                     if num_ == 0:
                         RE = x
                     else:
                         RE += "+" + x
-                tuple_ = [geneExpr_,pop , maf , hwe , vif , outliers , transform, logLikelihood, sizeOriginalDf , sizeFinalDf ,self.method_,self.formulaFE_,RE]
+                tuple_ = [geneExpr_,pop , maf , hwe , vif , outliers , transform, alpha, logLikelihood, sizeOriginalDf , sizeFinalDf ,self.method_,self.formulaFE_,RE]
                 for sigmas in self.parametersOpt_['sigmasInit']:
                     tuple_.append(self.parametersOpt_['sigmasInit'][sigmas])
                 self.getSigmas()
@@ -407,7 +409,7 @@ class heritabilityAlt:
                         tuple_.append(self.finalDesiredSigma2[cov_][0].copy())
                     finalTuple.append(tuple_)
                     finalDf = pd.DataFrame(finalTuple)
-                    cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers', 'Transformation', 'logLikelihood', 'sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
+                    cols_ = ['Gene','Pop' , 'MAF' , 'HWE' , 'VIF' , 'outliers', 'Transformation', 'Alpha', 'logLikelihood', 'sizeOriginalDf','sizeFinalDf','method','formulaF','randEffects']
                     for sigmas in self.parametersOpt_['sigmasInit']:
                         cols_.append(sigmas+'_init')
                     for cov_ in list(self.finalDesiredSigma2):

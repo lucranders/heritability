@@ -5,7 +5,6 @@ from kedro.pipeline import Pipeline
 
 from heritability.pipelines import setAnalysisEnvironment as sae
 from heritability.pipelines import calculateZZt as cZZt
-from heritability.pipelines import calculateZZtV2 as cZZtV2
 from heritability.pipelines import estimateH2Simple as eH2S
 
 
@@ -18,13 +17,25 @@ def register_pipelines() -> Dict[str, Pipeline]:
     """
     setAnalysisEnvironmentPipeline = sae.create_pipeline()
     calculateZZt = cZZt.create_pipeline()
-    calculateZZtV2 = cZZtV2.create_pipeline()
     estimateH2Simple = eH2S.create_pipeline()
 
+    setName_ = 'FullSet'
+    pipelineFullChrSer = setAnalysisEnvironmentPipeline + \
+                            calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
+                            estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
+    setName_ = 'TwoSets'
+    twoSetsChromosomes = setAnalysisEnvironmentPipeline + \
+                            calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
+                            estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
+    setName_ = 'TwentyTwoSets'
+    twentyTwoSetsChromosomes = setAnalysisEnvironmentPipeline + \
+                            calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
+                            estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
+
+
     return {
-        "sae": setAnalysisEnvironmentPipeline,
-        "cZZt":calculateZZt,
-        "cZZtV2":calculateZZtV2,
-        "eH2S":estimateH2Simple,
-        "__default__": setAnalysisEnvironmentPipeline + calculateZZt + calculateZZtV2 + estimateH2Simple 
+        "pipelineFullChrSer": pipelineFullChrSer,
+        "twoSetsChromosomes": twoSetsChromosomes,
+        "twentyTwoSetsChromosomes": twentyTwoSetsChromosomes,
+        "__default__": setAnalysisEnvironmentPipeline + calculateZZt +  estimateH2Simple 
     }

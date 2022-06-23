@@ -80,6 +80,7 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
         f.write('formula: ' + str(formula_).replace('None','Null') + '\n')
         f.write('# path to save control\n')
         f.write('saveControl: ' + '"conf/snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_ + '"')
+    
     if not exists(path_ + '/done_'):
         query_ = ['kedro', 'run' ,'--env=snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_]
         print(query_)
