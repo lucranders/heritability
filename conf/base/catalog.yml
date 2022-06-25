@@ -17,8 +17,4 @@ genotypedData:
   load_args:
     sep: "\t"
     header: 0
-# Filtered sample
-selected_Sample:
-  type: MemoryDataSet
-corrected_ZZt:
-  type: MemoryDataSet
+    

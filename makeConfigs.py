@@ -4,6 +4,18 @@ import os
 from kedro.config import ConfigLoader
 import time
 from os.path import exists
+import sys
+setChrs_ = sys.argv[1]
+conf_paths = ["conf/local"]
+conf_loader = ConfigLoader(conf_paths)
+parameters = conf_loader.get("paths*", "paths*/**")
+pathProcessed = parameters['registerProcessed']
+saveRegister = pathProcessed + setChrs_ + '/'
+if not exists(saveRegister):
+    proc_ = subprocess.Popen(['mkdir',saveRegister])
+    proc_.wait()
+
+
 
 def retStr(var_):
     if var_ != 'null':
@@ -81,14 +93,14 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
         f.write('# path to save control\n')
         f.write('saveControl: ' + '"conf/snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_ + '"')
     
-    if not exists(path_ + '/done_'):
-        query_ = ['kedro', 'run' ,'--env=snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_]
+    processedFile = 'snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_ 
+    if not exists(saveRegister + processedFile):
+        query_ = ['kedro', 'run' ,'--env=snpsParams_maf_' + maf_ + '_hwe_' + hwe_ + '_vif_' + vif_ + '_sampParams_' + popStr_ + 'sex_' + sexStr_ + '_lab_' + labStr_ + '_outliers_' + outliers_, '--pipeline', setChrs_]
         print(query_)
-        print(os.getcwd())
-        subprocess.Popen(query_)
-        while not exists(path_ + '/done_'):
-            time.sleep(10)
-            print('waiting: ' + path_ + '/done_')
+        proc_ = subprocess.Popen(query_)
+        proc_.wait()
+        with open(saveRegister + processedFile,'w') as wf_:
+            wf_.write('done!')
     else:
         print('calculations already done!')
         

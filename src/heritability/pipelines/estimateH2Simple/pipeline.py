@@ -37,17 +37,18 @@ def create_pipeline(**kwargs):
         parameters={"params:overrideSetsChrs": "params:listChrsFull"},
         namespace="herit_" + setName3_
     )
-    endPipe = Pipeline([
-    node(
-            func=execAllSimple,
-            inputs=["herit_" + setName1_ + '.heritability_estimates_for_different_alphas',"herit_" + setName2_ + '.heritability_estimates_for_different_alphas',"herit_" + setName3_ + '.heritability_estimates_for_different_alphas','params:saveControl'],
-            outputs="saved_Files",
-            name="saves_all_files",
-            tags=['Heritability','Estimation'],
-            namespace='save_file'
-    ),
-    ])
-    entirepipeline = fullSetChromosomes + twoSetsChromosomes + twentyTwoSetsChromosomes + endPipe
+    # endPipe = Pipeline([
+    # node(
+    #         func=execAllSimple,
+    #         inputs=["herit_" + setName1_ + '.heritability_estimates_for_different_alphas',"herit_" + setName2_ + '.heritability_estimates_for_different_alphas',"herit_" + setName3_ + '.heritability_estimates_for_different_alphas','params:saveControl'],
+    #         outputs="saved_Files",
+    #         name="saves_all_files",
+    #         tags=['Heritability','Estimation'],
+    #         namespace='save_file'
+    # ),
+    # ])
+    entirepipeline = fullSetChromosomes + twoSetsChromosomes + twentyTwoSetsChromosomes
+    #  + endPipe
     return entirepipeline
 
 
