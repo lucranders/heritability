@@ -27,14 +27,14 @@ def create_pipeline(**kwargs):
     twoSetsChromosomes = pipeline(
         pipe=templateHeritReml,
         inputs={'selected_Sample':'selected_Sample','corrected_product_k_c_alpha':"herit_" + setName2_+'.corrected_product_k_c_alpha'},
-        parameters={"params:overrideSetsChrs": "params:listChrsFull"},
+        parameters={"params:overrideSetsChrs": "params:listChrsPartitioned2"},
         namespace="herit_" + setName2_
     )
     setName3_ = 'TwentyTwoSets'
     twentyTwoSetsChromosomes = pipeline(
         pipe=templateHeritReml,
         inputs={'selected_Sample':'selected_Sample','corrected_product_k_c_alpha':"herit_" + setName3_+'.corrected_product_k_c_alpha'},
-        parameters={"params:overrideSetsChrs": "params:listChrsFull"},
+        parameters={"params:overrideSetsChrs": "params:listChrsPartitioned22"},
         namespace="herit_" + setName3_
     )
     # endPipe = Pipeline([

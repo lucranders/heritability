@@ -71,8 +71,8 @@ def estimateSigmas2REMLSimpleSingleStart(snpsParams: dict , sampParams: dict , f
     for alpha_ in alphasExplored["alphas"]:
         dictGenes = {}
         for nameMatrixIt_ in matrixes:
-            nameMatrix = 'K_C_' + str(alpha_) + '_' + nameMatrixIt_
-            with open(pathAnalysis+'/' + nameMatrix + '.pkl','rb') as rf_:
+            nameMatrix = 'K_C_' + str(alpha_) + '_' + nameMatrixIt_ 
+            with open(pathAnalysis+'/' + nameMatrix + '_correction.pkl','rb') as rf_:
                 desiredMatrix = pickle.load(rf_)
             dictGenes[nameMatrixIt_] = desiredMatrix
         generalParams_['additiveMatrixDictionary'] = dictGenes
