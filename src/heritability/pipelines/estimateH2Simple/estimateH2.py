@@ -12,6 +12,22 @@ import pickle
 from multiprocessing import Pool
 import logging
 
+def createSymMatrix(dict_):
+    k_ = len(dict_)
+    # nrows/cols
+    n_ = int((-1 + (1 + 8*k_)**.5)/2)
+    print(n_)
+    triangularMatrix = np.zeros([n_,n_])
+    for row_ in range(n_):
+        for col_ in range(n_):
+            if row_ <= col_:
+                triangularMatrix[row_,col_] = dict_[(row_,col_)]
+    symMatrix = triangularMatrix + \
+                triangularMatrix.T - \
+                np.diag(triangularMatrix.diagonal())
+    return symMatrix
+
+
 def extractGCTAResults(path_):
     f_ = open(path_,'r')
     for line in f_:
@@ -207,17 +223,18 @@ class heritabilityAlt:
         k = 1
         while k < maxIt:
             s = list()
-            Hessian = np.zeros([numberMatrixes,numberMatrixes])
             for numRow,cov1 in enumerate(nameComponents):
                 # score vector element
                 sElement = np.trace(vInverse @ givenMatrixes[cov1]) - (np.transpose(difMean) @ vInverse @ givenMatrixes[cov1] @ vInverse @ difMean)
-                s.append(-.5*sElement[0,0].copy())
+                s.append(-.5*sElement.copy())
                 del(sElement)
                 for numCol,cov2 in enumerate(nameComponents):
-                    hElement = np.trace(vInverse @ givenMatrixes[cov1] @ vInverse @ givenMatrixes[cov2])
-                    Hessian[numRow,numCol] = .5*hElement.copy()
-                    del(hElement)
-            # print(Hessian)
+                    if numRow <= numCol:
+                        # Hessian element
+                        hElement = np.trace(vInverse @ givenMatrixes[cov1] @ vInverse @ givenMatrixes[cov2])
+                        dict_[(numRow,numCol)] = -.5*hElement.copy()
+                        del(hElement)
+            Hessian = createSymMatrix(dict_)
             invHessian = np.linalg.inv(Hessian)
             V = np.zeros([dimSquareMatrixes,dimSquareMatrixes])
             thetas_ = dict()
@@ -284,16 +301,18 @@ class heritabilityAlt:
         k = 1
         while k < maxIt:
             s = list()
-            Hessian = np.zeros([numberMatrixes,numberMatrixes])
             for numRow,cov1 in enumerate(nameComponents):
                 # score vector element
                 sElement = np.trace(P @ givenMatrixes[cov1]) - np.transpose(difMean) @ vInverse @ givenMatrixes[cov1] @ vInverse @ difMean
                 s.append(-.5*sElement.copy())
                 del(sElement)
                 for numCol,cov2 in enumerate(nameComponents):
-                    hElement = np.trace(P @ givenMatrixes[cov1] @ P @ givenMatrixes[cov2])
-                    Hessian[numRow,numCol] = -.5*hElement.copy()
-                    del(hElement)
+                    if numRow <= numCol:
+                        # Hessian element
+                        hElement = np.trace(P @ givenMatrixes[cov1] @ P @ givenMatrixes[cov2])
+                        dict_[(numRow,numCol)] = -.5*hElement.copy()
+                        del(hElement)
+            Hessian = createSymMatrix(dict_)
             invHessian = np.linalg.inv(Hessian)
             V = np.zeros([dimSquareMatrixes,dimSquareMatrixes])
             thetas_ = dict()
