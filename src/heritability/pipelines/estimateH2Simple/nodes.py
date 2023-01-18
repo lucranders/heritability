@@ -84,6 +84,26 @@ def estimateSigmas2REMLSimpleSingleStart(snpsParams: dict , sampParams: dict , f
             estimateH2_REMLSimple.saveResults()
     return 1
 
+def estimateSigmas2REMLSimpleSingleStartGCTA(snpsParams: dict , sampParams: dict , formula: dict, GeneExpressions: list ,  selectedSample: dict , alphasExplored: dict, correctedMatrixes:dict, matrixes:dict):
+    generalParams_ = assembleParams(snpsParams , sampParams , formula, GeneExpressions, selectedSample, alphasExplored, matrixes)
+    generalParams_['method'] = 'REML'
+    generalParams_['parametersOpt'] = {'maxIt':100,'conv':1e-4}
+    pathAnalysis = selectedSample['pathAnalysis']
+    dictGenes = {}
+    for nameMatrixIt_ in matrixes:
+        nameMatrix = 'GCTA_' + nameMatrixIt_ 
+        with open(pathAnalysis+'/' + nameMatrix + '_correction.pkl','rb') as rf_:
+            desiredMatrix = pickle.load(rf_)
+        dictGenes[nameMatrixIt_] = desiredMatrix
+    generalParams_['additiveMatrixDictionary'] = dictGenes
+    generalParams_['alpha'] = 'GCTA'
+    for transf_ in ['None', 'log2']:
+        generalParams_['transf_'] = transf_
+        estimateH2_REMLSimple = herit.heritabilityAlt(generalParams_)
+        estimateH2_REMLSimple.calculateAll('Genes')
+        estimateH2_REMLSimple.saveResults()
+    return 1
+
 def execAllSimple(flgs1,flgs2,flgs3, saveControl: str):
     f = open(saveControl + '/done_','w')
     f.write('done!')

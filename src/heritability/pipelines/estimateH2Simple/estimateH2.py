@@ -299,6 +299,7 @@ class heritabilityAlt:
         thetas = dict()
         thetas[0] = sigmas2Init.copy()
         k = 1
+        dict_ = {}
         while k < maxIt:
             s = list()
             for numRow,cov1 in enumerate(nameComponents):
@@ -337,7 +338,12 @@ class heritabilityAlt:
         n = X.shape[0]
         p = np.linalg.matrix_rank(X)
         adjust = -((n-p)/2)*np.log(2*np.pi)
-        self.logLikelihood = adjust + logLik[k]
+        try:
+            # If there is convergence, it will happen on index k
+            self.logLikelihood = adjust + logLik[k]
+        except:
+            # If there is no convergence, the final log likelihood will be the last iteration
+            self.logLikelihood = adjust + logLik[k-1]
         self.betas = betas
     def estimateSimpleHeritR(self,geneExpr_,matrixName_,method_,saveFile_):
         print(os.getcwd())

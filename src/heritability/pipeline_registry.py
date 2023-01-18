@@ -28,14 +28,14 @@ def register_pipelines() -> Dict[str, Pipeline]:
                             calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
                             estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
     setName_ = 'TwentyTwoSets'
-    twentyTwoSetsChromosomes = setAnalysisEnvironmentPipeline + \
-                            calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
-                            estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
+    # twentyTwoSetsChromosomes = setAnalysisEnvironmentPipeline + \
+    #                         calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
+    #                         estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
 
 
     return {
         "pipelineFullChrSer": pipelineFullChrSer,
         "twoSetsChromosomes": twoSetsChromosomes,
-        "twentyTwoSetsChromosomes": twentyTwoSetsChromosomes,
+        # "twentyTwoSetsChromosomes": twentyTwoSetsChromosomes,
         "__default__": setAnalysisEnvironmentPipeline + calculateZZt +  estimateH2Simple 
     }

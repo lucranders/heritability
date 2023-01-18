@@ -11,6 +11,7 @@ import os
 import numpy as np
 from pathlib import Path
 from os.path import exists
+import itertools
 from multiprocessing import Pool
 from kedro.config import ConfigLoader
 from datetime import datetime
@@ -79,6 +80,42 @@ class calculateMatrixes:
         self.zztMatrixes = zztMatrixes.copy()
         self.ncolsMatrixes = ncolsDict
         self.zzts_ = zzts_
+    def calculateFinalMatrixDiagCorrection(self):
+        ncolsDict = {}
+        zzts_ = {}
+        for i_,chr_ in enumerate(self.chromosomes_):
+            tempMatrix_ = self.correctedMatrixDef[chr_].copy()
+            means_ = tempMatrix_.mean(axis = 0)
+            stds_ = tempMatrix_.std(axis = 0)
+            ncols_ = tempMatrix_.shape[1]
+            ncolsDict[chr_] = ncols_
+            # Calculating full ZZt
+            Z_ = ((tempMatrix_ - means_) * ((stds_)**(-1)))
+            ZZt_ = Z_ @ Z_.T
+            # According to Yang 2010, there is a bias in the main diagonal
+            # Calculating correction for matrix diagonal, which is:
+            # Aijj = 1 + [x_{ij}^2 - (1 + 2p_{i})x_{ij} + 2p_{i}^2]/(2p_{i}(1-p_{i}))
+            # But this result holds only for alpha = -1 (for now)
+            tmpMatrix_ = ((tempMatrix_ - 1) * ((stds_)**(-1)))
+            tmpMatrix2_ = Z_ @ tmpMatrix_.T
+            # We are interested only on main diag
+            mainDiag_ = np.diag(tmpMatrix2_)
+            # Calculating matrix from additive effects
+            ZZtCorrect = ZZt_.copy()
+            # Fill the main diagonal with 0
+            np.fill_diagonal(ZZtCorrect, 0)
+            # Transforming diagonal as diagonal matrix
+            mainDiagMatrix_ = np.diag(mainDiag_)
+            # Replacing the main diagonal of matrix calculated from additive effects by correction
+            ZZtCorrect = ZZtCorrect + mainDiagMatrix_
+            zzts_[chr_] = ZZtCorrect
+            if i_ == 0:
+                zztMatrixes = ZZtCorrect.copy()
+            else: 
+                zztMatrixes += ZZtCorrect
+        self.zztMatrixes = zztMatrixes.copy()
+        self.ncolsMatrixes = ncolsDict
+        self.zzts_ = zzts_
     def calculateFinalMatrix(self):
         for i_,chr_ in enumerate(self.chromosomes_):
             if i_ == 0:
@@ -112,6 +149,32 @@ def calculate_K_C_alpha(matrixes:dict,selectedSample: dict ,parametersMatrix:dic
             else:
                 print('K_C_' + str(alpha_) + '_' + nameMatrixIt_ + " already calculated!")
     return 1
+
+# Function equivalent to calculate_K_C_alpha; Only difference is the calculateMatrix step
+# And matrix name
+def calculate_GCTA(matrixes:dict,selectedSample: dict ,parametersMatrix:dict, check_bed_files_exists:int):
+    pathAnalysis = selectedSample['pathAnalysis']
+    print(pathAnalysis)
+    for nameMatrixIt_ in matrixes:
+        nameMatrix = 'GCTA_' + nameMatrixIt_
+        if not exists(pathAnalysis+'/' + nameMatrix + '.pkl'):
+            params = {}
+            params["pathAnalysis"] = pathAnalysis
+            params["cores"] = parametersMatrix["cores"]
+            params["alpha"] = 'GCTA'
+            params["chromosomes"] = matrixes[nameMatrixIt_]
+            calculator = calculateMatrixes(params)
+            calculator.readBeds()
+            calculator.eliminateBadColumns()
+            calculator.calculateFinalMatrixDiagCorrection()
+            calculator.calculateFinalMatrix()
+            desiredMatrix = calculator.zztFinal
+            with open(pathAnalysis+'/' + nameMatrix + '.pkl','wb') as wf_:
+                pickle.dump(desiredMatrix, wf_)
+        else:
+            print('GCTA_' + nameMatrixIt_ + " already calculated!")
+    return 1
+
 
 def correct_K_C_alpha(matrixes: dict, selectedSample: dict, parametersMatrix: dict, check_GCTA_calculated:int):
     pathAnalysis = selectedSample['pathAnalysis']
@@ -147,4 +210,40 @@ def correct_K_C_alpha(matrixes: dict, selectedSample: dict, parametersMatrix: di
                         pickle.dump(desiredMatrix, wf_)
             else:
                 print(nameMatrix + ' already corrected!')
+    return 1
+
+# Function equivalent to correct_K_C_alpha; Only difference is the name of input matrix
+def correct_GCTA(matrixes: dict, selectedSample: dict, check_GCTA_calculated:int):
+    pathAnalysis = selectedSample['pathAnalysis']
+    for nameMatrixIt_ in matrixes:
+        nameMatrix = 'GCTA_' + nameMatrixIt_
+        # Reads and stores as a variable the calculated matrix
+        if not exists(pathAnalysis + '/' + nameMatrix + '_correction.pkl'):
+            with open(pathAnalysis+'/' + nameMatrix + '.pkl','rb') as rf_:
+                desiredMatrix = pickle.load(rf_)
+            try:
+                choleskyDecomp_ = np.linalg.cholesky(desiredMatrix)
+                a = 1
+            except:
+                a = 0
+            if a == 0:
+                newMatrix = desiredMatrix.copy()
+                while a == 0:
+                    eigenValues, eigenVectors = np.linalg.eig(newMatrix)
+                    minEigen = np.min(abs(eigenValues))
+                    reg_ = abs(minEigen) + 1e-6
+                    newDiag = np.diag(eigenValues + reg_)
+                    newMatrix = eigenVectors @ newDiag @ eigenVectors.T
+                    try: 
+                        np.linalg.cholesky(newMatrix)
+                        a = 1
+                    except:
+                        a = 0
+                with open(pathAnalysis + '/' + nameMatrix + '_correction.pkl','wb') as wf_:
+                    pickle.dump(newMatrix, wf_)
+            else:
+                with open(pathAnalysis + '/' + nameMatrix + '_correction.pkl','wb') as wf_:
+                    pickle.dump(desiredMatrix, wf_)
+        else:
+            print(nameMatrix + ' already corrected!')
     return 1
