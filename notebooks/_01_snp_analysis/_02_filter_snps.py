@@ -1,11 +1,10 @@
-import time
 import subprocess
 import pandas as pd
 import os
 import logging
 from typing import Any, Dict
+import shutil
 from kedro.config import ConfigLoader
-from datetime import datetime
 
 
 # Reading dataframe
@@ -142,35 +141,8 @@ def checkLogSizes(path_,listNames_):
     return listSizes
 
 
-# Update status about process
-def updateLog(path_,status_,file_):
-    if status_ == 0:
-        msg_ = str(datetime.now()) + ": Waiting..."
-    else:
-        msg_ = str(datetime.now()) + ": Done!"
-    f = open(path_ + '/' + file_, "a")
-    f.write(msg_ + '\n')
-    f.close()
 
-
-def monitoringProcess(pathTempFiles,listNames,statusFile_):
-    # Check if all 22 .bed files are created
-    sizes = checkLogSizes(pathTempFiles,listNames)
-    cond = sum(sizes) < 22
-    # If not, waits until so
-    while cond:
-        sizes = checkLogSizes(pathTempFiles,listNames)
-        cond = sum(sizes) < 22
-        if cond:
-            # Updates status (inside tmp folder)
-            updateLog(pathTempFiles,0,statusFile_ + ".txt")
-            time.sleep(10)
-        else:
-            # Updates status (inside tmp folder)
-            updateLog(pathTempFiles,1,statusFile_ + ".txt")
-
-
-def createBedFiles(pathTempFiles:str, snpsParams: dict, nameFiles:str) -> None:
+def filterSnps(pathTempFiles:str, snpsParams: dict, nameFiles:str) -> None:
     conf_paths = ["../../conf/local"]
     conf_loader = ConfigLoader(conf_paths)
     parameters = conf_loader.get("paths*", "paths*/**")
@@ -199,25 +171,8 @@ def createBedFiles(pathTempFiles:str, snpsParams: dict, nameFiles:str) -> None:
                 f.write('\n')
             cmd = ['sh', pathTempFiles + '/filterSnps' + str(chr_) + '.sh']
             print(sbatchFile_1)
-            subprocess.Popen(cmd)
-        monitoringProcess(pathTempFiles,[f'list_filt_snps_chr{chr_}_{nameFiles}.prune.in' for chr_ in range(1,23)],f'filteredSnpsStatus_{nameFiles}')
-    checkCreatedFiles2_ = checkLogSizes(pathTempFiles,[f'chr{chr_}_{nameFiles}.bed' for chr_ in range(1,23)])
-    cond2 = sum(checkCreatedFiles2_) < 22
-    if cond2:
-        query_2 = f'''{pathPlink} --vcf $input --vcf-half-call missing --extract $filtered --keep {pathTempFiles}/sample.txt --make-bed --out $bed'''
-        for chr_ in range(1,23):
-            sbatchFile_2 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
-    filtered={pathTempFiles}/list_filt_snps_chr{chr_}_{nameFiles}.prune.in
-    bed={pathTempFiles}/chr{chr_}_{nameFiles}
-    eval {query_2}
-            '''
-            print(sbatchFile_2)
-            with open(pathTempFiles + '/bedMaker' + str(chr_) + '.sh', 'w') as f:
-                f.write(sbatchFile_2)
-                f.write('\n')
-            cmd = ['sh', pathTempFiles + '/bedMaker' + str(chr_) + '.sh']
-            subprocess.Popen(cmd)   
-        monitoringProcess(pathTempFiles,[f'chr{chr_}_{nameFiles}.bed' for chr_ in range(1,23)],f'bedStatus_{nameFiles}')
+            p = subprocess.Popen(cmd)
+            p.wait()
     return None
 
 
@@ -225,5 +180,8 @@ vif_ = 1.5
 maf_ = .05
 hwe_ = 10**-4
 
-createBedFiles(pathTemp,{'vif': vif_, 'maf': maf_, 'hwe': hwe_},'test_')
+filterSnps(pathTemp,{'vif': vif_, 'maf': maf_, 'hwe': hwe_},'test_')
 
+for file_ in os.listdir(pathTemp):
+    if '.prune.in' in file_:
+        shutil.copyfile(f'{pathTemp}/{file_}', file_)
