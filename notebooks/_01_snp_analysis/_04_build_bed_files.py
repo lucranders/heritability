@@ -2,6 +2,7 @@ import subprocess
 import os
 from kedro.config import ConfigLoader
 
+# Setting paths
 conf_paths = ["../../conf/local"]
 conf_loader = ConfigLoader(conf_paths)
 parameters = conf_loader.get("paths*", "paths*/**")
@@ -10,6 +11,10 @@ pathPlink = parameters['plink']
 pathVcf = parameters['pathVcfFiles']
 pathTemp = parameters['pathTemp']
 pathTempFiles = f'''{pathTemp}/{name_}'''
+
+# Query to produce new bed files ->
+# From original .prune.in files and from
+# the new list (drop duplicates) .prune.in file
 mainQuery = f'''{pathPlink} --vcf $input --vcf-half-call missing --extract $filtered --keep {pathTempFiles}/sample.txt --make-bed --out $bed'''
 filesTemp = [x for x in os.listdir(pathTempFiles)]
 for chr_ in range(1,23):
