@@ -3,9 +3,9 @@ from typing import Dict
 
 from kedro.pipeline import Pipeline
 
-from heritability.pipelines import setAnalysisEnvironment as sae
-from heritability.pipelines import calculateZZt as cZZt
-from heritability.pipelines import estimateH2Simple as eH2S
+from heritability.pipelines import _01_set_analysis_environment as sae
+from heritability.pipelines import _02_calculateZZt as cZZt
+# from heritability.pipelines import _03_estimate_h2_simple as eH2S
 
 
 def register_pipelines() -> Dict[str, Pipeline]:
@@ -17,25 +17,13 @@ def register_pipelines() -> Dict[str, Pipeline]:
     """
     setAnalysisEnvironmentPipeline = sae.create_pipeline()
     calculateZZt = cZZt.create_pipeline()
-    estimateH2Simple = eH2S.create_pipeline()
+    # estimateH2Simple = eH2S.create_pipeline()
 
-    setName_ = 'FullSet'
-    pipelineFullChrSer = setAnalysisEnvironmentPipeline + \
-                            calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
-                            estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
-    setName_ = 'TwoSets'
-    twoSetsChromosomes = setAnalysisEnvironmentPipeline + \
-                            calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
-                            estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
-    setName_ = 'TwentyTwoSets'
-    # twentyTwoSetsChromosomes = setAnalysisEnvironmentPipeline + \
-    #                         calculateZZt.only_nodes_with_namespace("herit_" + setName_) +\
-    #                         estimateH2Simple.only_nodes_with_namespace("herit_" + setName_)
+    full_pipeline = setAnalysisEnvironmentPipeline +\
+                            calculateZZt 
+                            # estimateH2Simple
 
 
     return {
-        "pipelineFullChrSer": pipelineFullChrSer,
-        "twoSetsChromosomes": twoSetsChromosomes,
-        # "twentyTwoSetsChromosomes": twentyTwoSetsChromosomes,
-        "__default__": setAnalysisEnvironmentPipeline + calculateZZt +  estimateH2Simple 
+        "__default__": full_pipeline
     }

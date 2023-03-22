@@ -68,14 +68,26 @@ print(tab_.loc[tab_.duplicatesPruned > tab_.duplicatesInfoBySNPPos].shape[0] == 
 # Conclusion: When there are duplicates, it does not happen to be more duplicates on selection than on available information - check
 print(round(100 * tab_.loc[tab_.duplicatesInfoBySNPPos == 1].SNP.sum() / compiledInfo.shape[0], 2))
 # If we drop all the duplicate snps, we will keep 99.86% of all snps
+del(tab_)
+tab_ = compiledInfo.groupby(['CHR','duplicatesInfoBySNPPos']).SNP.count().reset_index()
+tab_.loc[:, 'tot'] = tab_.duplicatesInfoBySNPPos * tab_.SNP
+tab_.loc[tab_.duplicatesInfoBySNPPos != 1].tot.sum()
+# 2230 snps - total amount of problematic snps
 
+del(tab_)
+alternate_view_ = compiledInfo.copy()
+alternate_view_.loc[alternate_view_.duplicatesInfoBySNPPos > 1, 'duplicatesInfoBySNPPos'] = '> 1'
+tab_ = alternate_view_.groupby(['CHR','duplicatesInfoBySNPPos']).SNP.count().reset_index()
+# An alternate view, to simplify the analysis
 
 conf_paths = ["../../conf/local"]
 conf_loader = ConfigLoader(conf_paths)
 parameters = conf_loader.get("paths*", "paths*/**")
 pathTemp = parameters['pathTemp']
+name_ = 'test_0'
+
 for chr_ in range(1,23):
     # aux_ = compiledInfo.loc[(compiledInfo.duplicatesInfoBySNPPos == 1)&(compiledInfo.CHR == chr_)]
     file_ = f'new_list_filt_snps_{chr_}.prune.in'
     # aux_.loc[:,['SNP']].to_csv(file_, index = False, header = None, sep = '\t')
-    shutil.copyfile(file_ , f'{pathTemp}/test_/{file_}')
+    shutil.copyfile(file_ , f'{pathTemp}/{name_}/{file_}')

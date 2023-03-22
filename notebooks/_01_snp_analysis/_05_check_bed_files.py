@@ -1,8 +1,8 @@
 import pandas as pd
-from multiprocessing import Pool
 from kedro.config import ConfigLoader
 from bed_reader import open_bed
 import numpy as np
+import pickle
 
 def howManyVariants(params):
     pathAnalysis = params['pathAnalysis']
@@ -28,15 +28,23 @@ def badColsComputer(params, chr_):
     val = bed.read()
     # Computing std, ignoring nan values
     stds_ = np.nanstd(val, axis = 0)
-    totalBadColumns = len(np.where(stds_ == 0)[0])
-    return totalBadColumns
+    noVar = np.where(stds_ == 0)[0]
+    totalBadColumns = len(noVar)
+    return totalBadColumns, noVar
 
 
 def howManyBadCols(params):
     label_ = params['label_']
     info_ = []
     for chr_ in range(1,23):
-        info_.append([label_, chr_, badColsComputer(params,chr_)])
+        info_.append([label_, chr_, badColsComputer(params,chr_)[0]])
+    return pd.DataFrame(info_, columns = ['label', 'chr', 'badCols'])
+
+def whichBadCols(params):
+    label_ = params['label_']
+    info_ = []
+    for chr_ in range(1,23):
+        info_.append([label_, chr_, badColsComputer(params,chr_)[1]])
     return pd.DataFrame(info_, columns = ['label', 'chr', 'badCols'])
 
 
@@ -44,19 +52,17 @@ def howManyBadCols(params):
 conf_paths = ["../../conf/local"]
 conf_loader = ConfigLoader(conf_paths)
 parameters = conf_loader.get("paths*", "paths*/**")
-name_ = 'test_'
 pathTemp = parameters['pathTemp']
-pathTempFiles = f'''{pathTemp}/{name_}'''
 
 originalFilesParams = {
-                        'pathAnalysis': pathTempFiles,
-                        'filePatt_': 'stdPruned',
+                        'pathAnalysis': f'''{pathTemp}/test_0_0''',
+                        'filePatt_': 'pruned',
                         'label_': 'Original',
                         }
 
 dedupFilesParams = {
-                        'pathAnalysis': pathTempFiles,
-                        'filePatt_': 'dedupPruned',
+                        'pathAnalysis': f'''{pathTemp}/test_0_1''',
+                        'filePatt_': 'pruned',
                         'label_': 'Without duplicates',
                         }
 
@@ -70,7 +76,7 @@ Considering all chromosomes, the total is {int(tab_['diff'].sum())}
 
 totalBadCols = pd.concat([howManyBadCols(originalFilesParams), howManyBadCols(dedupFilesParams)], ignore_index= True, axis = 0)
 tab_ = pd.pivot(totalBadCols, index = 'chr',columns='label', values = 'badCols').reset_index()
-tab_.to_csv('totalBadCols', index = False, sep = '|')
+tab_.to_csv(f'''{originalFilesParams['pathAnalysis']}/totalBadCols.txt''', index = False, sep = '|')
 
 print(f'''
 Considering a bad column is a column without variation (at all), we have for each set:
@@ -83,3 +89,7 @@ New set:
     - average: {int(totalBadCols.loc[totalBadCols['label'] == dedupFilesParams['label_'], 'badCols'].mean())} 
     - total: {int(totalBadCols.loc[totalBadCols['label'] == dedupFilesParams['label_'], 'badCols'].sum())}
     ''')
+
+index_bad_cols_orig = whichBadCols(originalFilesParams)
+pickle.dump(index_bad_cols_orig, open(f'''{originalFilesParams['pathAnalysis']}/index_bad_cols.pkl''','wb'))
+index_bad_cols_orig.to_csv(f'''{originalFilesParams['pathAnalysis']}/index_bad_cols.txt''', index = False, sep = '|')

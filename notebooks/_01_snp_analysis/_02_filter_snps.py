@@ -79,6 +79,7 @@ def selectSample(
         data = data.loc[data['lab'].isin(sampParams['lab'])]
     # Merged data - intersection between genotyped and phenotyped individuals
     dfMerge = genoData.merge(data, how = 'inner')
+    dfMerge.sort_values(['pop', 'subject_id'], inplace = True)
     sizeOriginalDf = dfMerge.drop_duplicates(['subject_id']).shape[0]
     # logging.info('The original sample size is: ' + str(sizeOriginalDf))
     # Saving sample on temp folder
@@ -113,75 +114,89 @@ def selectSample(
     final_ = {'selectedSample':dfSample.loc[:,['subject_id']] , 'sizeOriginalDf':sizeOriginalDf , 'sizeFinalDf':dfSample.shape[0] , 'originalDf': dfMerge, 'MahalanobisDf': mahalanobisFinal,'pathAnalysis': pathTempFiles}
     return final_
 
-sampParams = {'pop': None,'sex':None,'lab':None,'outliers':None}
-pathTemp = createTempFolder('test_')
-
-sample = selectSample(
-                        dfPhen_.loc[dfPhen_.subject_id.isin(sampleAnalysis.subject_id)],
-                        sampleGen_,
-                        sampParams,
-                        pathTemp
-                        )
-print(f'''
-SIZE OF ORIGINAL SAMPLE:
-{sample['sizeOriginalDf']}
-SIZE OF NEW SAMPLE
-{sample['sizeFinalDf']}
-''')
-
-def checkLogSizes(path_,listNames_):
-    listSizes = []
-    for name_ in listNames_:
-        try:
-            size = os.path.getsize(path_ + '/' + name_)
-        except:
-            size = 0
-    
-        listSizes.append(size > 0)
-    return listSizes
-
-
-
 def filterSnps(pathTempFiles:str, snpsParams: dict, nameFiles:str) -> None:
     conf_paths = ["../../conf/local"]
     conf_loader = ConfigLoader(conf_paths)
     parameters = conf_loader.get("paths*", "paths*/**")
     pathPlink = parameters['plink']
     pathVcf = parameters['pathVcfFiles']
-    query_1 = pathPlink + " --vcf $input"
+    main_query_ = pathPlink + " --vcf $input"
     if snpsParams['vif'] != None:
-        query_1 += " --indep 50 5 " + str(snpsParams['vif'])
+        main_query_ += " --indep 50 5 " + str(snpsParams['vif'])
     if snpsParams['maf'] != None:
-        query_1 += " --maf " + str(snpsParams['maf'])
+        main_query_ += " --maf " + str(snpsParams['maf'])
     if snpsParams['hwe'] != None:
-        query_1 += " --hwe " + str(snpsParams['hwe'])
-    query_1 += f" --keep {pathTempFiles}/sample.txt --mind 0.05 --geno 0.05 --vcf-half-call missing --out $filtered"
-    # check if files were already created
-    checkCreatedFiles_ = checkLogSizes(pathTempFiles,[f'list_filt_snps_chr{chr_}_{nameFiles}.prune.in' for chr_ in range(1,23)])
-    cond = sum(checkCreatedFiles_) < 22
-    if cond:
-        # Create .bed files - 22 chromossomes
-        for chr_ in range(1,23):
-            sbatchFile_1 = f'''input={pathVcf}/ALL.chr{chr_}_GRCh38.genotypes.20170504.vcf.gz
-    filtered={pathTempFiles}/list_filt_snps_chr{chr_}_{nameFiles}
-    eval {query_1}
-            '''
-            with open(pathTempFiles + '/filterSnps' + str(chr_) + '.sh', 'w') as f:
-                f.write(sbatchFile_1)
-                f.write('\n')
-            cmd = ['sh', pathTempFiles + '/filterSnps' + str(chr_) + '.sh']
-            print(sbatchFile_1)
-            p = subprocess.Popen(cmd)
-            p.wait()
+        main_query_ += " --hwe " + str(snpsParams['hwe'])
+    if snpsParams['exclude'] != None:
+        main_query_ += f" --exclude {snpsParams['exclude']}"
+    main_query_ += f" --keep {pathTempFiles}/sample.txt --mind 0.05 --geno 0.05 --vcf-half-call missing --out $filtered"
+    # Create .bed files - 22 chromossomes
+    query = f'''
+        #!/bin/bash
+        array_=()
+        for chr_ in $(seq 1 22); do
+            input={pathVcf}/ALL.chr"$chr_"_GRCh38.genotypes.20170504.vcf.gz
+            filtered={pathTempFiles}/list_filt_snps_chr"$chr_"
+            if test -f "$filtered.prune.in"; then
+                echo "bed file for chromosome $chr_ already processed"
+            else
+                echo "creating bed file for chromosome $chr_"
+                array_+=("{main_query_}")
+            fi
+        done;
+        '''
+    # Loop in batches of size 5 (parallel)
+    query += '''
+    let length_queries=${#array_[@]} step=5 how_many=length_queries/step
+    let rest=length_queries-how_many*step
+
+    for i in $(seq 0 $how_many); do
+        let init=$i*step
+        if (($i<$how_many)); then
+            let end=($i+1)*$step
+        else
+            let end=$i*step+rest
+        fi
+        for batch_ in $(seq $init $end); do
+            eval "${array_[$batch_]}"&
+        done;
+        wait;
+    done;
+        '''
+    with open(f'{pathTempFiles}/prune_snps.sh', 'w') as f:
+        f.write(query)
+        f.close()
+    cmd = ['chmod','+x', f'''{pathTempFiles}/prune_snps.sh''']
+    p = subprocess.Popen(cmd)
+    p.wait()
+    cmd = ['bash',f'''{pathTempFiles}/prune_snps.sh''']
+    p = subprocess.Popen(cmd)
+    p.wait()
     return None
 
-
+scenarios_ = {'test_0_0': None, 'test_0_1': 'test_0/remove_snps.txt'}
 vif_ = 1.5
 maf_ = .05
-hwe_ = 10**-4
+hwe_ = 10**-7
 
-filterSnps(pathTemp,{'vif': vif_, 'maf': maf_, 'hwe': hwe_},'test_')
+for name_ in scenarios_:
+    sampParams = {'pop': None,'sex':None,'lab':None,'outliers':None}
+    pathTemp = createTempFolder(name_)
+    sample = selectSample(
+                        dfPhen_.loc[dfPhen_.subject_id.isin(sampleAnalysis.subject_id)],
+                        sampleGen_,
+                        sampParams,
+                        pathTemp
+                        )
+    print(f'''
+    SIZE OF ORIGINAL SAMPLE:
+    {sample['sizeOriginalDf']}
+    SIZE OF NEW SAMPLE
+    {sample['sizeFinalDf']}
+    ''')
+    os.makedirs(pathTemp, exist_ok = True)
+    filterSnps(pathTemp,{'vif': vif_, 'maf': maf_, 'hwe': hwe_, 'exclude':scenarios_[name_]}, name_)
+    for file_ in os.listdir(pathTemp):
+        if '.prune.in' in file_:
+            shutil.copyfile(f'{pathTemp}/{file_}', f'{name_}/{file_}')
 
-for file_ in os.listdir(pathTemp):
-    if '.prune.in' in file_:
-        shutil.copyfile(f'{pathTemp}/{file_}', file_)
