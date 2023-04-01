@@ -17,7 +17,7 @@ def create_pipeline(**kwargs):
 	),
 	node(
 			func=make_K_matrix_non_negative,
-			inputs=['params:params_run',"input_data"],
+			inputs=['params:params_run',"specified_matrices"],
 			outputs="non_negative_specified_matrices",
 			name="correction_to_non_negative_specified_matrices",
 			tags=['Genotype','Matrix','Correction']

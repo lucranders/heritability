@@ -317,7 +317,7 @@ def make_K_matrix_non_negative(params_, selectedSample):
             if 'K_C' in matrix_:
                 for alpha_ in type_[matrix_]:
                     nameMatrix = f'''K_C_{alpha_}_{case_}'''
-                    if not exists(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.pkl'''):
+                    if not exists(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt'''):
                         with open(f'''{pathAnalysis}/{nameMatrix}.pkl''','rb') as rf_:
                             desiredMatrix = pickle.load(rf_)
                         try:
@@ -334,7 +334,7 @@ def make_K_matrix_non_negative(params_, selectedSample):
                             while a == 0:
                                 counter_ += 1
                                 eigenValues, eigenVectors = np.linalg.eig(newMatrix)
-                                minEigen = np.min(abs(eigenValues))
+                                minEigen = np.min(abs(eigenValues)) + 1e-6
                                 reg_ = min(abs(minEigen), 1e-4)
                                 newDiag = np.diag(eigenValues + reg_)
                                 logging.info(f"""
@@ -350,16 +350,21 @@ def make_K_matrix_non_negative(params_, selectedSample):
                                     a = 0
                             with open(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.pkl''','wb') as wf_:
                                 pickle.dump(newMatrix, wf_)
+                            newMatrix = pd.DataFrame(newMatrix)
+                            newMatrix.to_csv(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt''', sep = '|', header = None)
                         else:
                             with open(pathAnalysis + '/' + nameMatrix + '_correction_non_negative.pkl','wb') as wf_:
                                 pickle.dump(desiredMatrix, wf_)
+                            desiredMatrix = pd.DataFrame(desiredMatrix)
+                            desiredMatrix.to_csv(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt''', sep = '|', header = None)
+                            counter_ = 0
                         logging.info(f"""
                         Done! Matrix is positive semidefinite
                         Number of trials until matrix {nameMatrix} correction: {counter_}
                         """)
                     else:
                         logging.info(f'''{nameMatrix} already corrected!''')
-    return 1
+    return selectedSample
 
 
 

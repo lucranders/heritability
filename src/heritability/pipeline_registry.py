@@ -5,7 +5,7 @@ from kedro.pipeline import Pipeline
 
 from heritability.pipelines import _01_set_analysis_environment as sae
 from heritability.pipelines import _02_calculateZZt as cZZt
-# from heritability.pipelines import _03_estimate_h2_simple as eH2S
+from heritability.pipelines import _03_estimate_h2 as eH2S
 
 
 def register_pipelines() -> Dict[str, Pipeline]:
@@ -17,11 +17,11 @@ def register_pipelines() -> Dict[str, Pipeline]:
     """
     setAnalysisEnvironmentPipeline = sae.create_pipeline()
     calculateZZt = cZZt.create_pipeline()
-    # estimateH2Simple = eH2S.create_pipeline()
+    estimate_heritability = eH2S.create_pipeline()
 
     full_pipeline = setAnalysisEnvironmentPipeline +\
-                            calculateZZt 
-                            # estimateH2Simple
+                            calculateZZt +\
+                            estimate_heritability
 
 
     return {

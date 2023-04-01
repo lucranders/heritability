@@ -49,7 +49,7 @@ genes = [
         ]
 
 outliers = [0.01, 'null']
-formulas = [{'fixed': '~pop + lab', 'random': "null"}]
+formulas = [{'fixed': ['pop+lab'], 'random': "null"}]
 matrices_ = {'K_C':[-1]}
 sets_ = {'pipelineFullChrSer':[x for x in range(1,23)]}
 
@@ -108,7 +108,8 @@ params_run:
             """
         f.write(content_)
         f.close()
-    query_ = ['kedro', 'run' ,f'--env={folder_name_}', '--to-nodes=_4:matrices_calculation.calculate_matrices']
+    query_ = ['kedro', 'run' ,f'--env={folder_name_}']
+    # '--to-nodes=_4:matrices_calculation.calculate_matrices']
     print(query_)
     proc_ = subprocess.Popen(query_)
     proc_.wait()

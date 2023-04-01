@@ -108,3 +108,29 @@ for alpha_ in [-2,-1,0,1,2]:
 
     )
     p.save(filename = f'matrix_alpha_{alpha_}_2.png', height=5, width=5, units = 'in', dpi=1000)
+
+stds_list_ = []
+for alpha_ in [-2,-1,0,1,2]:
+    for chr_ in range(1,23):
+        aux_ = pd.DataFrame(dict_stds_[alpha_][chr_]['std_transformed'], columns = ['std_value'])
+        aux_.loc[:, 'chr'] = chr_
+        aux_.loc[:, 'alpha'] = alpha_
+        stds_list_.append(aux_)
+
+df_stds_ = pd.concat(stds_list_, axis = 0, ignore_index=True)
+# import pickle
+# pickle.dump(df_stds_, open("stds_.pkl", 'wb'))
+
+p = ggplot() +\
+    geom_boxplot(df_stds_, aes(y = 'std_value',x = 'chr', fill = 'chr', group = 'chr')) +\
+    labs(x = "Standard Deviation (alpha)", y = 'Density', colour = "Chromosome") +\
+    facet_wrap(["alpha"], nrow = 5)
+    
+p.save(filename = f'stds_alpha.png', height=5, width=5, units = 'in', dpi=1000)
+
+p = ggplot() +\
+    geom_density(df_stds_.loc[df_stds_.alpha == 1], aes('std_value',fill = 'chr',colour = 'chr', group = 'chr'), alpha = .05) +\
+    labs(x = "Standard Deviation (alpha)", y = 'Density') +\
+    guides(fill=None)
+
+p.save(filename = f'stds_original.png', height=5, width=5, units = 'in', dpi=1000)
