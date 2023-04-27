@@ -4,7 +4,8 @@ import os
 from kedro.config import ConfigLoader
 import time
 from os.path import exists
-import sys
+import yaml
+
 
 
 def checkLogSizes(path_,name_,ext_):
@@ -50,19 +51,27 @@ genes = [
 
 outliers = [0.01, 'null']
 formulas = [{'fixed': ['pop+lab'], 'random': "null"}]
-matrices_ = {'K_C':[-1]}
-sets_ = {'pipelineFullChrSer':[x for x in range(1,23)]}
+matrices_ = {
+                # 'K_C':[-1],
+                # 'std_K_C':[-1]
+                'std_GCTA': 10
+            }
+
+
+sets_ = {
+        'pipelineFullChrSer': {'all': [x for x in range(1,23)]}
+        }
 
 
 
 for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outliers,genes,formulas):
-    maf_ = str(element[0])
+    maf_ = element[0]
     pop_ = element[1]
-    vif_ = str(element[2])
-    hwe_ = str(element[3])
+    vif_ = element[2]
+    hwe_ = element[3]
     sex_ = element[4]
     lab_ = element[5]
-    outliers_ = str(element[6])
+    outliers_ = element[6]
     genes_ = element[7]
     formula_ = element[8]
     print(element)
@@ -77,39 +86,37 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
         proc_.wait()
     else:
         print('env already created!\n' + path_)
-    with open(path_+'/parameters.yml','w') as f:
-        content_ = f'''
-params_run:
-    # Parameters for snp selection
-    snpsParams:
-        maf: {maf_}
-        hwe: {hwe_}
-        vif: {vif_}
-        exclude: yes
-    # Sample parameters
-    sampParams:
-        pop: {str(pop_)}
-        lab: {str(lab_)}
-        sex: {str(sex_)} 
-        outliers: {outliers_}
-        genes: {str(genes_)}
-    formula: {str(formula_)}
-    saveControl: {folder_name_}
-    matrices:
-        sets_:'''
-        for set_ in sets_:
-            content_ +=f"""
-            {set_}: {sets_[set_]}"""
-        content_ += f"""
-        type_:"""
-        for matrix_ in matrices_:
-            content_ += f"""
-            {matrix_}: {matrices_[matrix_]}
-            """
-        f.write(content_)
-        f.close()
+    final_dict_ = {
+                    'params_run':{
+                                'snpsParams': {
+                                    'maf': maf_,
+                                    'hwe': hwe_,
+                                    'vif': vif_,
+                                    'exclude': 'yes',
+                                    },
+                                'sampParams':{
+                                    'pop': pop_,
+                                    'lab': lab_,
+                                    'sex': sex_,
+                                    'outliers': outliers_,
+                                    'genes': genes_
+                                },
+                                'formula': formula_,
+                                'saveControl': folder_name_,
+                                'matrices': {
+                                            'sets_': sets_, 
+                                            'type_': matrices_
+                                            }
+                                }
+                }
+    with open(path_+'/parameters.yml','w') as file:
+        yaml.dump(final_dict_, file,sort_keys=True)
+        file.close()
     query_ = ['kedro', 'run' ,f'--env={folder_name_}']
     # '--to-nodes=_4:matrices_calculation.calculate_matrices']
     print(query_)
     proc_ = subprocess.Popen(query_)
     proc_.wait()
+
+
+

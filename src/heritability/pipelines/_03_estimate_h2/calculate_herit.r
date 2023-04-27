@@ -1,6 +1,6 @@
 library(coxme)
 library(dplyr)
-
+library(yaml)
 
 
 
@@ -35,13 +35,18 @@ k_fold_samples_ = function(df_, k_){
     return(folds_)
 }
 
-fit_model_ = function(df_, matrix_){
-    matrix_ = matrix_[rownames(matrix_) %in% df_$subject_id, colnames(matrix_) %in% df_$subject_id]
+fit_model_ = function(df_, varlist_){
+    new_varlist_ = list()
+    for (set_ in names(varlist_)){
+        matrix_ = varlist_[[set_]]
+        matrix_ = matrix_[rownames(matrix_) %in% df_$subject_id, colnames(matrix_) %in% df_$subject_id]
+        new_varlist_[[set_]] = as.matrix(matrix_)
+    }
     fit1 = lmekin(
                 as.formula(paste("tpm~",formula_)), 
                 data = df_, 
                 random=~1|df_$subject_id, 
-                varlist=list(genetic = as.matrix(matrix_)), 
+                varlist=new_varlist_, 
                 vinit=2, 
                 method = "REML"
             )
@@ -56,7 +61,7 @@ fit_model_ = function(df_, matrix_){
 estimate_h2 = function(list_){
     dataset_ = list_[['dataset_']]
     df_ = list_[['df_']]
-    matrix_ = list_[['matrix_']]
+    varlist_ = list_[['varlist_']]
     genes_= list_[['genes_']]
     formula_ = list_[['formula_']]
     return_ = list()
@@ -74,18 +79,25 @@ estimate_h2 = function(list_){
         for(fold_ in c(1:(B))){
             # df_sample_ = df_complete_fit_ %>% filter(subject_id %in% folds_fit_[[fold_]])
             df_sample_ = df_complete_fit_ %>% filter(subject_id %in% sample(df_complete_fit_$subject_id, floor(nrow(df_complete_fit_) * frac_)))
-            vector_h1_ = c(vector_h1_, fit_model_(df_sample_, matrix_)[['h1']])
+            vector_h1_ = c(vector_h1_, fit_model_(df_sample_, varlist_)[['h1']])
         }
         print(vector_h1_)
         df_sample_ = df_complete_fit_ %>% filter(subject_id %in% sample(df_complete_fit_$subject_id, floor(nrow(df_complete_fit_) * frac_)))
-        fit_ = fit_model_(df_sample_, matrix_)
+        fit_ = fit_model_(df_sample_, varlist_)
         h1 = fit_[['h1']]
         sig2e1 = fit_[['sig2e1']]
         sig2g1 = fit_[['sig2g1']]
-        ELRT = -sum(log(1+h1*(eigen(matrix_)$values-1)))
+        ELRT = -sum(log(1+h1*(eigen(varlist_[[1]])$values-1)))
         p_value_ = (1 - pchisq(ELRT, 1)) / 2
         sd_h1 = sd(vector_h1_)
-        return_ = list(sig2e1=sig2e1,sig2g1=sig2g1,h1=h1,ELRT = ELRT,p_value_=p_value_, sd_h1 = sd_h1)
+        return_ = list(
+                        sig2e1=sig2e1,
+                        sig2g1=sig2g1,
+                        h1=h1,
+                        ELRT = ELRT,
+                        p_value_=p_value_, 
+                        sd_h1 = sd_h1
+                        )
     }
     return(return_)
 }
@@ -100,7 +112,7 @@ formula_ = commandArgs(TRUE)[2]
 set_ = commandArgs(TRUE)[3]
 matrix_name_ = commandArgs(TRUE)[4]
 gene_ = commandArgs(TRUE)[5]
-
+yml_ = read_yaml(paste0('conf/',tail(strsplit(path_tmp_, '/')[[1]],1), '/parameters.yml'))
 
 
 print(path_tmp_)
@@ -126,13 +138,17 @@ fixed_covs = dataset_ %>%
             select(-c(gene_name, tpm))
 
 df_fit = merge(subject_ids, fixed_covs, all.x = T, all.y = F, by = 'subject_id')
-matrix_df_ = read.table(paste0(path_tmp_,'/',matrix_name_,'_',set_,'_correction_non_negative.txt'), sep = '|')
-matrix_fit = matrix_prep_(matrix_df_)
+varlist_ = list()
+for(matrix_ in yml_$params_run$matrices$sets_[set_]){
+    matrix_df_ = read.table(paste0(path_tmp_,'/',matrix_name_,'_',set_,'_',names(matrix_),'_correction_non_negative.txt'), sep = '|')
+    varlist_[[names(matrix_)]] = matrix_prep_(matrix_df_)
+}
+
 
 list_ = list(
                 df_ = df_fit
                 , dataset_ = dataset_
-                , matrix_ = matrix_fit
+                , varlist_ = varlist_
                 , genes_ = gene_
                 , formula_ = formula_
             )

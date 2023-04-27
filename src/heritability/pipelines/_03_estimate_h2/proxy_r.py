@@ -9,12 +9,12 @@ def estimate_herit_R(params, selectedSample):
     logging.info("Initializing heritability estimates step")
     matrices_ = []
     for matrix_type_ in params['matrices']['type_']:
-        if len(params['matrices']['type_'][matrix_type_]) > 0:
+        if type(params['matrices']['type_'][matrix_type_]) == list:
             for element_ in params['matrices']['type_'][matrix_type_]:
                 print(element_)
                 matrices_.append(f'''{matrix_type_}_{element_}''')
         else:
-            matrices_.append(f'''{matrix_type_}_std''')
+            matrices_.append(f'''{matrix_type_}''')
     query = f'''
                 #!/bin/bash
                 array_=()

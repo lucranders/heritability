@@ -4,7 +4,8 @@ generated using Kedro 0.17.6
 """
 
 from kedro.pipeline import pipeline, node,Pipeline
-from .nodes import calculate_K_matrix, make_K_matrix_non_negative
+from .nodes import calculate_K_matrix, make_K_matrix_non_negative, standardize_matrix_if_asked
+
 
 def create_pipeline(**kwargs):
 	template_calculate_matrix = Pipeline([
@@ -16,8 +17,15 @@ def create_pipeline(**kwargs):
 			tags=['Genotype','Matrix','Calculation']
 	),
 	node(
-			func=make_K_matrix_non_negative,
+			func=standardize_matrix_if_asked,
 			inputs=['params:params_run',"specified_matrices"],
+			outputs="standardized_matrices",
+			name="standardize_matrices_if_asked",
+			tags=['Genotype','Matrix','Calculation']
+	),
+	node(
+			func=make_K_matrix_non_negative,
+			inputs=['params:params_run',"standardized_matrices"],
 			outputs="non_negative_specified_matrices",
 			name="correction_to_non_negative_specified_matrices",
 			tags=['Genotype','Matrix','Correction']

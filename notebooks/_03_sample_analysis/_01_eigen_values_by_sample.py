@@ -32,6 +32,7 @@ sets_ = {'pipelineFullChrSer':[x for x in range(1,23)]}
 
 
 dfs_ = []
+file_check_ = []
 for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outliers,genes):
     maf_ = str(element[0])
     pop_ = element[1]
@@ -65,17 +66,29 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
                     df_.loc[:,'status'] = 'negative'
                 else:
                     df_.loc[:,'status'] = 'positive'
+                df_.loc[:,'type_'] = 'std' if 'std_' in file_ else 'original'
                 dfs_.append(df_)
+                file_check_.append(file_)
 
+# Debug:
+pd.DataFrame(file_check_, columns = ['file']).file.value_counts()
 
 finalDf_ = pd.concat(dfs_, axis = 0, ignore_index = True)
 finalDf_.sort_values(['vif','maf','hwe','outliers'], inplace = True)
 finalDf_.loc[:, 'combination_'] = finalDf_.apply(lambda x: f'''{x['vif']}_{x['maf']}_{x['hwe']}_{x['outliers']}''', axis = 1)
+pickle.dump(finalDf_, open('eigen_info.pkl','wb'))
 
-p_ = ggplot(finalDf_, aes(x = 'combination_', y='eigen', colour = 'status')) +\
+p_ = ggplot(finalDf_.loc[finalDf_.type_ == 'original'], aes(x = 'combination_', y='eigen', colour = 'status')) +\
     geom_boxplot() +\
     facet_wrap(['genes','pop'], scales='free_y') +\
     theme(figure_size=(12,9), axis_text_x=element_text(rotation=90, hjust=1))
 
 p_.save('boxplot_eigen_values')
+
+p_ = ggplot(finalDf_.loc[finalDf_.type_ == 'std'], aes(x = 'combination_', y='eigen', colour = 'status')) +\
+    geom_boxplot() +\
+    facet_wrap(['genes','pop'], scales='free_y') +\
+    theme(figure_size=(12,9), axis_text_x=element_text(rotation=90, hjust=1))
+
+p_.save('boxplot_eigen_values_std')
 

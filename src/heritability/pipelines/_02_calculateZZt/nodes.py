@@ -8,6 +8,7 @@ import rpy2.robjects as robjects
 import pickle
 import pandas as pd
 import os
+import struct
 import numpy as np
 from pathlib import Path
 from os.path import exists
@@ -277,28 +278,94 @@ class calculateMatrixes:
 #             print(nameMatrix + ' already corrected!')
 #     return 1
 
+def readBinaryGCTA(file_):
+    t_ = pd.read_csv(f'{file_}.grm.id', sep = '\t', header = None)
+    n_ = t_.shape[0]
+    biteSize = 4
+    totalElements = int(n_ * (n_ + 1) / 2)
+    values_ = []
+    with open(f'{file_}.grm.bin','rb') as binFile_:
+        for i_ in range(totalElements):
+            values_.append(struct.unpack('f',binFile_.read(biteSize))[0])
+    dfIndex = pd.DataFrame([x for x in range(n_)], columns = ['index_'])
+    dfIndex.loc[:,'index_'] = dfIndex.index_ + 1
+    dfIndex.loc[:, 'indexC_'] = dfIndex.index_.cumsum()
+    dfIndex.loc[:, 'indexDiagonal'] = dfIndex.indexC_
+    indexDiagonal = dfIndex.indexDiagonal.values - 1
+    diagonalMatrix = [values_[x] for x in indexDiagonal]
+    offDiagonalMatrix = [values_[x] for x in range(len(values_)) if x not in indexDiagonal]
+    # Build matrix from binary files
+    gctaMatrix_ = np.zeros([n_,n_])
+    cont_ = 0
+    contDiag_ = 0
+    for col_ in range(n_):
+        for row_ in range(n_):
+            if row_ < col_:
+                gctaMatrix_[row_,col_] = offDiagonalMatrix[cont_]
+                gctaMatrix_[col_,row_] = offDiagonalMatrix[cont_]
+                cont_ += 1
+            if row_ == col_:
+                gctaMatrix_[row_,col_] = diagonalMatrix[contDiag_]
+                contDiag_ += 1
+    return gctaMatrix_
 
 def calculate_K_matrix(params_, selectedSample):
     pathAnalysis = selectedSample['pathAnalysis']
     matrices_params_ = params_['matrices']
     sets_ = matrices_params_['sets_']
+    print(sets_)
     type_ = matrices_params_['type_']
     for case_ in sets_:
-        chromosomes = sets_[case_]
-        for matrix_ in type_:
-            logging.info(matrix_)
-            if 'K_C' in matrix_:
-                for alpha_ in type_[matrix_]:
-                    nameMatrix = f'''K_C_{alpha_}_{case_}'''
+        print(case_)
+        for list_ in sets_[case_]:
+            print(sets_[case_], list_)
+            chromosomes = sets_[case_][list_]
+            for matrix_ in type_:
+                logging.info(matrix_)
+                if 'K_C' in matrix_:
+                    for alpha_ in type_[matrix_]:
+                        nameMatrix = f'''K_C_{alpha_}_{case_}_{list_}'''
+                        if not exists(f'''{pathAnalysis}/{nameMatrix}.pkl'''):
+                            params = {}
+                            params["pathAnalysis"] = pathAnalysis
+                            params["alpha"] = alpha_
+                            params["chromosomes"] = chromosomes
+                            calculator = calculateMatrixes(params)
+                            calculator.readBeds()
+                            calculator.calculateMatrix()
+                            desiredMatrix = calculator.zztFinal
+                            with open(f'''{pathAnalysis}/{nameMatrix}.pkl''','wb') as wf_:
+                                pickle.dump(desiredMatrix, wf_)
+                            df_desired_matrix = pd.DataFrame(desiredMatrix)
+                            df_desired_matrix.to_csv(f'''{pathAnalysis}/{nameMatrix}.txt''', sep = '|', header = None)
+                        else:
+                            print(f"""{nameMatrix} already calculated!""")
+                elif 'GCTA' in matrix_:
+                    nameMatrix = f'''GCTA_{case_}_{list_}'''
                     if not exists(f'''{pathAnalysis}/{nameMatrix}.pkl'''):
+                        # Specific parameters to build matrices
                         params = {}
                         params["pathAnalysis"] = pathAnalysis
-                        params["alpha"] = alpha_
                         params["chromosomes"] = chromosomes
-                        calculator = calculateMatrixes(params)
-                        calculator.readBeds()
-                        calculator.calculateMatrix()
-                        desiredMatrix = calculator.zztFinal
+                        # Number of threads
+                        numThreads_ = type_[matrix_]
+                        # Hiden parameters, to run GCTA software
+                        conf_paths = ["conf/local"]
+                        conf_loader = ConfigLoader(conf_paths)
+                        parameters = conf_loader.get("paths*", "paths*/**")
+                        pathGCTA_ = parameters['gcta']
+                        # Write ref file
+                        ref_file_name_ = f'{pathAnalysis}/REF_BEDS_{case_}_{list_}'
+                        file_ = open(ref_file_name_, 'w')
+                        [file_.write(f'{pathAnalysis}/pruned_chr{chr_}\n') for chr_ in chromosomes]
+                        file_.close()
+                        # command to build matrix
+                        cmd = [pathGCTA_, '--mbfile' ,ref_file_name_, '--keep', f'{pathAnalysis}/sample.txt' ,'--make-grm','--out',f'{pathAnalysis}/{nameMatrix}','--thread-num',str(numThreads_)]
+                        # Execute command and wait for the end
+                        p = subprocess.Popen(cmd)
+                        p.wait()
+                        # Read matrix
+                        desiredMatrix = readBinaryGCTA(f'{pathAnalysis}/{nameMatrix}')
                         with open(f'''{pathAnalysis}/{nameMatrix}.pkl''','wb') as wf_:
                             pickle.dump(desiredMatrix, wf_)
                         df_desired_matrix = pd.DataFrame(desiredMatrix)
@@ -307,57 +374,121 @@ def calculate_K_matrix(params_, selectedSample):
                         print(f"""{nameMatrix} already calculated!""")
     return selectedSample
 
+def standardize_matrix(matrix_):
+    # Extract main diagonal from matrix and build diagonal matrix with the inverse of its sqrt
+    diag_matrix = np.diag(1/np.sqrt(np.diag(matrix_)))
+    std_matrix = diag_matrix @ matrix_ @ diag_matrix
+    return std_matrix
+
+def standardize_matrix_if_asked(params_, selectedSample):
+    pathAnalysis = selectedSample['pathAnalysis']
+    matrices_params_ = params_['matrices']
+    sets_ = matrices_params_['sets_']
+    type_ = matrices_params_['type_']
+    for case_ in sets_:
+        for list_ in sets_[case_]:
+            for matrix_ in type_:
+                logging.info(matrix_)
+                if 'std_' in matrix_:
+                    if 'K_C' in matrix_:
+                        for alpha_ in type_[matrix_]:
+                            nameMatrixOrig = f'''K_C_{alpha_}_{case_}_{list_}'''
+                            nameMatrix = f'''{matrix_}_{alpha_}_{case_}_{list_}'''
+                            if not exists(f'''{pathAnalysis}/{nameMatrix}.pkl'''):
+                                original_matrix = pickle.load(open(f'''{pathAnalysis}/{nameMatrixOrig}.pkl''', 'rb'))
+                                std_matrix = standardize_matrix(original_matrix)
+                                with open(f'''{pathAnalysis}/{nameMatrix}.pkl''','wb') as wf_:
+                                    pickle.dump(std_matrix, wf_)
+                                df_desired_matrix = pd.DataFrame(std_matrix)
+                                df_desired_matrix.to_csv(f'''{pathAnalysis}/{nameMatrix}.txt''', sep = '|', header = None)
+                            else:
+                                print(f"""{nameMatrix} already standardized!""")
+                    elif 'GCTA' in matrix_:
+                        nameMatrixOrig = f'''GCTA_{case_}_{list_}'''
+                        nameMatrix = f'''{matrix_}_{case_}_{list_}'''
+                        if not exists(f'''{pathAnalysis}/{nameMatrix}.pkl'''):
+                            original_matrix = pickle.load(open(f'''{pathAnalysis}/{nameMatrixOrig}.pkl''', 'rb'))
+                            std_matrix = standardize_matrix(original_matrix)
+                            with open(f'''{pathAnalysis}/{nameMatrix}.pkl''','wb') as wf_:
+                                pickle.dump(std_matrix, wf_)
+                            df_desired_matrix = pd.DataFrame(std_matrix)
+                            df_desired_matrix.to_csv(f'''{pathAnalysis}/{nameMatrix}.txt''', sep = '|', header = None)
+                        else:
+                            print(f"""{nameMatrix} already standardized!""")
+    return selectedSample
+
+def make_non_negative(input_matrix_):
+    try:
+        np.linalg.cholesky(input_matrix_)
+        a = 1
+    except:
+        a = 0
+    newMatrix = input_matrix_.copy()
+    # If the matrix is not positive definite, then proceed to algorithm
+    # Else, just skip that part and return the input
+    if a == 0:
+        logging.info(f"""
+        The matrix is not positive semidefinite
+        """)
+        counter_ = 0
+        while a == 0:
+            counter_ += 1
+            eigenValues, eigenVectors = np.linalg.eig(newMatrix)
+            minEigen = np.min(abs(eigenValues)) + 1e-6
+            reg_ = min(abs(minEigen), 1e-4)
+            newDiag = np.diag(eigenValues + reg_)
+            logging.info(f"""
+            Increasing {reg_} to main diagonal
+            Current minimum eigen value is: {minEigen}
+            New minimum value is {min(eigenValues + reg_)}
+            """)
+            newMatrix = eigenVectors @ newDiag @ eigenVectors.T
+            try: 
+                np.linalg.cholesky(newMatrix)
+                a = 1
+            except:
+                a = 0
+    else:
+        counter_ = 0
+        logging.info(f"""
+        The matrix was already positive semidefinite
+        """)
+    return newMatrix, counter_
+
 def make_K_matrix_non_negative(params_, selectedSample):
     pathAnalysis = selectedSample['pathAnalysis']
     matrices_params_ = params_['matrices']
     sets_ = matrices_params_['sets_']
     type_ = matrices_params_['type_']
     for case_ in sets_:
-        for matrix_ in type_:
-            if 'K_C' in matrix_:
-                for alpha_ in type_[matrix_]:
-                    nameMatrix = f'''K_C_{alpha_}_{case_}'''
-                    if not exists(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt'''):
-                        with open(f'''{pathAnalysis}/{nameMatrix}.pkl''','rb') as rf_:
-                            desiredMatrix = pickle.load(rf_)
-                        try:
-                            np.linalg.cholesky(desiredMatrix)
-                            a = 1
-                        except:
-                            a = 0
-                        if a == 0:
-                            logging.info(f"""
-                            The matrix is not positive semidefinite
-                            """)
-                            newMatrix = desiredMatrix.copy()
-                            counter_ = 0
-                            while a == 0:
-                                counter_ += 1
-                                eigenValues, eigenVectors = np.linalg.eig(newMatrix)
-                                minEigen = np.min(abs(eigenValues)) + 1e-6
-                                reg_ = min(abs(minEigen), 1e-4)
-                                newDiag = np.diag(eigenValues + reg_)
-                                logging.info(f"""
-                                Increasing {reg_} to main diagonal
-                                Current minimum eigen value is: {minEigen}
-                                New minimum value is {min(eigenValues + reg_)}
-                                """)
-                                newMatrix = eigenVectors @ newDiag @ eigenVectors.T
-                                try: 
-                                    np.linalg.cholesky(newMatrix)
-                                    a = 1
-                                except:
-                                    a = 0
+        for list_ in sets_[case_]:
+            for matrix_ in type_:
+                if 'K_C' in matrix_:
+                    for alpha_ in type_[matrix_]:
+                        nameMatrix = f'''{matrix_}_{alpha_}_{case_}_{list_}'''
+                        if not exists(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt'''):
+                            with open(f'''{pathAnalysis}/{nameMatrix}.pkl''','rb') as rf_:
+                                desiredMatrix = pickle.load(rf_)
+                            newMatrix, counter_ = make_non_negative(desiredMatrix)
                             with open(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.pkl''','wb') as wf_:
                                 pickle.dump(newMatrix, wf_)
                             newMatrix = pd.DataFrame(newMatrix)
                             newMatrix.to_csv(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt''', sep = '|', header = None)
+                            logging.info(f"""
+                            Done! Matrix is positive semidefinite
+                            Number of trials until matrix {nameMatrix} correction: {counter_}
+                            """)
                         else:
-                            with open(pathAnalysis + '/' + nameMatrix + '_correction_non_negative.pkl','wb') as wf_:
-                                pickle.dump(desiredMatrix, wf_)
-                            desiredMatrix = pd.DataFrame(desiredMatrix)
-                            desiredMatrix.to_csv(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt''', sep = '|', header = None)
-                            counter_ = 0
+                            logging.info(f'''{nameMatrix} already corrected!''')
+                elif 'GCTA' in matrix_:
+                    nameMatrix = f'''{matrix_}_{case_}_{list_}'''
+                    if not exists(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt'''):
+                        desiredMatrix = pickle.load(open(f'''{pathAnalysis}/{nameMatrix}.pkl''', 'rb'))
+                        newMatrix, counter_ = make_non_negative(desiredMatrix)
+                        with open(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.pkl''','wb') as wf_:
+                            pickle.dump(newMatrix, wf_)
+                        newMatrix = pd.DataFrame(newMatrix)
+                        newMatrix.to_csv(f'''{pathAnalysis}/{nameMatrix}_correction_non_negative.txt''', sep = '|', header = None)
                         logging.info(f"""
                         Done! Matrix is positive semidefinite
                         Number of trials until matrix {nameMatrix} correction: {counter_}

@@ -2,59 +2,59 @@ import pandas as pd
 import os
 import shutil
 
-mergedFiles_ = []
-filescwd = [x for x in os.listdir()]
-for chr_ in range(1,23):
-    prunedSnpsFile = [x for x in filescwd if '.prune.in' in x and f'chr{chr_}_' in x][0]
-    snpsInfoFile = [x for x in filescwd if f't{chr_}.txt' in x][0]
-    print(f'''
-    Pruned snps file: {prunedSnpsFile}
-    Snps info file: {snpsInfoFile}
-    ''')
-    # Read pruned files and rename columns
-    auxPruned = pd.read_csv(prunedSnpsFile, sep = '\t', header = None)
-    auxPruned.rename(columns = {0: 'SNP'}, inplace = True)
-    auxPruned.loc[:, 'CHR'] = chr_
-    auxPruned.loc[:, 'aux_'] = 1
-    # Count how many duplicates the snp has in the file
-    auxPruned2 = auxPruned.groupby(['SNP','CHR']).aux_.sum().reset_index()
-    auxPruned2.rename(columns = {'aux_': 'duplicatesPruned'}, inplace = True)
-    print('''
-    TOTAL OF DUPLICATED SNPS ALREADY COMPUTED
-    ''')
-    # Read snps info and rename columns
-    auxSnpsInfo = pd.read_csv(snpsInfoFile, sep = '\t', header = None)
-    auxSnpsInfo.rename(columns = {0: 'CHR', 1: 'POS', 2: 'SNP'}, inplace = True)
-    auxSnpsInfo = auxSnpsInfo.loc[auxSnpsInfo.SNP.isin(auxPruned2.SNP)]
-    print('''
-    SNPS OF INTEREST ALREADY FILTERED (INFO)
-    ''')
-    auxSnpsInfo.loc[:, 'aux_'] = 1
-    # Count how many duplicates the snp has in the file (by snp)
-    auxSnpsInfo2 = auxSnpsInfo.groupby(['SNP','CHR']).aux_.sum().reset_index()
-    auxSnpsInfo2.rename(columns = {'aux_': 'duplicatesInfoBySNP'}, inplace = True)
-    print('''
-    TOTAL OF DUPLICATED SNPS INFO BY SNP ALREADY COMPUTED
-    ''')
-    # Count how many duplicates the snp has in the file (by snp and pos)
-    auxSnpsInfo3 = auxSnpsInfo.groupby(['POS','SNP','CHR']).aux_.sum().reset_index()
-    auxSnpsInfo3.rename(columns = {'aux_': 'duplicatesInfoBySNPPos'}, inplace = True)
-    print('''
-    TOTAL OF DUPLICATED SNPS INFO BY SNP AND POSITION ALREADY COMPUTED
-    ''')
-    # Merge infos
-    auxSnpsInfo4 = pd.merge(
-                            auxSnpsInfo3
-                            , auxSnpsInfo2
-                            , how = 'left'
-                            )
-    # merge infos and pruned snps
-    merge_ = pd.merge(
-                    auxPruned2
-                    , auxSnpsInfo4
-                    , how = 'left'
-                    )
-    mergedFiles_.append(merge_)
+mergedFiles_ = {}
+for name_ in ['test_0_0','test_0_1']:
+    for chr_ in range(1,23):
+        prunedSnpsFile = [x for x in os.listdir(f'{name_}') if '.prune.in' in x and f'chr{chr_}_' in x][0]
+        snpsInfoFile = [x for x in os.listdir(f'{name_}') if f't{chr_}.txt' in x][0]
+        print(f'''
+        Pruned snps file: {prunedSnpsFile}
+        Snps info file: {snpsInfoFile}
+        ''')
+        # Read pruned files and rename columns
+        auxPruned = pd.read_csv(f'{name_}/{prunedSnpsFile}', sep = '\t', header = None)
+        auxPruned.rename(columns = {0: 'SNP'}, inplace = True)
+        auxPruned.loc[:, 'CHR'] = chr_
+        auxPruned.loc[:, 'aux_'] = 1
+        # Count how many duplicates the snp has in the file
+        auxPruned2 = auxPruned.groupby(['SNP','CHR']).aux_.sum().reset_index()
+        auxPruned2.rename(columns = {'aux_': 'duplicatesPruned'}, inplace = True)
+        print('''
+        TOTAL OF DUPLICATED SNPS ALREADY COMPUTED
+        ''')
+        # Read snps info and rename columns
+        auxSnpsInfo = pd.read_csv(f'{name_}/{snpsInfoFile}', sep = '\t', header = None)
+        auxSnpsInfo.rename(columns = {0: 'CHR', 1: 'POS', 2: 'SNP'}, inplace = True)
+        auxSnpsInfo = auxSnpsInfo.loc[auxSnpsInfo.SNP.isin(auxPruned2.SNP)]
+        print('''
+        SNPS OF INTEREST ALREADY FILTERED (INFO)
+        ''')
+        auxSnpsInfo.loc[:, 'aux_'] = 1
+        # Count how many duplicates the snp has in the file (by snp)
+        auxSnpsInfo2 = auxSnpsInfo.groupby(['SNP','CHR']).aux_.sum().reset_index()
+        auxSnpsInfo2.rename(columns = {'aux_': 'duplicatesInfoBySNP'}, inplace = True)
+        print('''
+        TOTAL OF DUPLICATED SNPS INFO BY SNP ALREADY COMPUTED
+        ''')
+        # Count how many duplicates the snp has in the file (by snp and pos)
+        auxSnpsInfo3 = auxSnpsInfo.groupby(['POS','SNP','CHR']).aux_.sum().reset_index()
+        auxSnpsInfo3.rename(columns = {'aux_': 'duplicatesInfoBySNPPos'}, inplace = True)
+        print('''
+        TOTAL OF DUPLICATED SNPS INFO BY SNP AND POSITION ALREADY COMPUTED
+        ''')
+        # Merge infos
+        auxSnpsInfo4 = pd.merge(
+                                auxSnpsInfo3
+                                , auxSnpsInfo2
+                                , how = 'left'
+                                )
+        # merge infos and pruned snps
+        merge_ = pd.merge(
+                        auxPruned2
+                        , auxSnpsInfo4
+                        , how = 'left'
+                        )
+        mergedFiles_.append(merge_)
 
 
 compiledInfo = pd.concat(mergedFiles_, axis = 0, ignore_index = True)
@@ -84,10 +84,10 @@ conf_paths = ["../../conf/local"]
 conf_loader = ConfigLoader(conf_paths)
 parameters = conf_loader.get("paths*", "paths*/**")
 pathTemp = parameters['pathTemp']
-name_ = 'test_0'
+
 
 for chr_ in range(1,23):
-    # aux_ = compiledInfo.loc[(compiledInfo.duplicatesInfoBySNPPos == 1)&(compiledInfo.CHR == chr_)]
+    aux_ = compiledInfo.loc[(compiledInfo.duplicatesInfoBySNPPos == 1)&(compiledInfo.CHR == chr_)]
     file_ = f'new_list_filt_snps_{chr_}.prune.in'
-    # aux_.loc[:,['SNP']].to_csv(file_, index = False, header = None, sep = '\t')
+    aux_.loc[:,['SNP']].to_csv(file_, index = False, header = None, sep = '\t')
     shutil.copyfile(file_ , f'{pathTemp}/{name_}/{file_}')
