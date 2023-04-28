@@ -43,11 +43,11 @@ def select_sample(data: pd.DataFrame , genoData: pd.DataFrame, params_run: dict)
     """
     pathTempFiles = createTempFolder(params_run['saveControl'])
     sampParams = params_run['sampParams']
-    if sampParams['pop'] != 'null':
+    if sampParams['pop'] is not None:
         data = data.loc[data['pop'].isin(sampParams['pop'])]
-    if sampParams['sex'] != 'null':
+    if sampParams['sex'] is not None:
         data = data.loc[data['sex'].isin(sampParams['sex'])]
-    if sampParams['lab'] != 'null':
+    if sampParams['lab'] is not None:
         data = data.loc[data['lab'].isin(sampParams['lab'])]
     # Merged data - intersection between genotyped and phenotyped individuals
     dfMerge = genoData.merge(data, how = 'inner')

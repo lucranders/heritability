@@ -87,6 +87,8 @@ estimate_h2 = function(list_){
         h1 = fit_[['h1']]
         sig2e1 = fit_[['sig2e1']]
         sig2g1 = fit_[['sig2g1']]
+        # ELRT and p-value -> probably will be removed
+        # Because it is not clear how to calculate them when more than 1 genetic matrix
         ELRT = -sum(log(1+h1*(eigen(varlist_[[1]])$values-1)))
         p_value_ = (1 - pchisq(ELRT, 1)) / 2
         sd_h1 = sd(vector_h1_)
@@ -112,49 +114,7 @@ formula_ = commandArgs(TRUE)[2]
 set_ = commandArgs(TRUE)[3]
 matrix_name_ = commandArgs(TRUE)[4]
 gene_ = commandArgs(TRUE)[5]
-yml_ = read_yaml(paste0('conf/',tail(strsplit(path_tmp_, '/')[[1]],1), '/parameters.yml'))
-
-
-print(path_tmp_)
-print(formula_)
-print(set_)
-print(matrix_name_)
-print(gene_)
-
-
-
-dataset_ = read.table("data/01_raw/hla_expression.tsv",sep = '\t', header = T)
-# All fam files are equal - chose chromosome 22 arbitrarily
-subject_ids = read.table(paste0(path_tmp_,"/pruned_chr22.fam"), sep = ' ') %>% 
-                    select(V1) %>% 
-                    rename(subject_id = V1)
-
-# The dataset is stacked
-# In order to read sex, lab and pop, it is only needed to filter a gene
-# (in this case was HLA-A) and then drop duplicates
-fixed_covs = dataset_ %>% 
-            filter(gene_name == 'HLA-A') %>% 
-            unique() %>% 
-            select(-c(gene_name, tpm))
-
-df_fit = merge(subject_ids, fixed_covs, all.x = T, all.y = F, by = 'subject_id')
-varlist_ = list()
-for(matrix_ in yml_$params_run$matrices$sets_[set_]){
-    matrix_df_ = read.table(paste0(path_tmp_,'/',matrix_name_,'_',set_,'_',names(matrix_),'_correction_non_negative.txt'), sep = '|')
-    varlist_[[names(matrix_)]] = matrix_prep_(matrix_df_)
-}
-
-
-list_ = list(
-                df_ = df_fit
-                , dataset_ = dataset_
-                , varlist_ = varlist_
-                , genes_ = gene_
-                , formula_ = formula_
-            )
-result_ = as.data.frame(estimate_h2(list_))
-write.table(result_,
-            paste0(
+save_file_ = paste0(
                     path_tmp_,'/',
                     'resultfit_',
                     formula_,'_',
@@ -162,5 +122,52 @@ write.table(result_,
                     matrix_name_,'_',
                     gene_,'.txt'
                     )
+print(path_tmp_)
+print(formula_)
+print(set_)
+print(matrix_name_)
+print(gene_)
+if(!file.exists(save_file_)){
+    yml_ = read_yaml(paste0('conf/',tail(strsplit(path_tmp_, '/')[[1]],1), '/parameters.yml'))
+    dataset_ = read.table("data/01_raw/hla_expression.tsv",sep = '\t', header = T)
+    # All fam files are equal - chose chromosome 22 arbitrarily
+    subject_ids = read.table(paste0(path_tmp_,"/pruned_chr22.fam"), sep = ' ') %>% 
+                        select(V1) %>% 
+                        rename(subject_id = V1)
+
+    # The dataset is stacked
+    # In order to read sex, lab and pop, it is only needed to filter a gene
+    # (in this case was HLA-A) and then drop duplicates
+    fixed_covs = dataset_ %>% 
+                filter(gene_name == 'HLA-A') %>% 
+                unique() %>% 
+                select(-c(gene_name, tpm))
+
+    df_fit = merge(subject_ids, fixed_covs, all.x = T, all.y = F, by = 'subject_id')
+    varlist_ = list()
+    for(matrix_ in yml_$params_run$matrices$sets_[set_]){
+        matrix_df_ = read.table(paste0(path_tmp_,'/',matrix_name_,'_',set_,'_',names(matrix_),'_correction_non_negative.txt'), sep = '|')
+        varlist_[[names(matrix_)]] = matrix_prep_(matrix_df_)
+    }
+    list_ = list(
+                    df_ = df_fit
+                    , dataset_ = dataset_
+                    , varlist_ = varlist_
+                    , genes_ = gene_
+                    , formula_ = formula_
+                )
+    result_ = as.data.frame(estimate_h2(list_))
+    write.table(result_,
+                save_file_
             )
+}else{print('Already estimated!')}
+
+
+
+
+
+
+
+
+
 

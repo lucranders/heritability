@@ -42,19 +42,20 @@ pops = [['FIN','GBR','TSI','CEU','YRI'], ['FIN','GBR','TSI','CEU']]
 vifs = [1.5,2]
 hwes = [1e-7,1e-4]
 # hwes = [1e-7]
-sexs = ['null']
-labs = ['null']
+sexs = [None]
+labs = [None]
 genes = [
         ["HLA-A", "HLA-B", "HLA-C", "HLA-DQA1", "HLA-DPB1", "HLA-DRB1", "HLA-DPA1", "HLA-DQB1", "HLA-DRA"],
         ['HLA-A']
         ]
 
-outliers = [0.01, 'null']
-formulas = [{'fixed': ['pop+lab'], 'random': "null"}]
+outliers = [0.01, None]
+formulas = [{'fixed': ['pop+lab'], 'random': None}]
 matrices_ = {
                 # 'K_C':[-1],
                 # 'std_K_C':[-1]
-                'std_GCTA': 10
+                'std_GCTA': 10,
+                'GCTA': 10
             }
 
 
@@ -76,10 +77,10 @@ for element in itertools.product(mafs , pops , vifs , hwes , sexs , labs , outli
     formula_ = element[8]
     print(element)
     popStr_ = "_".join(pop_)
-    sexStr_ = "_".join(sex_) if sex_ != 'null' else sex_
-    labStr_ = "_".join(lab_) if lab_ != 'null' else lab_
+    sexStr_ = "_".join(sex_) if sex_ is not None else 'null'
+    labStr_ = "_".join(lab_) if lab_ is not None else 'null'
     geneStr_ = "_".join(genes_)
-    folder_name_ = f'''snpsParams_maf_{maf_}_hwe_{hwe_}_vif_{vif_}_sampParams_{popStr_}_sex_{sexStr_}_lab_{labStr_}_outliers_{outliers_}_genes_{geneStr_}'''
+    folder_name_ = f'''snpsParams_maf_{maf_}_hwe_{hwe_}_vif_{vif_}_sampParams_{popStr_}_sex_{sexStr_}_lab_{labStr_}_outliers_{'null' if outliers_ is None else outliers_}_genes_{geneStr_}'''
     path_ =  f'''conf/{folder_name_}''' 
     if not exists(path_):
         proc_ = subprocess.Popen(['mkdir',path_])
